@@ -25,12 +25,27 @@ import { SettingsSheet } from './components/Settings';
 import { HelpSheet } from './components/Help';
 import { DebugPanel, OfflineModal, Toasts } from './components/Overlays';
 import { eras } from './game/content/eras';
+import {
+  WorkbookNavigation,
+  type WorkforceFocus,
+} from './components/navigation';
 
 export default function App() {
   const snapshot = useGame(),
     { state, saveError } = snapshot;
   const [selectedSheet, setSheet] = useState('overview'),
     [zoom, setZoom] = useState(100);
+  const [workforceFocus, setWorkforceFocus] = useState<WorkforceFocus | null>(
+    null,
+  );
+  function openWorkforce(resource: string) {
+    if (!isFeatureUnlocked(state, 'jobs')) return;
+    setWorkforceFocus((current) => ({
+      resource,
+      request: (current?.request ?? 0) + 1,
+    }));
+    setSheet('workforce');
+  }
   useEffect(() => gameStore.start(), []);
   const visible = sheets.filter((s) =>
     isFeatureUnlocked(state, s.requiredFeature),
@@ -195,7 +210,11 @@ export default function App() {
                   Back to Overview
                 </button>
               )}
-              <Sheet />
+              <WorkbookNavigation.Provider
+                value={{ openWorkforce, workforceFocus }}
+              >
+                <Sheet />
+              </WorkbookNavigation.Provider>
               <DebugPanel />
             </div>
           </main>

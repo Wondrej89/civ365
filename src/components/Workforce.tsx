@@ -1,16 +1,41 @@
-import { Minus, Plus, Users, ArrowUpRight } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import {
+  Plus,
+  Users,
+  ArrowDown,
+  ArrowUpRight,
+  LockKeyhole,
+  RotateCcw,
+} from 'lucide-react';
 import { useGame } from '../hooks/useGame';
-import { jobs } from '../game/content/jobs';
+import { gameStore } from '../game/store';
 import { resources } from '../game/content/resources';
 import {
-  idleWorkers,
-  isJobUnlocked,
-  jobProduction,
+  getPopulationFootprint,
+  representedPopulation,
+  idlePopulation,
+  ownedUnits,
+  productionChains,
+  unitStatus,
+  unitById,
+  unitCosts,
+  maxCreatable,
+  creationBlockReason,
+} from '../game/engine/units';
+import {
   populationCost,
+  productionPerSecond,
+  unitProduction,
+  upgradePreview,
 } from '../game/engine/production';
-import { gameStore } from '../game/store';
 import { D, formatNumber } from '../game/utils/numbers';
+import type {
+  GameState,
+  ProductionUnitDefinition,
+  GameAction,
+} from '../game/types';
 import { ResourceIcon } from './common';
+import { useWorkbookNavigation } from './navigation';
 
 export function GrowButton() {
   const { state } = useGame(),
@@ -40,141 +65,364 @@ export function GrowButton() {
     </button>
   );
 }
-export function Workforce({ compact = false }: { compact?: boolean }) {
-  const { state } = useGame(),
-    idle = idleWorkers(state);
+function ProductionValues({
+  values,
+  signed = false,
+}: {
+  values: Record<string, ReturnType<typeof D>>;
+  signed?: boolean;
+}) {
   return (
-    <div className="panel workforce">
-      <div className="panel-heading">
-        <div>
-          <h2>{compact ? 'Your workforce' : 'Workforce allocation'}</h2>
-          {!compact && (
-            <p>Give everyone a purpose. Changes take effect immediately.</p>
-          )}
-        </div>
-        <span className="idle-badge">
-          <span className="tiny-dot" />
-          {formatNumber(idle, 0)} idle
+    <>
+      {Object.entries(values).map(([id, amount]) => (
+        <span className="chain-production-value" key={id}>
+          {signed && amount.gte(0) ? '+' : ''}
+          {formatNumber(amount)}{' '}
+          <small>{resources.find((r) => r.id === id)?.name ?? id}/s</small>
         </span>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Occupation</th>
-            <th className="numeric">Workers</th>
-            <th className="numeric">Production</th>
-          </tr>
-        </thead>
-        <tbody>
-          {jobs
-            .filter((j) => isJobUnlocked(state, j))
-            .map((j) => {
-              const production = jobProduction(state, j),
-                count = state.jobAssignments[j.id];
-              return (
-                <tr key={j.id}>
-                  <td>
-                    <span className="resource-name">
-                      <span className="job-symbol">
-                        <ResourceIcon id={j.production[0].resource} />
-                      </span>
-                      <span>
-                        {j.name}
-                        {!compact && <small>{j.description}</small>}
-                      </span>
-                    </span>
-                  </td>
-                  <td>
-                    <div className="stepper">
-                      <button
-                        aria-label={`Remove ${j.name}`}
-                        title={
-                          count.lt(1)
-                            ? 'No workers to remove'
-                            : `Remove one ${j.name}`
-                        }
-                        disabled={count.lt(1)}
-                        onClick={() =>
-                          gameStore.dispatch({
-                            type: 'assign',
-                            job: j.id,
-                            amount: -1,
-                          })
-                        }
-                      >
-                        <Minus size={13} />
-                      </button>
-                      <span>{formatNumber(count, 0)}</span>
-                      <button
-                        aria-label={`Assign ${j.name}`}
-                        title={
-                          idle.lt(1)
-                            ? 'Grow population or free a worker first'
-                            : `Assign one ${j.name}`
-                        }
-                        disabled={idle.lt(1)}
-                        onClick={() =>
-                          gameStore.dispatch({
-                            type: 'assign',
-                            job: j.id,
-                            amount: 1,
-                          })
-                        }
-                      >
-                        <Plus size={13} />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="numeric">
-                    {j.production.map((p) => (
-                      <div className="job-output" key={p.resource}>
-                        +{formatNumber(production[p.resource] ?? D())}
-                        <span className="unit">
-                          {' '}
-                          {resources.find((r) => r.id === p.resource)?.name}/s
-                        </span>
-                      </div>
-                    ))}
-                  </td>
-                </tr>
-              );
-            })}
-        </tbody>
-      </table>
-      <div className="table-foot">
-        <Users size={13} />
-        {formatNumber(state.population.sub(idle), 0)} assigned /{' '}
-        {formatNumber(state.population, 0)} total
-        <span className="foot-right">
-          <ArrowUpRight size={13} />
-          Always working
-        </span>
-      </div>
-    </div>
+      ))}
+    </>
   );
 }
-export function PopulationSheet() {
-  const { state } = useGame();
+function UnitCard({
+  unit,
+  state,
+}: {
+  unit: ProductionUnitDefinition;
+  state: GameState;
+}) {
+  const status = unitStatus(state, unit),
+    count = ownedUnits(state, unit.id),
+    maximum = maxCreatable(state, unit);
+  const production = unitProduction(state, unit),
+    perUnit = unitProduction(state, unit, 1);
+  const reason = creationBlockReason(state, unit),
+    source = unit.upgradeFrom ? unitById(unit.upgradeFrom.unitId)! : null;
+  const preview = upgradePreview(state, unit);
+  function act(
+    type: Extract<GameAction, { unitId: string }>['type'],
+    amount: number | 'max',
+  ) {
+    gameStore.dispatch({ type, unitId: unit.id, amount });
+  }
+  if (status === 'revealed')
+    return (
+      <article
+        className="unit-card locked-unit"
+        aria-label={`Locked tier ${unit.tier}`}
+      >
+        <div className="unit-card-heading">
+          <span className="tag">Tier {formatNumber(unit.tier, 0)}</span>
+          <LockKeyhole size={16} />
+        </div>
+        <h3>???</h3>
+        <p>Requires new technology</p>
+        <span className="locked-tier-note">
+          A new way to put your people to work.
+        </span>
+      </article>
+    );
+  return (
+    <article
+      className={`unit-card ${count.gt(0) ? 'unit-owned' : ''}`}
+      data-unit={unit.id}
+      aria-label={unit.name}
+    >
+      <div className="unit-card-heading">
+        <span className="tag">Tier {formatNumber(unit.tier, 0)}</span>
+        <span className="unit-state">
+          {status === 'owned' ? 'Owned' : 'Available'}
+        </span>
+      </div>
+      <h3>{unit.name}</h3>
+      <p className="unit-description">{unit.description}</p>
+      <div className="unit-owned-row">
+        <strong>{formatNumber(count, 0)}</strong>
+        <span>
+          units
+          <small>
+            {formatNumber(count.mul(getPopulationFootprint(unit.id)), 0)} people
+            represented
+          </small>
+        </span>
+      </div>
+      <div className="unit-production">
+        <ProductionValues values={production} signed />
+        <span className="per-unit-rate">
+          <ProductionValues values={perUnit} /> per unit
+        </span>
+      </div>
+      <div className="unit-footprint">
+        <Users size={12} />
+        {formatNumber(getPopulationFootprint(unit.id), 0)}{' '}
+        {getPopulationFootprint(unit.id).eq(1) ? 'person' : 'people'} per unit
+      </div>
+      <div className="unit-requirements">
+        <span className="field-label">
+          {source ? 'Requires per upgrade' : 'Recruitment cost'}
+        </span>
+        {source && unit.upgradeFrom ? (
+          <div>
+            <span>{source.name} units</span>
+            <strong
+              className={
+                ownedUnits(state, source.id).lt(unit.upgradeFrom.amount)
+                  ? 'insufficient'
+                  : ''
+              }
+            >
+              {formatNumber(unit.upgradeFrom.amount, 0)}
+            </strong>
+          </div>
+        ) : (
+          <div>
+            <span>Idle Population</span>
+            <strong>{formatNumber(getPopulationFootprint(unit.id), 0)}</strong>
+          </div>
+        )}
+        {unitCosts(unit).map((c) => (
+          <div key={c.resource}>
+            <span>
+              {resources.find((r) => r.id === c.resource)?.name ?? c.resource}
+            </span>
+            <strong
+              className={
+                state.resources[c.resource].lt(c.amount) ? 'insufficient' : ''
+              }
+            >
+              {formatNumber(c.amount)}
+            </strong>
+          </div>
+        ))}
+      </div>
+      {source ? (
+        <>
+          <details className="upgrade-details">
+            <summary>
+              Production comparison
+              <ArrowUpRight size={12} />
+            </summary>
+            {preview && (
+              <>
+                <div>
+                  <span>Replaces</span>
+                  <ProductionValues values={preview.replaced} />
+                </div>
+                <div>
+                  <span>New unit</span>
+                  <ProductionValues values={preview.produced} />
+                </div>
+                <div className="upgrade-gain">
+                  <span>Net gain</span>
+                  <ProductionValues
+                    values={Object.fromEntries(
+                      Object.entries(preview.gain).filter(
+                        ([id, amount]) => id === unit.category || !amount.eq(0),
+                      ),
+                    )}
+                    signed
+                  />
+                </div>
+              </>
+            )}
+          </details>
+          <div className="unit-buttons upgrade-buttons">
+            <button
+              className="button primary"
+              aria-label={`Upgrade 1 ${unit.name}`}
+              disabled={maximum.lt(1)}
+              title={
+                reason ??
+                `Create 1 ${unit.name} from ${unit.upgradeFrom!.amount} ${source.name} units`
+              }
+              onClick={() => act('upgrade', 1)}
+            >
+              Upgrade 1
+            </button>
+            <button
+              className="button"
+              aria-label={`Upgrade Max ${unit.name}`}
+              disabled={maximum.lt(1)}
+              title={reason ?? `Upgrade ${formatNumber(maximum, 0)} units`}
+              onClick={() => act('upgrade', 'max')}
+            >
+              Upgrade Max
+            </button>
+          </div>
+          <div className="unit-buttons dismantle-buttons">
+            <button
+              aria-label={`Dismantle 1 ${unit.name}`}
+              disabled={count.lt(1)}
+              title={
+                count.lt(1)
+                  ? 'No units to dismantle'
+                  : `Returns ${unit.upgradeFrom!.amount} ${source.name} units; resources are not refunded`
+              }
+              onClick={() => act('dismantle', 1)}
+            >
+              <RotateCcw size={11} />
+              Dismantle 1
+            </button>
+            <button
+              aria-label={`Dismantle All ${unit.name}`}
+              disabled={count.lt(1)}
+              title="Return all units to their previous tier; resources are not refunded"
+              onClick={() => act('dismantle', 'max')}
+            >
+              All
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="unit-buttons recruit-buttons">
+            {[1, 10, 'max'].map((quantity) => {
+              const n = quantity === 'max' ? maximum : D(quantity);
+              const blocked =
+                quantity === 'max' ? maximum.lt(1) : maximum.lt(n);
+              return (
+                <button
+                  className="button"
+                  key={quantity}
+                  aria-label={`Recruit ${quantity === 'max' ? 'Max' : quantity} ${unit.name}`}
+                  disabled={blocked}
+                  title={
+                    blocked
+                      ? (creationBlockReason(
+                          state,
+                          unit,
+                          quantity === 'max' ? 1 : quantity,
+                        ) ?? 'No units available')
+                      : `Recruit ${formatNumber(n, 0)} units`
+                  }
+                  onClick={() =>
+                    act(
+                      'recruit',
+                      quantity === 'max' ? 'max' : Number(quantity),
+                    )
+                  }
+                >
+                  {quantity === 'max' ? 'Max' : `+${quantity}`}
+                </button>
+              );
+            })}
+          </div>
+          <div className="unit-buttons release-buttons">
+            {[1, 10, 'max'].map((quantity) => (
+              <button
+                key={quantity}
+                aria-label={`Release ${quantity === 'max' ? 'All' : quantity} ${unit.name}`}
+                disabled={count.lt(quantity === 'max' ? 1 : quantity)}
+                title="Return these people to Idle Population"
+                onClick={() =>
+                  act('release', quantity === 'max' ? 'max' : Number(quantity))
+                }
+              >
+                {quantity === 'max' ? 'All' : `−${quantity}`}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+      {reason && <p className="unit-block-reason">{reason}</p>}
+    </article>
+  );
+}
+export function WorkforceSheet() {
+  const { state } = useGame(),
+    { workforceFocus } = useWorkbookNavigation();
+  const columns = useRef<Record<string, HTMLElement | null>>({});
+  const chains = productionChains(state),
+    rates = productionPerSecond(state);
+  useEffect(() => {
+    if (!workforceFocus) return;
+    const target = columns.current[workforceFocus.resource];
+    target?.querySelector('header')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+      inline: 'nearest',
+    });
+    target?.focus({ preventScroll: true });
+  }, [workforceFocus]);
   return (
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">PEOPLE & PURPOSE</div>
-          <h1>A tribe, working together.</h1>
-          <p>Small contributions add up to something bigger.</p>
+          <div className="eyebrow">PEOPLE · PRODUCTION · PROGRESS</div>
+          <h1>A workforce that grows together.</h1>
+          <p>
+            Recruit your first units. Build the next tier from the people
+            already working.
+          </p>
         </div>
         <GrowButton />
       </div>
-      <div className="population-banner">
-        <Users size={23} />
+      <div className="population-accounting">
         <div>
-          <strong>{formatNumber(state.population, 0)} people</strong>
-          <span>
-            {formatNumber(idleWorkers(state), 0)} available for a new role
-          </span>
+          <span>Total Population</span>
+          <strong>{formatNumber(state.population, 0)}</strong>
+        </div>
+        <span className="accounting-symbol">=</span>
+        <div>
+          <span>In production units</span>
+          <strong>{formatNumber(representedPopulation(state), 0)}</strong>
+        </div>
+        <span className="accounting-symbol">+</span>
+        <div className="idle-account">
+          <span>Idle Population</span>
+          <strong>{formatNumber(idlePopulation(state), 0)}</strong>
         </div>
       </div>
-      <Workforce />
+      <div className="production-chains">
+        {chains.map(({ resource, units: chain }) => (
+          <section
+            className={`production-chain ${workforceFocus?.resource === resource.id ? 'selected-chain' : ''}`}
+            key={resource.id}
+            data-category={resource.id}
+            tabIndex={-1}
+            aria-label={
+              resource.productionLabel ?? `${resource.name} Production`
+            }
+            ref={(element) => {
+              columns.current[resource.id] = element;
+            }}
+          >
+            <header className="chain-heading">
+              <span className="chain-icon" style={{ color: resource.color }}>
+                <ResourceIcon id={resource.id} size={20} />
+              </span>
+              <div>
+                <h2>
+                  {resource.productionLabel ?? `${resource.name} Production`}
+                </h2>
+                <span>
+                  {formatNumber(state.resources[resource.id])} available{' '}
+                  <b>+{formatNumber(rates[resource.id])}/s</b>
+                </span>
+              </div>
+            </header>
+            <div className="chain-units">
+              {chain.map((unit) => (
+                <div className="chain-tier" key={unit.id}>
+                  {unit.upgradeFrom && (
+                    <div className="chain-connector">
+                      <ArrowDown size={17} />
+                      <span>
+                        {formatNumber(unit.upgradeFrom.amount, 0)} → 1
+                      </span>
+                    </div>
+                  )}
+                  <UnitCard state={state} unit={unit} />
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+      <p className="sheet-note">
+        Upgrades keep the same population. Dismantling returns the previous
+        units; upgrade resource costs are not refunded.
+      </p>
     </>
   );
 }

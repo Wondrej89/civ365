@@ -2,11 +2,28 @@ import { technologies } from '../content/technologies';
 import { skills } from '../content/skills';
 import { achievements } from '../content/achievements';
 import { eras } from '../content/eras';
+import { units } from '../content/units';
 import type { GameEffect, GameState } from '../types';
 import { D } from '../utils/numbers';
 
 export function activeEffects(state: GameState): GameEffect[] {
   return [
+    ...units.flatMap((unit) => {
+      const count = state.productionUnits[unit.id] ?? D();
+      if (count.lte(0)) return [];
+      return (unit.effects ?? [])
+        .filter((e) => e.type !== 'grantResource')
+        .map((effect) => {
+          if (!('value' in effect)) return effect;
+          return {
+            ...effect,
+            value:
+              effect.type === 'productionFlatBonus'
+                ? D(effect.value).mul(count)
+                : D(effect.value).pow(count),
+          };
+        });
+    }),
     ...technologies
       .filter((t) => state.researchedTechnologies.includes(t.id))
       .flatMap((t) => t.effects),

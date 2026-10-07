@@ -29,8 +29,8 @@ export function HelpSheet() {
             <h2>Grow together</h2>
             <p>
               Spend Food to welcome new people. The cost grows with your
-              population. Assign available workers to keep resources coming in
-              automatically.
+              population. Open Workforce to recruit from Idle Population.
+              Upgrades combine lower-tier units; dismantling restores them.
             </p>
           </div>
         )}
@@ -59,9 +59,9 @@ export function HelpSheet() {
         <div className="panel">
           <h2>Come back to more</h2>
           <p>
-            Assigned workers produce for up to 8 hours while you’re away.
-            Progress is stored in this browser every 10 seconds. Use Settings to
-            export a backup or move your game to another browser.
+            Production units work for up to 8 hours while you’re away. Progress
+            is stored in this browser every 10 seconds. Use Settings to export a
+            backup or move your game to another browser.
           </p>
         </div>
       </div>

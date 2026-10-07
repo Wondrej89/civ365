@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState } from '../state';
 import { applyAction, simulate } from '../engine/simulation';
-import {
-  productionPerSecond,
-  populationCost,
-  idleWorkers,
-} from '../engine/production';
+import { productionPerSecond, populationCost } from '../engine/production';
+import { idlePopulation } from '../engine/units';
 import { evaluateCondition, isFeatureUnlocked } from '../engine/conditions';
 import {
   activeEffects,
@@ -89,42 +86,42 @@ describe('opening and feature discovery', () => {
 });
 
 describe('workforce and production', () => {
-  it('cannot overassign, assign fractions, negative workers, or locked jobs', () => {
+  it('rejects excess recruitment, fractions, empty releases and locked units', () => {
     const s = developed(2);
-    expect(applyAction(s, { type: 'assign', job: 'gatherer', amount: 3 })).toBe(
-      s,
-    );
     expect(
-      applyAction(s, { type: 'assign', job: 'gatherer', amount: 0.5 }),
+      applyAction(s, { type: 'recruit', unitId: 'gatherer', amount: 3 }),
     ).toBe(s);
     expect(
-      applyAction(s, { type: 'assign', job: 'gatherer', amount: -1 }),
+      applyAction(s, { type: 'recruit', unitId: 'gatherer', amount: 0.5 }),
     ).toBe(s);
-    expect(applyAction(s, { type: 'assign', job: 'thinker', amount: 1 })).toBe(
-      s,
-    );
-    expect(applyAction(s, { type: 'assign', job: 'farmer', amount: 1 })).toBe(
-      s,
-    );
+    expect(
+      applyAction(s, { type: 'release', unitId: 'gatherer', amount: 1 }),
+    ).toBe(s);
+    expect(
+      applyAction(s, { type: 'recruit', unitId: 'thinker', amount: 1 }),
+    ).toBe(s);
+    expect(
+      applyAction(s, { type: 'recruit', unitId: 'farmer', amount: 1 }),
+    ).toBe(s);
   });
-  it('assigns immediately, produces by elapsed time, and frees workers', () => {
+  it('recruits immediately, produces by elapsed time, and releases people', () => {
     let s = applyAction(developed(2), {
-      type: 'assign',
-      job: 'gatherer',
+      type: 'recruit',
+      unitId: 'gatherer',
       amount: 2,
     });
-    expect(idleWorkers(s).eq(0)).toBe(true);
-    expect(productionPerSecond(s).food.toNumber()).toBeCloseTo(0.408);
+    expect(idlePopulation(s).eq(0)).toBe(true);
+    expect(productionPerSecond(s).food.toNumber()).toBeCloseTo(1.02);
     const before = s.resources.food;
     s = simulate(s, 5);
-    expect(s.resources.food.sub(before).toNumber()).toBeCloseTo(2.04);
-    s = applyAction(s, { type: 'assign', job: 'gatherer', amount: -1 });
-    expect(idleWorkers(s).eq(1)).toBe(true);
+    expect(s.resources.food.sub(before).toNumber()).toBeCloseTo(5.1);
+    s = applyAction(s, { type: 'release', unitId: 'gatherer', amount: 1 });
+    expect(idlePopulation(s).eq(1)).toBe(true);
   });
   it('is independent of tick frequency', () => {
     const s = applyAction(developed(), {
-      type: 'assign',
-      job: 'woodcutter',
+      type: 'recruit',
+      unitId: 'woodcutter',
       amount: 2,
     });
     let small = s;
@@ -203,14 +200,14 @@ describe('technology, effects, achievements, and eras', () => {
   });
   it('multiplicatively combines technology and skill bonuses without changing base data', () => {
     let s = applyAction(developed(), {
-      type: 'assign',
-      job: 'woodcutter',
+      type: 'recruit',
+      unitId: 'woodcutter',
       amount: 1,
     });
     s = buy(buy(s, 'foraging'), 'toolMaking');
     s.purchasedSkills.efficientHands = 1;
     expect(productionPerSecond(s).materials.toNumber()).toBeCloseTo(
-      0.2 * 1.25 * 1.1,
+      0.5 * 1.25 * 1.1,
     );
     const effects = [
       { type: 'productionMultiplier' as const, resource: 'food', value: 2 },
@@ -249,12 +246,12 @@ describe('technology, effects, achievements, and eras', () => {
     });
     try {
       let s = applyAction(developed(), {
-        type: 'assign',
-        job: 'woodcutter',
+        type: 'recruit',
+        unitId: 'woodcutter',
         amount: 1,
       });
       s = buy(s, 'testEffects');
-      expect(productionPerSecond(s).materials.toNumber()).toBeCloseTo(4.8);
+      expect(productionPerSecond(s).materials.toNumber()).toBeCloseTo(8.4);
       expect(isFeatureUnlocked(s, 'economy')).toBe(true);
       expect(s.resources.civilizationPoints.eq(2)).toBe(true);
       s = simulate(s, 20);
@@ -266,7 +263,7 @@ describe('technology, effects, achievements, and eras', () => {
   it('awards production achievements once, during the simulation', () => {
     let s = developed();
     s.resources.research = D();
-    s = applyAction(s, { type: 'assign', job: 'thinker', amount: 1 });
+    s = applyAction(s, { type: 'recruit', unitId: 'thinker', amount: 1 });
     s = simulate(s, 70);
     expect(s.achievements).toContain('curious');
     const count = s.eventLog.filter((e) =>
@@ -282,7 +279,8 @@ describe('technology, effects, achievements, and eras', () => {
     for (const id of ['language', 'knowledgeSharing', 'agriculture'])
       s = buy(s, id);
     expect(applyAction(s, { type: 'advance', id: 'agricultural' })).toBe(s);
-    s = applyAction(s, { type: 'assign', job: 'farmer', amount: 1 });
+    s = applyAction(s, { type: 'recruit', unitId: 'gatherer', amount: 5 });
+    s = applyAction(s, { type: 'upgrade', unitId: 'farmer', amount: 1 });
     expect(productionPerSecond(s).food.gt(0.85)).toBe(true);
     s = applyAction(s, { type: 'grow' });
     const resourcesBefore = s.resources.food;
@@ -347,10 +345,10 @@ describe('technology, effects, achievements, and eras', () => {
 });
 
 describe('saves and offline production', () => {
-  it('roundtrips Decimal values, assignments, events, and settings through JSON and Base64', () => {
+  it('roundtrips Decimal values, units, events, and settings through JSON and Base64', () => {
     let s = applyAction(developed(), {
-      type: 'assign',
-      job: 'thinker',
+      type: 'recruit',
+      unitId: 'thinker',
       amount: 1,
     });
     s = buy(s, 'foraging');
@@ -359,7 +357,7 @@ describe('saves and offline production', () => {
     const restored = importSave(exportSave(s));
     expect(restored.resources.food.eq(s.resources.food)).toBe(true);
     expect(restored.population.eq(s.population)).toBe(true);
-    expect(restored.jobAssignments.thinker.eq(1)).toBe(true);
+    expect(restored.productionUnits.thinker.eq(1)).toBe(true);
     expect(restored.researchedTechnologies).toEqual(s.researchedTechnologies);
     expect(restored.settings.notifications).toBe(false);
     expect(restored.eventLog).toEqual(s.eventLog);
@@ -380,7 +378,7 @@ describe('saves and offline production', () => {
     raw.resources.food = 'NaN';
     expect(() => deserializeSave(raw)).toThrow();
     raw.resources.food = '100';
-    raw.jobAssignments.gatherer = '6';
+    raw.productionUnits.gatherer = '6';
     expect(() => deserializeSave(raw)).toThrow();
   });
   it('refuses saves missing required initial features or era history', () => {
@@ -392,25 +390,33 @@ describe('saves and offline production', () => {
     raw.currentEra = 'agricultural';
     expect(() => deserializeSave(raw)).toThrow('era history');
   });
-  it('rejects workers in jobs that have not been discovered', () => {
+  it('rejects owned units that have not been discovered', () => {
     const raw = JSON.parse(serializeSave(initial()));
-    raw.jobAssignments.farmer = '1';
-    expect(() => deserializeSave(raw)).toThrow('undiscovered job');
+    raw.population = '5';
+    raw.productionUnits.farmer = '1';
+    expect(() => deserializeSave(raw)).toThrow('undiscovered unit');
   });
   it('migrates version zero before validation and refuses future versions', () => {
     const raw = JSON.parse(serializeSave(initial()));
     raw.saveVersion = 0;
+    raw.jobAssignments = {
+      gatherer: '0',
+      woodcutter: '0',
+      thinker: '0',
+      farmer: '0',
+    };
+    delete raw.productionUnits;
     delete raw.settings;
     delete raw.reachedEras;
     delete raw.announcedEras;
-    expect(migrateSave(raw).saveVersion).toBe(1);
+    expect(migrateSave(raw).saveVersion).toBe(2);
     expect(deserializeSave(raw).settings.notifications).toBe(true);
-    expect(() => migrateSave({ saveVersion: 2 })).toThrow('Unsupported');
+    expect(() => migrateSave({ saveVersion: 3 })).toThrow('Unsupported');
   });
   it('uses the same simulation offline, including achievements and their changing bonuses', () => {
     const s = applyAction(developed(), {
-      type: 'assign',
-      job: 'thinker',
+      type: 'recruit',
+      unitId: 'thinker',
       amount: 1,
     });
     const { state, report } = applyOfflineProgress(s, 181_000),
@@ -421,14 +427,14 @@ describe('saves and offline production', () => {
   });
   it('caps offline progress at 8 hours and resets the clock to avoid a second award', () => {
     const s = applyAction(developed(2), {
-      type: 'assign',
-      job: 'gatherer',
+      type: 'recruit',
+      unitId: 'gatherer',
       amount: 1,
     });
     const now = s.lastSimulationTime + 24 * 3600 * 1000,
       { state, report } = applyOfflineProgress(s, now);
     expect(report?.simulatedSeconds).toBe(28800);
-    expect(report?.produced.food.toNumber()).toBeCloseTo(0.204 * 28800);
+    expect(report?.produced.food.toNumber()).toBeCloseTo(0.51 * 28800);
     expect(
       applyOfflineProgress(state, now).state.resources.food.eq(
         state.resources.food,
@@ -504,27 +510,31 @@ it('completes the opening-to-skills loop without resource cheats or hundreds of 
   for (let i = 0; i < 10; i++)
     s = applyAction(s, { type: 'gather', resource: 'food' });
   s = applyAction(s, { type: 'grow' });
-  s = applyAction(s, { type: 'assign', job: 'gatherer', amount: 2 });
+  s = applyAction(s, { type: 'recruit', unitId: 'gatherer', amount: 2 });
   let elapsed = 0;
   while (s.currentEra !== 'agricultural' && elapsed < 1800) {
     s = simulate(s, 1);
     elapsed++;
     if (s.population.lt(20)) s = applyAction(s, { type: 'grow' });
-    if (s.population.gte(5) && s.jobAssignments.thinker.eq(0)) {
-      if (idleWorkers(s).eq(0))
-        s = applyAction(s, { type: 'assign', job: 'gatherer', amount: -1 });
-      s = applyAction(s, { type: 'assign', job: 'thinker', amount: 1 });
+    if (s.population.gte(5) && s.productionUnits.thinker.eq(0)) {
+      if (idlePopulation(s).eq(0))
+        s = applyAction(s, { type: 'release', unitId: 'gatherer', amount: 1 });
+      s = applyAction(s, { type: 'recruit', unitId: 'thinker', amount: 1 });
     }
-    if (s.population.gte(5) && s.jobAssignments.woodcutter.eq(0)) {
-      if (idleWorkers(s).eq(0))
-        s = applyAction(s, { type: 'assign', job: 'gatherer', amount: -1 });
-      s = applyAction(s, { type: 'assign', job: 'woodcutter', amount: 1 });
+    if (s.population.gte(5) && s.productionUnits.woodcutter.eq(0)) {
+      if (idlePopulation(s).eq(0))
+        s = applyAction(s, { type: 'release', unitId: 'gatherer', amount: 1 });
+      s = applyAction(s, { type: 'recruit', unitId: 'woodcutter', amount: 1 });
     }
-    const job = s.researchedTechnologies.includes('agriculture')
-      ? 'farmer'
-      : 'gatherer';
-    if (idleWorkers(s).gt(0))
-      s = applyAction(s, { type: 'assign', job, amount: idleWorkers(s) });
+    const unitId = 'gatherer';
+    if (idlePopulation(s).gt(0))
+      s = applyAction(s, {
+        type: 'recruit',
+        unitId,
+        amount: idlePopulation(s),
+      });
+    if (s.researchedTechnologies.includes('agriculture'))
+      s = applyAction(s, { type: 'upgrade', unitId: 'farmer', amount: 'max' });
     for (const id of [
       'language',
       'knowledgeSharing',

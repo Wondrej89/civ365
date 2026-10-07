@@ -32,7 +32,7 @@ export const guidance: {
     visible: { type: 'featureUnlocked', featureId: 'jobs' },
     complete: { type: 'statAtLeast', stat: 'assignedWorkers', value: 1 },
     title: 'Let your people help',
-    text: 'Assign a Gatherer below. They will keep finding Food, even while you’re away.',
+    text: 'Open Food Production and recruit a Gatherer from Idle Population. They keep finding Food, even while you’re away.',
   },
   {
     id: 'grow',
@@ -47,7 +47,7 @@ export const guidance: {
     visible: { type: 'featureUnlocked', featureId: 'research' },
     complete: { type: 'statAtLeast', stat: 'totalResearchProduced', value: 1 },
     title: 'Give curiosity a little time',
-    text: 'Assign a Thinker to produce Research. Open the Research sheet to discover your first technologies.',
+    text: 'Open Research Production and recruit a Thinker. Then explore the Research sheet to discover your first technologies.',
   },
   {
     id: 'discover',
@@ -61,7 +61,7 @@ export const guidance: {
     visible: { type: 'technologyOwned', technologyId: 'agriculture' },
     complete: { type: 'eraReached', eraId: 'agricultural' },
     title: 'Put down roots',
-    text: 'Assign Farmers and reach 20 people. Your next chapter is almost here.',
+    text: 'Upgrade 5 Gatherers into a Farmer in Food Production and reach 20 people. Your next chapter is almost here.',
     target: 20,
   },
   {

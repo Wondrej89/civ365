@@ -27,9 +27,11 @@ import {
   ResourceLedger,
   visibleResources,
 } from './common';
-import { GrowButton, Workforce } from './Workforce';
+import { GrowButton } from './Workforce';
+import { useWorkbookNavigation } from './navigation';
 
 export function Overview() {
+  const { openWorkforce } = useWorkbookNavigation();
   const { state } = useGame();
   const era = eras.find((e) => e.id === state.currentEra)!;
   const nextEra = eras.find((e) => canAdvance(state, e));
@@ -69,7 +71,14 @@ export function Overview() {
       <div className="kpi-grid">
         <PopulationKpi state={state} />
         {visibleResources(state).map((r) => (
-          <ResourceKpi key={r.id} state={state} id={r.id} />
+          <ResourceKpi
+            key={r.id}
+            state={state}
+            id={r.id}
+            onOpenProduction={
+              isFeatureUnlocked(state, 'jobs') ? openWorkforce : undefined
+            }
+          />
         ))}
       </div>
       {nextEra && (
@@ -143,7 +152,6 @@ export function Overview() {
             )}
           </div>
           <ResourceLedger state={state} />
-          {isFeatureUnlocked(state, 'jobs') && <Workforce compact />}
         </div>
         <aside className="side-column">
           <div className="panel next-step">

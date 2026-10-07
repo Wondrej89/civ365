@@ -4,6 +4,7 @@ import {
   Lightbulb,
   Users,
   Sparkles,
+  ArrowUpRight,
   type LucideIcon,
 } from 'lucide-react';
 import { resources } from '../game/content/resources';
@@ -90,7 +91,15 @@ export function PopulationKpi({ state }: { state: GameState }) {
     </div>
   );
 }
-export function ResourceKpi({ state, id }: { state: GameState; id: string }) {
+export function ResourceKpi({
+  state,
+  id,
+  onOpenProduction,
+}: {
+  state: GameState;
+  id: string;
+  onOpenProduction?: (resource: string) => void;
+}) {
   const r = resources.find((r) => r.id === id)!;
   return (
     <div className="kpi">
@@ -105,6 +114,15 @@ export function ResourceKpi({ state, id }: { state: GameState; id: string }) {
         </span>
       </div>
       <p>{r.description}</p>
+      {onOpenProduction && (
+        <button
+          className="production-link"
+          onClick={() => onOpenProduction(id)}
+        >
+          Open {r.productionLabel ?? `${r.name} Production`}
+          <ArrowUpRight size={13} />
+        </button>
+      )}
     </div>
   );
 }

@@ -1,55 +1,48 @@
-import { jobs } from '../content/jobs';
+import { units } from '../content/units';
 import { resources } from '../content/resources';
 import { balance } from '../content/config';
-import { D, sum } from '../utils/numbers';
-import type { GameState, JobDefinition } from '../types';
+import { D } from '../utils/numbers';
+import { cloneState } from '../state';
+import type { Amount, GameState, ProductionUnitDefinition } from '../types';
+import { ownedUnits, unitById } from './units';
 import {
   activeEffects,
   populationModifier,
   productionModifier,
   resourceMultiplier,
 } from './effects';
-import { evaluateCondition } from './conditions';
-
-export const assignedWorkers = (state: GameState) =>
-  sum(Object.values(state.jobAssignments));
-export const idleWorkers = (state: GameState) =>
-  state.population.sub(assignedWorkers(state));
-export function isJobUnlocked(state: GameState, job: JobDefinition) {
-  return (
-    evaluateCondition(job.unlockedBy, state) ||
-    activeEffects(state).some((e) => e.type === 'unlockJob' && e.id === job.id)
-  );
-}
-export function jobProduction(state: GameState, job: JobDefinition) {
+export function unitProduction(
+  state: GameState,
+  unit: ProductionUnitDefinition,
+  count: Amount = ownedUnits(state, unit.id),
+) {
   const effects = activeEffects(state);
-  return Object.fromEntries(
-    job.production.map((p) => {
-      const modifier = effects.reduce(
-        (n, e) =>
-          e.type === 'jobProductionMultiplier' &&
-          e.job === job.id &&
-          (!e.resource || e.resource === p.resource)
-            ? n.mul(e.value)
-            : n,
-        D(1),
-      );
-      return [
-        p.resource,
-        D(p.amount)
-          .mul(state.jobAssignments[job.id] ?? D())
-          .mul(modifier)
-          .mul(productionModifier(effects, p.resource))
-          .mul(resourceMultiplier(effects, p.resource)),
-      ];
-    }),
-  );
+  const result: Record<string, ReturnType<typeof D>> = {};
+  for (const p of unit.baseProduction) {
+    const modifier = effects.reduce(
+      (n, e) =>
+        ((e.type === 'unitProductionMultiplier' && e.unit === unit.id) ||
+          (e.type === 'jobProductionMultiplier' && e.job === unit.id)) &&
+        (!e.resource || e.resource === p.resource)
+          ? n.mul(e.value)
+          : n,
+      D(1),
+    );
+    result[p.resource] = (result[p.resource] ?? D()).add(
+      D(p.amount)
+        .mul(count)
+        .mul(modifier)
+        .mul(productionModifier(effects, p.resource))
+        .mul(resourceMultiplier(effects, p.resource)),
+    );
+  }
+  return result;
 }
 export function productionPerSecond(state: GameState) {
   const result = Object.fromEntries(resources.map((r) => [r.id, D()]));
   const effects = activeEffects(state);
-  for (const job of jobs.filter((j) => isJobUnlocked(state, j))) {
-    for (const [resource, value] of Object.entries(jobProduction(state, job)))
+  for (const unit of units.filter((u) => ownedUnits(state, u.id).gt(0))) {
+    for (const [resource, value] of Object.entries(unitProduction(state, unit)))
       result[resource] = (result[resource] ?? D()).add(value);
   }
   for (const e of effects)
@@ -60,6 +53,32 @@ export function productionPerSecond(state: GameState) {
           .mul(resourceMultiplier(effects, e.resource)),
       );
   return result;
+}
+/** Include ownership effects gained/lost with the whole replacement group in the preview. */
+export function upgradePreview(
+  state: GameState,
+  unit: ProductionUnitDefinition,
+) {
+  if (!unit.upgradeFrom) return null;
+  const source = unitById(unit.upgradeFrom.unitId)!;
+  const before = cloneState(state);
+  before.productionUnits[source.id] = ownedUnits(state, source.id).max(
+    unit.upgradeFrom.amount,
+  );
+  const next = cloneState(before);
+  next.productionUnits[source.id] = before.productionUnits[source.id].sub(
+    unit.upgradeFrom.amount,
+  );
+  next.productionUnits[unit.id] = ownedUnits(state, unit.id).add(1);
+  const previous = productionPerSecond(before),
+    future = productionPerSecond(next);
+  return {
+    replaced: unitProduction(before, source, unit.upgradeFrom.amount),
+    produced: unitProduction(next, unit, 1),
+    gain: Object.fromEntries(
+      resources.map((r) => [r.id, future[r.id].sub(previous[r.id])]),
+    ),
+  };
 }
 export function populationCost(state: GameState) {
   const config = balance.populationGrowth;

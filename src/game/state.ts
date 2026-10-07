@@ -1,5 +1,5 @@
 import { resources } from './content/resources';
-import { jobs } from './content/jobs';
+import { units } from './content/units';
 import { balance } from './content/config';
 import { D } from './utils/numbers';
 import type { GameState } from './types';
@@ -24,7 +24,7 @@ export function createInitialState(now = Date.now()): GameState {
     lastSimulationTime: now,
     resources: Object.fromEntries(resources.map((r) => [r.id, D()])),
     population: D(1),
-    jobAssignments: Object.fromEntries(jobs.map((j) => [j.id, D()])),
+    productionUnits: Object.fromEntries(units.map((u) => [u.id, D()])),
     researchedTechnologies: [],
     purchasedSkills: {},
     achievements: [],
@@ -52,7 +52,7 @@ export function cloneState(state: GameState): GameState {
   return {
     ...state,
     resources: { ...state.resources },
-    jobAssignments: { ...state.jobAssignments },
+    productionUnits: { ...state.productionUnits },
     researchedTechnologies: [...state.researchedTechnologies],
     purchasedSkills: { ...state.purchasedSkills },
     achievements: [...state.achievements],

@@ -2,13 +2,13 @@ import Decimal from 'break_infinity.js';
 import { createInitialState, statisticIds } from '../state';
 import { balance } from '../content/config';
 import { resources } from '../content/resources';
-import { jobs } from '../content/jobs';
+import { units } from '../content/units';
 import { technologies } from '../content/technologies';
 import { skills } from '../content/skills';
 import { achievements } from '../content/achievements';
 import { eras } from '../content/eras';
 import { features } from '../content/features';
-import { isJobUnlocked } from '../engine/production';
+import { isUnitUnlocked, representedPopulation } from '../engine/units';
 import { sum } from '../utils/numbers';
 import type { GameEvent, GameState } from '../types';
 
@@ -52,7 +52,7 @@ function ids(value: unknown, allowed: string[]): string[] {
     throw new Error('Unknown or duplicate content in save.');
   return value as string[];
 }
-/** Version-zero prototype migration; future migrations can be chained here before validation. */
+/** Chain legacy versions before validating the current format. Never invent population. */
 export function migrateSave(value: unknown): Obj {
   const save = { ...object(value) };
   if (save.saveVersion === 0) {
@@ -63,6 +63,58 @@ export function migrateSave(value: unknown): Obj {
         ? ['tribal', 'agricultural']
         : ['tribal'];
     save.announcedEras ??= [];
+  }
+  if (save.saveVersion === 1) {
+    const assignments = object(save.jobAssignments);
+    const legacyIds = units.flatMap((u) => u.legacyJobs ?? []);
+    for (const [id, value] of Object.entries(assignments)) {
+      if (!legacyIds.includes(id)) throw new Error('Unknown legacy job.');
+      decimal(value, true);
+    }
+    if (
+      sum(Object.values(assignments).map((value) => decimal(value, true))).gt(
+        decimal(save.population, true),
+      )
+    )
+      throw new Error('Assigned workers exceed population.');
+    // An old Farmer represented one person, so it becomes one Gatherer, not a five-person Farmer.
+    save.productionUnits = Object.fromEntries(
+      units.map((u) => [
+        u.id,
+        sum(
+          (u.legacyJobs ?? []).map((id) =>
+            decimal(assignments[id] ?? '0', true),
+          ),
+        ).toString(),
+      ]),
+    );
+    if (decimal(assignments.farmer ?? '0', true).gt(0)) {
+      if (
+        !Array.isArray(save.researchedTechnologies) ||
+        !save.researchedTechnologies.includes('agriculture')
+      )
+        throw new Error('Legacy Farmers require Agriculture.');
+      if (
+        !Array.isArray(save.eventLog) ||
+        save.eventLog.length > balance.eventLimit
+      )
+        throw new Error('Invalid event log.');
+      const id = timestamp(save.nextEventId);
+      save.eventLog = [
+        ...save.eventLog,
+        {
+          id,
+          time: timestamp(save.savedAt),
+          message:
+            'Workforce updated: previous Farmers are now Gatherers, preserving every person. Upgrade 5 Gatherers into a Farmer in Workforce.',
+          kind: 'system',
+          notify: true,
+        },
+      ].slice(-balance.eventLimit);
+      save.nextEventId = id + 1;
+    }
+    delete save.jobAssignments;
+    save.saveVersion = 2;
   }
   if (save.saveVersion !== balance.saveVersion)
     throw new Error(
@@ -79,14 +131,16 @@ export function deserializeSave(value: unknown): GameState {
   if (state.population.lt(1))
     throw new Error('A civilization needs at least one person.');
   const rawResources = object(raw.resources),
-    rawJobs = object(raw.jobAssignments),
+    rawUnits = object(raw.productionUnits),
     rawStats = object(raw.statistics);
   for (const r of resources)
     state.resources[r.id] = decimal(rawResources[r.id] ?? '0');
-  for (const j of jobs)
-    state.jobAssignments[j.id] = decimal(rawJobs[j.id] ?? '0', true);
-  if (sum(Object.values(state.jobAssignments)).gt(state.population))
-    throw new Error('Assigned workers exceed population.');
+  if (Object.keys(rawUnits).some((id) => !units.some((u) => u.id === id)))
+    throw new Error('Unknown production unit.');
+  for (const unit of units)
+    state.productionUnits[unit.id] = decimal(rawUnits[unit.id] ?? '0', true);
+  if (representedPopulation(state).gt(state.population))
+    throw new Error('Production units exceed population.');
   for (const id of new Set([
     ...statisticIds,
     ...resources.map(
@@ -190,11 +244,13 @@ export function deserializeSave(value: unknown): GameState {
   if (state.eventLog.some((e) => e.id >= state.nextEventId))
     throw new Error('Invalid event sequence.');
   if (
-    jobs.some(
-      (job) => state.jobAssignments[job.id].gt(0) && !isJobUnlocked(state, job),
+    units.some(
+      (unit) =>
+        state.productionUnits[unit.id].gt(0) && !isUnitUnlocked(state, unit),
     )
   )
-    throw new Error('Workers assigned to an undiscovered job.');
+    throw new Error('Save contains an undiscovered unit.');
+  state.statistics.assignedWorkers = representedPopulation(state);
   return state;
 }
 export function serializeSave(state: GameState, now = Date.now()): string {
@@ -207,7 +263,7 @@ export function serializeSave(state: GameState, now = Date.now()): string {
     savedAt: now,
     population: state.population.toString(),
     resources: decimals(state.resources),
-    jobAssignments: decimals(state.jobAssignments),
+    productionUnits: decimals(state.productionUnits),
     statistics: decimals(state.statistics),
   });
 }
