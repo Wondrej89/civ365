@@ -1,0 +1,98 @@
+import type { TechnologyDefinition } from '../types';
+export const technologies: TechnologyDefinition[] = [
+  {
+    id: 'foraging',
+    name: 'Foraging',
+    description: 'Learn where the good things grow.',
+    era: 'tribal',
+    cost: [{ resource: 'research', amount: 8 }],
+    prerequisites: [],
+    effects: [{ type: 'productionMultiplier', resource: 'food', value: 1.3 }],
+    effectText: '+30% Food production',
+    visibilityCondition: { type: 'featureUnlocked', featureId: 'research' },
+    unlockCondition: { type: 'always' },
+  },
+  {
+    id: 'toolMaking',
+    name: 'Tool Making',
+    description: 'A sharp edge makes a world of difference.',
+    era: 'tribal',
+    cost: [
+      { resource: 'research', amount: 18 },
+      { resource: 'materials', amount: 10 },
+    ],
+    prerequisites: ['foraging'],
+    effects: [
+      { type: 'productionMultiplier', resource: 'materials', value: 1.25 },
+    ],
+    effectText: '+25% Materials production',
+    visibilityCondition: { type: 'technologyOwned', technologyId: 'foraging' },
+    unlockCondition: { type: 'always' },
+  },
+  {
+    id: 'woodworking',
+    name: 'Woodworking',
+    description: 'Give useful materials a useful shape.',
+    era: 'tribal',
+    cost: [
+      { resource: 'research', amount: 35 },
+      { resource: 'materials', amount: 30 },
+    ],
+    prerequisites: ['toolMaking'],
+    effects: [
+      { type: 'productionMultiplier', resource: 'materials', value: 1.5 },
+    ],
+    effectText: '+50% Materials production',
+    visibilityCondition: {
+      type: 'technologyOwned',
+      technologyId: 'toolMaking',
+    },
+    unlockCondition: { type: 'always' },
+  },
+  {
+    id: 'language',
+    name: 'Language',
+    description: 'An idea is better when it can be shared.',
+    era: 'tribal',
+    cost: [{ resource: 'research', amount: 8 }],
+    prerequisites: [],
+    effects: [
+      { type: 'productionMultiplier', resource: 'research', value: 1.1 },
+    ],
+    effectText: '+10% Research production',
+    visibilityCondition: { type: 'featureUnlocked', featureId: 'research' },
+    unlockCondition: { type: 'always' },
+  },
+  {
+    id: 'knowledgeSharing',
+    name: 'Knowledge Sharing',
+    description: 'Let the whole tribe build on what you know.',
+    era: 'tribal',
+    cost: [{ resource: 'research', amount: 22 }],
+    prerequisites: ['language'],
+    effects: [
+      { type: 'productionMultiplier', resource: 'research', value: 1.25 },
+    ],
+    effectText: '+25% Research production',
+    visibilityCondition: { type: 'technologyOwned', technologyId: 'language' },
+    unlockCondition: { type: 'always' },
+  },
+  {
+    id: 'agriculture',
+    name: 'Agriculture',
+    description: 'Plant a seed. Put down roots.',
+    era: 'tribal',
+    cost: [
+      { resource: 'research', amount: 75 },
+      { resource: 'materials', amount: 40 },
+    ],
+    prerequisites: ['knowledgeSharing'],
+    effects: [{ type: 'unlockJob', id: 'farmer' }],
+    effectText: 'Unlocks Farmer · 0.85 Food/s per worker',
+    visibilityCondition: {
+      type: 'technologyOwned',
+      technologyId: 'knowledgeSharing',
+    },
+    unlockCondition: { type: 'always' },
+  },
+];
