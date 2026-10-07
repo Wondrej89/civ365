@@ -6,7 +6,7 @@ import { skills } from '../content/skills';
 import { balance } from '../content/config';
 import { evaluateCondition, isFeatureUnlocked } from '../engine/conditions';
 import { activeEffects } from '../engine/effects';
-import { assignedWorkers } from '../engine/production';
+import { representedPopulation } from '../engine/units';
 import { D } from '../utils/numbers';
 import type {
   GameState,
@@ -110,7 +110,7 @@ export function canAdvance(state: GameState, era: EraDefinition) {
 
 /** Evaluate to a fixed point so linked unlocks happen on the same action/tick. Eras remain a player choice. */
 export function settleProgression(state: GameState) {
-  state.statistics.assignedWorkers = assignedWorkers(state);
+  state.statistics.assignedWorkers = representedPopulation(state);
   state.statistics.maxPopulation = state.statistics.maxPopulation.max(
     state.population,
   );

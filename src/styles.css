@@ -2034,3 +2034,428 @@ textarea::placeholder {
     animation: none !important;
   }
 }
+
+/* Production units: every resource renders the same workbook column. */
+.production-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: none;
+  color: #397456;
+  font-size: 10px;
+  padding: 0;
+  margin-top: 16px;
+  text-align: left;
+}
+.production-link:hover {
+  color: #155b3f;
+  text-decoration: underline;
+}
+.population-accounting {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  align-items: center;
+  gap: 22px;
+  border: 1px solid #d6e5da;
+  border-radius: 6px;
+  background: #fff;
+  padding: 22px 28px;
+  margin-bottom: 28px;
+}
+.population-accounting > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.population-accounting > div > span {
+  font-size: 11px;
+  color: #7c9083;
+}
+.population-accounting strong {
+  font-size: 27px;
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+}
+.accounting-symbol {
+  color: #b3c1b7;
+  font-size: 20px;
+}
+.population-accounting .idle-account strong {
+  color: #2f7c51;
+}
+.production-chains {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(255px, 1fr));
+  align-items: start;
+  gap: 20px;
+}
+.production-chain {
+  border: 1px solid #dce5df;
+  border-radius: 6px;
+  background: #f4f7f5;
+  overflow: hidden;
+  scroll-margin-top: 20px;
+  min-width: 0;
+}
+.production-chain.selected-chain {
+  border-color: #78a98a;
+  box-shadow: 0 0 0 2px #dcece1;
+}
+.production-chain:focus {
+  outline: 2px solid #568d6b;
+  outline-offset: 3px;
+}
+.chain-heading {
+  display: flex;
+  scroll-margin-top: 20px;
+  gap: 12px;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #dde6df;
+  background: #f9fcfa;
+}
+.chain-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  background: #eef4ef;
+  border: 1px solid #e2eae3;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.chain-heading h2 {
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+.chain-heading div > span {
+  font-size: 10px;
+  color: #8a9c8f;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chain-heading b {
+  font-weight: 500;
+  color: #4f8b62;
+}
+.chain-units {
+  padding: 16px;
+}
+.chain-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #8ba596;
+  padding: 14px 0;
+  font-size: 11px;
+}
+.chain-connector svg {
+  color: #88a790;
+}
+.unit-card {
+  background: #fff;
+  border: 1px solid #dfe7e1;
+  border-radius: 5px;
+  padding: 19px;
+  min-width: 0;
+}
+.unit-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.unit-state {
+  font-size: 9px;
+  color: #95a799;
+}
+.unit-owned .unit-state {
+  color: #52836a;
+}
+.unit-card h3 {
+  font-size: 18px;
+  font-weight: 550;
+  margin-bottom: 8px;
+}
+.unit-description {
+  font-size: 11px;
+  color: #8b9c90;
+  line-height: 1.7;
+}
+.unit-owned-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 15px;
+}
+.unit-owned-row > strong {
+  font-size: 30px;
+  font-weight: 550;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.unit-owned-row > span {
+  font-size: 10px;
+  color: #8ea394;
+}
+.unit-owned-row small {
+  display: block;
+  font-size: 9px;
+  margin-top: 5px;
+  color: #a1b0a5;
+}
+.unit-production {
+  background: #f5f9f6;
+  border: 1px solid #e9f0eb;
+  padding: 13px;
+  border-radius: 4px;
+  color: #517e61;
+  font-size: 16px;
+}
+.chain-production-value {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+.chain-production-value small {
+  font-size: 10px;
+  color: #88a18f;
+}
+.per-unit-rate {
+  display: block;
+  margin-top: 7px;
+  font-size: 9px;
+  color: #90a597;
+}
+.per-unit-rate .chain-production-value {
+  display: inline;
+  font-size: 10px;
+}
+.per-unit-rate small {
+  font-size: 9px;
+}
+.unit-footprint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: #90a497;
+  padding: 13px 0;
+  border-bottom: 1px solid #edf2ee;
+}
+.unit-requirements {
+  margin: 16px 0;
+}
+.unit-requirements .field-label {
+  font-size: 9px;
+  color: #91a397;
+  margin: 0 0 10px;
+  font-weight: 500;
+}
+.unit-requirements > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 11px;
+  color: #8c9d92;
+}
+.unit-requirements strong {
+  font-weight: 500;
+  color: #5c7d68;
+  font-variant-numeric: tabular-nums;
+}
+.unit-requirements strong.insufficient {
+  color: #b2916a;
+}
+.unit-buttons {
+  display: flex;
+  gap: 7px;
+}
+.unit-buttons button {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 5px;
+  font-size: 10px;
+  min-height: 32px;
+}
+.recruit-buttons button {
+  background: #f6faf7;
+  color: #507b5c;
+}
+.recruit-buttons button:hover:enabled {
+  background: #eaf4ee;
+}
+.release-buttons {
+  margin-top: 8px;
+}
+.release-buttons button,
+.dismantle-buttons button {
+  background: none;
+  border: 0;
+  color: #879d8c;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.release-buttons button:hover:enabled,
+.dismantle-buttons button:hover:enabled {
+  color: #2b754c;
+  background: #f3f7f4;
+  border-radius: 3px;
+}
+.unit-block-reason {
+  font-size: 9px !important;
+  color: #ac9a7f;
+  line-height: 1.6;
+  margin-top: 12px;
+}
+.upgrade-details {
+  margin: 0 0 17px;
+  border-top: 1px solid #edf2ee;
+  border-bottom: 1px solid #edf2ee;
+  padding: 12px 0;
+  font-size: 10px;
+}
+.upgrade-details summary {
+  color: #7c9786;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+}
+.upgrade-details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 9px;
+  align-items: baseline;
+  margin-top: 14px;
+  color: #899f90;
+}
+.upgrade-details > div > .chain-production-value {
+  font-size: 11px;
+  text-align: right;
+  color: #617f6b;
+}
+.upgrade-details .upgrade-gain > .chain-production-value {
+  color: #28734b;
+  font-weight: 550;
+}
+.dismantle-buttons {
+  margin-top: 7px;
+}
+.dismantle-buttons button:first-child {
+  flex: 2;
+}
+.locked-unit {
+  border-style: dashed;
+  background: #fafcfb;
+  color: #a0b0a4;
+}
+.locked-unit .unit-card-heading {
+  color: #a0b2a6;
+}
+.locked-unit h3 {
+  color: #9aaca0;
+  font-size: 25px;
+}
+.locked-unit > p {
+  font-size: 11px;
+  color: #a0b0a4;
+}
+.locked-tier-note {
+  display: block;
+  font-size: 9px;
+  color: #b1bdb4;
+  margin-top: 20px;
+}
+@media (max-width: 1100px) {
+  .production-chains {
+    gap: 15px;
+  }
+  .chain-heading {
+    padding: 16px;
+  }
+  .chain-units {
+    padding: 12px;
+  }
+  .unit-card {
+    padding: 16px;
+  }
+  .population-accounting {
+    padding: 20px;
+    gap: 14px;
+  }
+  .population-accounting > div {
+    flex-direction: column;
+    gap: 9px;
+    align-items: flex-start;
+  }
+}
+@media (max-width: 800px) {
+  .production-chains {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  .population-accounting {
+    padding: 18px;
+    gap: 12px;
+  }
+  .population-accounting strong {
+    font-size: 25px;
+  }
+  .production-link {
+    font-size: 9px;
+  }
+}
+@media (max-width: 520px) {
+  .production-chains {
+    grid-template-columns: 1fr;
+  }
+  .population-accounting {
+    padding: 17px 13px;
+    gap: 8px;
+  }
+  .population-accounting > div > span {
+    font-size: 9px;
+    min-height: 24px;
+    line-height: 1.4;
+  }
+  .population-accounting strong {
+    font-size: 24px;
+  }
+  .accounting-symbol {
+    font-size: 17px;
+  }
+  .chain-heading {
+    padding: 20px;
+  }
+  .chain-units {
+    padding: 15px;
+  }
+  .unit-card {
+    padding: 20px;
+  }
+  .unit-buttons button {
+    min-height: 37px;
+  }
+  .production-link {
+    font-size: 8px;
+    gap: 3px;
+  }
+  .unit-description {
+    font-size: 12px;
+  }
+  .unit-requirements > div {
+    font-size: 12px;
+  }
+  .chain-production-value small {
+    font-size: 11px;
+  }
+}

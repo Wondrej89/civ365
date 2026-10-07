@@ -7,6 +7,7 @@ export const resources: ResourceDefinition[] = [
     feature: 'manualGathering',
     initiallyVisible: true,
     color: '#c18d30',
+    productionLabel: 'Food Production',
   },
   {
     id: 'materials',
@@ -15,6 +16,7 @@ export const resources: ResourceDefinition[] = [
     feature: 'materials',
     initiallyVisible: false,
     color: '#957359',
+    productionLabel: 'Material Production',
   },
   {
     id: 'research',
@@ -23,6 +25,7 @@ export const resources: ResourceDefinition[] = [
     feature: 'research',
     initiallyVisible: false,
     color: '#627fb4',
+    productionLabel: 'Research Production',
   },
   {
     id: 'wealth',

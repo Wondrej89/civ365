@@ -26,8 +26,14 @@ export type GameEffect =
       resource?: string;
       value: Amount;
     }
+  | {
+      type: 'unitProductionMultiplier';
+      unit: string;
+      resource?: string;
+      value: Amount;
+    }
   | { type: 'populationCostMultiplier'; value: Amount }
-  | { type: 'unlockFeature' | 'unlockJob'; id: string }
+  | { type: 'unlockFeature' | 'unlockJob' | 'unlockUnit'; id: string }
   | { type: 'grantResource'; resource: string; value: Amount };
 
 export interface ResourceDefinition {
@@ -38,6 +44,7 @@ export interface ResourceDefinition {
   initiallyVisible: boolean;
   meta?: boolean;
   color: string;
+  productionLabel?: string;
 }
 export interface FeatureDefinition {
   id: string;
@@ -45,12 +52,21 @@ export interface FeatureDefinition {
   unlockCondition: Condition;
   notify?: boolean;
 }
-export interface JobDefinition {
+export interface ProductionUnitDefinition {
   id: string;
   name: string;
   description: string;
-  unlockedBy: Condition;
-  production: { resource: string; amount: Amount }[];
+  category: string;
+  tier: number;
+  baseProduction: { resource: string; amount: Amount }[];
+  populationCost?: number;
+  upgradeFrom?: { unitId: string; amount: number };
+  costs?: ResourceCost[];
+  unlockCondition: Condition;
+  visibilityCondition?: Condition;
+  effects?: GameEffect[];
+  /** Version-one assignment IDs represented by this tier-one unit. */
+  legacyJobs?: string[];
 }
 export interface ResourceCost {
   resource: string;
@@ -116,7 +132,7 @@ export interface GameState {
   lastSimulationTime: number;
   resources: Record<string, Decimal>;
   population: Decimal;
-  jobAssignments: Record<string, Decimal>;
+  productionUnits: Record<string, Decimal>;
   researchedTechnologies: string[];
   purchasedSkills: Record<string, number>;
   achievements: string[];
@@ -132,7 +148,11 @@ export interface GameState {
 export type GameAction =
   | { type: 'gather'; resource: string }
   | { type: 'grow' }
-  | { type: 'assign'; job: string; amount: Amount }
+  | {
+      type: 'recruit' | 'release' | 'upgrade' | 'dismantle';
+      unitId: string;
+      amount: Amount | 'max';
+    }
   | { type: 'research'; id: string }
   | { type: 'skill'; id: string }
   | { type: 'advance'; id: string }

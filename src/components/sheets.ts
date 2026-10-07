@@ -6,7 +6,7 @@ import {
   Award,
 } from 'lucide-react';
 import { Overview } from './Overview';
-import { PopulationSheet } from './Workforce';
+import { WorkforceSheet } from './Workforce';
 import { ResearchSheet } from './Research';
 import { SkillsSheet } from './Skills';
 import { AchievementsSheet } from './Achievements';
@@ -20,11 +20,11 @@ export const sheets = [
     component: Overview,
   },
   {
-    id: 'population',
-    name: 'Population',
+    id: 'workforce',
+    name: 'Workforce',
     requiredFeature: 'jobs',
     icon: Users,
-    component: PopulationSheet,
+    component: WorkforceSheet,
   },
   {
     id: 'research',

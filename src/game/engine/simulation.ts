@@ -1,6 +1,5 @@
 import { cloneState } from '../state';
 import { balance } from '../content/config';
-import { jobs } from '../content/jobs';
 import { skills } from '../content/skills';
 import { eras } from '../content/eras';
 import { resources } from '../content/resources';
@@ -8,12 +7,8 @@ import { D } from '../utils/numbers';
 import type { GameAction, GameState } from '../types';
 import { isFeatureUnlocked } from './conditions';
 import { activeEffects, resourceMultiplier } from './effects';
-import {
-  idleWorkers,
-  isJobUnlocked,
-  populationCost,
-  productionPerSecond,
-} from './production';
+import { populationCost, productionPerSecond } from './production';
+import { mutateUnitAction } from './units';
 import {
   canAdvance,
   canAfford,
@@ -95,23 +90,11 @@ export function applyAction(state: GameState, action: GameAction): GameState {
         );
       break;
     }
-    case 'assign': {
-      const job = jobs.find((j) => j.id === action.job),
-        amount = D(action.amount);
-      if (
-        !job ||
-        !isJobUnlocked(next, job) ||
-        !Number.isFinite(amount.mantissa) ||
-        !Number.isFinite(amount.exponent) ||
-        !amount.eq(amount.floor())
-      )
-        return state;
-      if (
-        amount.gt(idleWorkers(next)) ||
-        next.jobAssignments[job.id].add(amount).lt(0)
-      )
-        return state;
-      next.jobAssignments[job.id] = next.jobAssignments[job.id].add(amount);
+    case 'recruit':
+    case 'release':
+    case 'upgrade':
+    case 'dismantle': {
+      if (!mutateUnitAction(next, action)) return state;
       break;
     }
     case 'research': {

@@ -42,7 +42,7 @@ export const technologies: TechnologyDefinition[] = [
     effects: [
       { type: 'productionMultiplier', resource: 'materials', value: 1.5 },
     ],
-    effectText: '+50% Materials production',
+    effectText: '+50% Materials production · Unlocks Miner',
     visibilityCondition: {
       type: 'technologyOwned',
       technologyId: 'toolMaking',
@@ -73,7 +73,7 @@ export const technologies: TechnologyDefinition[] = [
     effects: [
       { type: 'productionMultiplier', resource: 'research', value: 1.25 },
     ],
-    effectText: '+25% Research production',
+    effectText: '+25% Research production · Unlocks Scholar',
     visibilityCondition: { type: 'technologyOwned', technologyId: 'language' },
     unlockCondition: { type: 'always' },
   },
@@ -87,8 +87,8 @@ export const technologies: TechnologyDefinition[] = [
       { resource: 'materials', amount: 40 },
     ],
     prerequisites: ['knowledgeSharing'],
-    effects: [{ type: 'unlockJob', id: 'farmer' }],
-    effectText: 'Unlocks Farmer · 0.85 Food/s per worker',
+    effects: [{ type: 'unlockUnit', id: 'farmer' }],
+    effectText: 'Unlocks Farmer · 5 Gatherers → 1 Farmer · 4 Food/s',
     visibilityCondition: {
       type: 'technologyOwned',
       technologyId: 'knowledgeSharing',

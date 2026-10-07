@@ -1,6 +1,6 @@
 # Civilization.xlsx
 
-Hratelná browserová incremental hra ve stylu světlého tabulkového workbooku. Začněte s jediným člověkem, sbírejte Food, rozdělte pracovníky, objevujte technologie a vstupte do Agricultural Age. Bez backendu, účtu nebo externích služeb.
+Hratelná browserová incremental hra ve stylu světlého tabulkového workbooku. Začněte s jediným člověkem, sbírejte Food, budujte produkční řetězce, objevujte technologie a vstupte do Agricultural Age. Bez backendu, účtu nebo externích služeb.
 
 ## Spuštění
 
@@ -45,12 +45,14 @@ Při dalších změnách vytvořte pracovní větev a PR do `main`. Po úspěšn
 ## První hraní
 
 1. Sbírejte Food. Po 5 Food celkem se objeví Materials, po 10 možnost růstu populace.
-2. Druhý člověk odemkne Workforce a první achievement. Přiřaďte Gatherery; automatická produkce začne s pouhými 10 úvodními kliknutími.
-3. Při populaci 5 se objeví Thinker a Research. Přidělte Thinkera a Woodcuttera; ostatní mohou sbírat Food.
-4. V Research kupujte technologie. Větev Language → Knowledge Sharing → Agriculture odemkne Farmery.
+2. Druhý člověk odemkne Workforce a první achievement. Otevřete Food Production a naberte Gatherery; automatická produkce začne s pouhými 10 úvodními kliknutími.
+3. Při populaci 5 se objeví Thinker a Research. Naberte Thinkera a Woodcuttera; ostatní mohou sbírat Food.
+4. V Research kupujte technologie. Language → Knowledge Sharing → Agriculture odemkne Scholar a Farmer, Woodworking odemkne Miner. Každý vzniká z 5 jednotek předchozího tieru a dalších zdrojů. Například 1 Farmer spotřebuje 5 Gathererů, 20 Materials a 50 Food, stále reprezentuje 5 lidí a produkuje základní 4 Food/s.
 5. S Agriculture a populací 20 lze v Overview vstoupit do Agricultural Age. Stav se neresetuje; získáte 1 Civilization point a možnost výběru skillu.
 
-Automatický průchod v testech trvá přibližně 15,5 minuty s jedním Thinkerem a deseti úvodními kliknutími. Více Thinkerů postup zrychlí. Populace Food nespotřebovává průběžně; MVP používá Food jako cenu růstu.
+Automatický průchod v testech trvá přibližně 15 minut s jedním Thinkerem a deseti úvodními kliknutími. Více Thinkerů postup zrychlí. Populace Food nespotřebovává průběžně; MVP používá Food jako cenu růstu a upgradu.
+
+Workforce zobrazuje samostatné sloupce Food, Materials a Research. Tier 1 nabízí nábor +1 / +10 / Max a uvolnění −1 / −10 / All. Vyšší tiery nabízejí Upgrade 1 / Max, porovnání produkce a Dismantle 1 / All. Rozebrání vrátí předchozí jednotky, ale nevrací utracené zdroje. Overview ukazuje agregovanou produkci; odkazy otevřou a zvýrazní příslušný sloupec Workforce.
 
 ## Architektura
 
@@ -62,7 +64,8 @@ src/game/
   engine/
     conditions.ts           společný evaluator podmínek
     effects.ts              aktivní efekty, odvozené modifikátory
-    production.ts           produkce, dostupnost jobs, cena populace
+    units.ts                řetězce, odvozená populace, nábor a upgrady
+    production.ts           součet produkce tierů, preview, cena populace
     simulation.ts           čisté akce a časová simulace
   systems/
     progression.ts          unlocks, technologie, skills, achievementy, eras
@@ -74,21 +77,23 @@ src/components/             workbook UI a jednotlivé sheets
 src/hooks/useGame.ts         useSyncExternalStore
 ```
 
-Engine nemá závislost na Reactu ani DOM. `applyAction` a `simulate` vracejí nový stav. Zdroje, populace, pracovníci i herní statistiky používají `break_infinity.js` Decimal; čísla typu `number` jsou čas, konfigurace a malé levely skillů. Decimal není přesná finanční aritmetika: zanedbatelné rozdíly se u velmi velkých částek zaokrouhlují.
+Engine nemá závislost na Reactu ani DOM. `applyAction` a `simulate` vracejí nový stav. Zdroje, populace, počty `productionUnits` i herní statistiky používají `break_infinity.js` Decimal; čísla typu `number` jsou čas, konfigurace a malé levely skillů. Decimal není přesná finanční aritmetika: zanedbatelné rozdíly se u velmi velkých částek zaokrouhlují.
 
-Jeden timer simuluje skutečně uplynulý čas po 100 ms, React dostává snapshot nejvýše každých 250 ms. Akce nejprve synchronizují čas, aby změna přiřazení nezměnila zpětně minulou produkci. Offline výpočet používá stejnou funkci `simulate` s kroky nejvýše 10 s; tím průběžně vyhodnocuje achievementy a jejich bonusy. Během dlouhých neaktivních intervalů se započítá nejvýše 8 hodin. Nákupy, růst populace a vstup do éry vždy vyžadují hráčovu akci.
+Jeden timer simuluje skutečně uplynulý čas po 100 ms, React dostává snapshot nejvýše každých 250 ms. Akce nejprve synchronizují čas, aby nábor nebo upgrade nezměnil zpětně minulou produkci. Offline výpočet používá stejnou funkci `simulate` s kroky nejvýše 10 s; tím průběžně vyhodnocuje achievementy a jejich bonusy. Během dlouhých neaktivních intervalů se započítá nejvýše 8 hodin. Nákupy, růst populace a vstup do éry vždy vyžadují hráčovu akci.
+
+`getPopulationFootprint(id)` rekurzivně násobí počty vstupních jednotek. Pro řetězec Gatherer → Farmer → Farm → Industrial Farm vrací 1 / 5 / 20 / 100 lidí. Platí `Total Population = Idle Population + Σ(owned × footprint)`. Upgrade a rozebrání zachovávají oba členy populace; jen nábor a uvolnění tieru 1 mění Idle Population. Max používá minimum dostupných vstupů a zdrojů, bez smyčky přes jednotlivé jednotky.
 
 Všechny progression systémy používají `Condition`: `resourceAtLeast`, `populationAtLeast`, `technologyOwned`, `achievementOwned`, `eraReached`, `featureUnlocked`, `statAtLeast`, `all`, `any`, `not` a konstanty `always`/`never`. Unlocky jsou trvalé a vyhodnocují se do ustáleného stavu. UI používá `isFeatureUnlocked`; sheet registry je v `components/sheets.ts`. Budoucí systémy a Wealth jsou zamčené a skryté.
 
-Technologie, skilly, achievementy a éry sdílejí `GameEffect`. Aktivní efekty se odvozují z vlastnictví; základní definice se nemění. Podporovány jsou násobiče produkce/zdrojů/jobs, ploché bonusy, cena růstu a unlocky. `grantResource` je jednorázový efekt při nákupu či vstupu do éry; opakovaný tick bod znovu neuděluje. Skill engine podporuje levely, rostoucí ceny, prerequisite levely i oboustranné vyloučení, i když MVP nabídka používá jen tři jednoduché volby.
+Jednotky, technologie, skilly, achievementy a éry sdílejí `GameEffect`. Aktivní efekty se odvozují z vlastnictví; základní definice se nemění. Podporovány jsou násobiče produkce/zdrojů/jednotek, ploché bonusy, cena růstu a unlocky. Efekty jednotek se aplikují za každý vlastněný kus: ploché bonusy se násobí počtem, násobiče umocňují. Zmizí po rozebrání. `grantResource` je jednorázový efekt při nákupu či vstupu do éry; jednotky používají pouze průběžné efekty. Skill engine podporuje levely, rostoucí ceny, prerequisite levely i oboustranné vyloučení, i když MVP nabídka používá jen tři jednoduché volby.
 
 Statistiky zahrnují vyprodukované zdroje (za celou hru, nezávisle na útratách), ruční kliknutí, nejvyšší populaci, simulovaný čas, počet technologií a přechodů érami. Event log uchovává posledních 100 událostí.
 
 ## Save systém
 
-Klíč localStorage: `civilization.xlsx.save`. Autosave každých 10 s, při skrytí stránky a odchodu. JSON obsahuje `saveVersion: 1`, čas vytvoření/uložení/simulace, Decimal částky jako řetězce, přiřazení, objevy, skilly, achievementy, éry, features, statistiky, nastavení a události. Export je Base64 UTF-8 text; import přijímá také JSON.
+Klíč localStorage: `civilization.xlsx.save`. Autosave každých 10 s, při skrytí stránky a odchodu. JSON obsahuje `saveVersion: 2`, čas vytvoření/uložení/simulace, Decimal částky jako řetězce, `productionUnits`, objevy, skilly, achievementy, éry, features, statistiky, nastavení a události. Export je Base64 UTF-8 text; import přijímá také JSON.
 
-Import kontroluje strukturu, ID obsahu, nezáporné konečné částky, celou populaci/pracovníky, jejich součet, prerequisites, levely a konflikty skillů, éry, nastavení a event log. Nepodporované budoucí verze odmítá. `migrateSave` obsahuje příklad migrace verze 0 → 1; další migrace přidávejte před validací. Poškozený automatický save zůstane jako `.recovery` kopie. Při nedostupném localStorage UI upozorní; export funguje i bez něj.
+Import kontroluje strukturu, ID obsahu, nezáporné konečné částky, celé počty jednotek, jejich vážený population footprint, odemčení jednotek, prerequisites, levely a konflikty skillů, éry, nastavení a event log. Nepodporované budoucí verze odmítá. `migrateSave` převádí verze 0 → 1 → 2. Staré `jobAssignments` převede do tieru 1; starý Farmer zabíral jen jednoho člověka, proto se každý změní na jednoho Gatherera. Zachová populaci, zdroje i objevy a vysvětlí převod v event logu. Poškozený automatický save zůstane jako `.recovery` kopie. Při nedostupném localStorage UI upozorní; export funguje i bez něj.
 
 Reset vyžaduje potvrzení. Před importem nebo resetem doporučujeme exportovat starý stav. Savům lze záměrně upravit hodnoty; jde o lokální single-player hru, nikoli ochranu proti cheatingu. Mezi více současně otevřenými záložkami není synchronizace, používejte jednu aktivní záložku.
 
@@ -96,17 +101,24 @@ Reset vyžaduje potvrzení. Před importem nebo resetem doporučujeme exportovat
 
 Definice přidejte do exportovaných polí v `src/game/content/`. Hlavní loop měnit nemusíte. Následující příklady jsou návody pro další vývoj, nejsou součástí MVP.
 
-### Job (`content/jobs.ts`)
+### Produkční jednotka (`content/units.ts`)
 
 ```ts
 {
   id: 'builder', name: 'Builder', description: 'Build lasting structures.',
-  unlockedBy: { type: 'technologyOwned', technologyId: 'construction' },
-  production: [{ resource: 'materials', amount: 0.4 }],
+  category: 'materials', tier: 3,
+  upgradeFrom: { unitId: 'miner', amount: 4 },
+  costs: [{ resource: 'materials', amount: 200 }],
+  baseProduction: [{ resource: 'materials', amount: 20 }],
+  visibilityCondition: { type: 'eraReached', eraId: 'agricultural' },
+  unlockCondition: { type: 'technologyOwned', technologyId: 'construction' },
+  effects: [{ type: 'unitProductionMultiplier', unit: 'miner', resource: 'materials', value: 1.1 }],
 }
 ```
 
-Přiřazení, produkce, save i workforce tabulka nový job načtou z registry. Jeden job může produkovat více zdrojů.
+Tier 1 má `populationCost` (výchozí 1), vyšší tier má `upgradeFrom` bez další ceny populace. Nábor, upgrady, produkce, save i Workforce načtou jednotku z registry. Jedna jednotka může produkovat více zdrojů a ovlivňovat ostatní přes `effects`. Validace definic odmítne neplatný řetězec, cyklus, neznámý zdroj nebo dodatečnou cenu populace na vyšším tieru.
+
+Každý zdroj s viditelnými jednotkami své `category` automaticky vytvoří nový produkční sloupec. Volitelný `productionLabel` určuje název sloupce i odkazu v Overview. UI neobsahuje konkrétní převody mezi jednotkami. `visibilityCondition` a `unlockCondition` rozlišují hidden / revealed (`???`) / available / owned. Čtyři tiery každého současného řetězce jsou připravené v datech; tier 3 a 4 zůstávají zatím skryté.
 
 ### Technologie (`content/technologies.ts`)
 
@@ -173,6 +185,6 @@ Nový zdroj přidejte do `content/resources.ts`: engine, produkce, formatter a s
 
 ## Rozsah a omezení
 
-MVP končí herním obsahem Agricultural Age. Economy, Energy, Space a Prestige nejsou implementované ani viditelné. Skills poskytují první jednorázovou volbu; další body vyžadují přidaný obsah. Grafiku tvoří workbook, KPI, tabulky a jednoduchý ukazatel postupu, bez složitých animací. Budoucí mechaniky se skutečnými vstupy/spotřebou zdrojů budou potřebovat obecný systém receptů; nynější jobs pouze produkují.
+MVP končí herním obsahem Agricultural Age. Economy, Energy, Space a Prestige nejsou implementované ani viditelné. Skills poskytují první jednorázovou volbu; další body vyžadují přidaný obsah. Grafiku tvoří workbook, KPI, tabulky a jednoduchý ukazatel postupu, bez složitých animací. Budoucí mechaniky s průběžnou spotřebou zdrojů budou potřebovat systém receptů; nynější jednotky zdroje spotřebovávají při upgradu a průběžně pouze produkují.
 
 Kritické unit/integration testy pokrývají odemykání, časovou produkci, workforce invarianty, technologie, podmínky, efekty, achievementy, přechod éry, skilly, save roundtrip/validaci/migraci, offline produkci a úplný průchod první epochou. UI lze ověřit také přes reálný prohlížeč.
