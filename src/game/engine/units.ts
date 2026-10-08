@@ -40,6 +40,7 @@ export function isUnitUnlocked(
   state: GameState,
   unit: ProductionUnitDefinition,
 ) {
+  if (state.unlockedProductionUnits.includes(unit.id)) return true;
   return (
     evaluateCondition(unit.unlockCondition, state) ||
     activeEffects(state).some(

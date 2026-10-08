@@ -82,7 +82,10 @@ export function upgradePreview(
 }
 export function populationCost(state: GameState) {
   const config = balance.populationGrowth;
+  const early = state.population.sub(1).min(config.scalingBreakpoint - 1);
+  const later = state.population.sub(config.scalingBreakpoint).max(0);
   return D(config.baseFoodCost)
-    .mul(D(config.multiplier).pow(state.population.sub(1)))
+    .mul(D(config.multiplier).pow(early))
+    .mul(D(config.laterMultiplier).pow(later))
     .mul(populationModifier(activeEffects(state)));
 }

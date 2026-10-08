@@ -29,9 +29,10 @@ import {
 } from './common';
 import { GrowButton } from './Workforce';
 import { useWorkbookNavigation } from './navigation';
+import { autoGrowthActive, nextGrowthSeconds } from '../game/engine/population';
 
 export function Overview() {
-  const { openWorkforce } = useWorkbookNavigation();
+  const { openWorkforce, openSheet } = useWorkbookNavigation();
   const { state } = useGame();
   const era = eras.find((e) => e.id === state.currentEra)!;
   const nextEra = eras.find((e) => canAdvance(state, e));
@@ -54,7 +55,7 @@ export function Overview() {
         <div>
           <div className="eyebrow">YOUR CIVILIZATION, AT A GLANCE</div>
           <h1>
-            {state.currentEra === 'agricultural'
+            {state.currentEra !== 'tribal'
               ? 'A place to call home.'
               : isFeatureUnlocked(state, 'jobs')
                 ? 'Small tribe. Big possibilities.'
@@ -68,6 +69,36 @@ export function Overview() {
           <span className="era-dot" />
         </div>
       </div>
+      {isFeatureUnlocked(state, 'population') && (
+        <div className="overview-shortcuts">
+          <span>
+            Growth:{' '}
+            <strong>
+              {autoGrowthActive(state)
+                ? `Auto · next attempt in ${formatNumber(nextGrowthSeconds(state), 1)} s`
+                : 'Manual'}
+            </strong>
+          </span>
+          <button className="button" onClick={() => openSheet('population')}>
+            Open Population
+          </button>
+          {isFeatureUnlocked(state, 'jobs') && (
+            <button className="button" onClick={() => openSheet('workforce')}>
+              Open Production
+            </button>
+          )}
+          {isFeatureUnlocked(state, 'research') && (
+            <button className="button" onClick={() => openSheet('research')}>
+              Open Research
+            </button>
+          )}
+          {isFeatureUnlocked(state, 'statistics') && (
+            <button className="button" onClick={() => openSheet('statistics')}>
+              Open Statistics
+            </button>
+          )}
+        </div>
+      )}
       <div className="kpi-grid">
         <PopulationKpi state={state} />
         {visibleResources(state).map((r) => (
@@ -88,10 +119,10 @@ export function Overview() {
           </div>
           <div>
             <span className="eyebrow">A NEW CHAPTER AWAITS</span>
-            <h2>Your tribe is ready to settle.</h2>
+            <h2>Your civilization is ready for {nextEra.name}.</h2>
             <p>
-              Advance without resetting your progress. Earn your first
-              Civilization point.
+              Advance without resetting your progress. Earn one Civilization
+              point.
             </p>
           </div>
           <button

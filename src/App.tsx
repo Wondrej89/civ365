@@ -46,6 +46,11 @@ export default function App() {
     }));
     setSheet('workforce');
   }
+  function openSheet(id: string) {
+    const target = sheets.find((s) => s.id === id);
+    if (target && isFeatureUnlocked(state, target.requiredFeature))
+      setSheet(id);
+  }
   useEffect(() => gameStore.start(), []);
   const visible = sheets.filter((s) =>
     isFeatureUnlocked(state, s.requiredFeature),
@@ -211,7 +216,7 @@ export default function App() {
                 </button>
               )}
               <WorkbookNavigation.Provider
-                value={{ openWorkforce, workforceFocus }}
+                value={{ openWorkforce, openSheet, workforceFocus }}
               >
                 <Sheet />
               </WorkbookNavigation.Provider>

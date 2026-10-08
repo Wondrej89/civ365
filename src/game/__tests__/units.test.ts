@@ -37,8 +37,9 @@ function ready(population = 50) {
   state.resources.research = D(1000);
   state.statistics.totalFoodProduced = D(10_000);
   state.researchedTechnologies = technologies
-    .filter((t) => t.id !== 'futureUnits')
+    .filter((t) => t.era === 'tribal')
     .map((t) => t.id);
+  state.unlockedProductionUnits = ['miner', 'scholar'];
   settleProgression(state);
   return state;
 }
@@ -123,7 +124,7 @@ describe('upgrades, dismantling and population accounting', () => {
     for (const ids of [
       ['gatherer', 'farmer', 'farm', 'industrialFarm'],
       ['woodcutter', 'miner', 'workshop', 'factory'],
-      ['thinker', 'scholar', 'scientist', 'laboratory'],
+      ['thinker', 'scholar', 'academy', 'laboratory'],
     ])
       expect(ids.map((id) => getPopulationFootprint(id).toNumber())).toEqual([
         1, 5, 20, 100,
@@ -164,6 +165,7 @@ describe('upgrades, dismantling and population accounting', () => {
     expect(action(inputs, 'upgrade', 'farmer')).toBe(inputs);
     inputs.resources.food = D(100);
     inputs.researchedTechnologies = [];
+    inputs.unlockedProductionUnits = [];
     expect(action(inputs, 'upgrade', 'farmer')).toBe(inputs);
   });
   it('Upgrade Max is limited by both sources and the scarcest resource', () => {
@@ -341,7 +343,7 @@ describe('tier production, modifiers and reveal states', () => {
       state = action(state, 'upgrade', 'farm');
       expect(state.productionUnits.farmer.eq(2)).toBe(true);
       expect(productionPerSecond(state).food.toNumber()).toBeCloseTo(
-        (2 * 4 * 1.1 ** 2 + 2 * 20) * 1.02 * 1.02 * 1.3,
+        (2 * 4 * 1.1 ** 2 + 2 * 28) * 1.02 * 1.02 * 1.3,
       );
       expect(
         activeEffects(state).some((e) => e.type === 'unitProductionMultiplier'),
@@ -357,6 +359,7 @@ describe('tier production, modifiers and reveal states', () => {
   it('keeps future tiers hidden, reveals unknown tiers, then makes purchased tiers available/owned', () => {
     const state = ready();
     state.researchedTechnologies = [];
+    state.unlockedProductionUnits = [];
     expect(unitStatus(state, unitById('farm')!)).toBe('hidden');
     expect(unitStatus(state, unitById('farmer')!)).toBe('revealed');
     state.researchedTechnologies = [
@@ -381,7 +384,7 @@ describe('tiered saves, legacy migration and offline progress', () => {
     state = action(state, 'recruit', 'thinker', 5);
     state = action(state, 'upgrade', 'scholar');
     const loaded = importSave(exportSave(state));
-    expect(loaded.saveVersion).toBe(2);
+    expect(loaded.saveVersion).toBe(3);
     expect(loaded.productionUnits.farmer.eq(2)).toBe(true);
     expect(loaded.productionUnits.scholar.eq(1)).toBe(true);
     expect(idlePopulation(loaded).eq(idlePopulation(state))).toBe(true);

@@ -49,6 +49,13 @@ export function OfflineModal() {
               </div>
             ))}
         </div>
+        {report.populationCreated.gt(0) && (
+          <p className="offline-growth">
+            Your community grew by{' '}
+            <strong>{formatNumber(report.populationCreated, 0)} people</strong>,
+            spending {formatNumber(report.foodSpentOnGrowth)} Food.
+          </p>
+        )}
         {report.awaySeconds > report.simulatedSeconds && (
           <p className="offline-cap">
             <Clock size={14} />
@@ -110,7 +117,7 @@ export function DebugPanel() {
             {action === 'population'
               ? '+10 Population'
               : action === 'speed'
-                ? `${speed === 1 ? '×10' : '×1'} simulation speed`
+                ? `${speed === 1 ? '×10' : speed === 10 ? '×100' : speed === 100 ? '×1000' : '×1'} simulation speed`
                 : action === 'technologies'
                   ? 'Unlock all MVP technologies'
                   : `+100 ${action[0].toUpperCase()}${action.slice(1)}`}

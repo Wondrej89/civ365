@@ -23,4 +23,36 @@ export const eras: EraDefinition[] = [
       { type: 'unlockFeature', id: 'skillTree' },
     ],
   },
+  {
+    id: 'bronze',
+    name: 'Bronze Age',
+    subtitle: 'Tools, records, and a civilization taking shape.',
+    previous: 'agricultural',
+    requirements: [
+      { type: 'technologyOwned', technologyId: 'mining' },
+      { type: 'technologyOwned', technologyId: 'writing' },
+      { type: 'populationAtLeast', value: 50 },
+      { type: 'resourceAtLeast', resource: 'research', value: 250 },
+    ],
+    effects: [],
+    onEnterEffects: [
+      { type: 'grantResource', resource: 'civilizationPoints', value: 1 },
+    ],
+  },
+  {
+    id: 'classical',
+    name: 'Classical Age',
+    subtitle: 'Cities, institutions, and ideas built to last.',
+    previous: 'bronze',
+    requirements: [
+      { type: 'populationAtLeast', value: 200 },
+      ...['mathematics', 'construction', 'formalEducation'].map(
+        (technologyId) => ({ type: 'technologyOwned' as const, technologyId }),
+      ),
+    ],
+    effects: [],
+    onEnterEffects: [
+      { type: 'grantResource', resource: 'civilizationPoints', value: 1 },
+    ],
+  },
 ];

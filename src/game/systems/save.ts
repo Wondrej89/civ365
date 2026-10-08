@@ -8,6 +8,9 @@ import { skills } from '../content/skills';
 import { achievements } from '../content/achievements';
 import { eras } from '../content/eras';
 import { features } from '../content/features';
+import { statisticSeries } from '../content/statistics';
+import { growthInterval } from '../engine/population';
+import { evaluateCondition } from '../engine/conditions';
 import { isUnitUnlocked, representedPopulation } from '../engine/units';
 import { sum } from '../utils/numbers';
 import type { GameEvent, GameState } from '../types';
@@ -116,6 +119,43 @@ export function migrateSave(value: unknown): Obj {
     delete save.jobAssignments;
     save.saveVersion = 2;
   }
+  if (save.saveVersion === 2) {
+    const counts = { ...object(save.productionUnits) };
+    if (counts.scientist !== undefined) {
+      counts.academy = decimal(counts.scientist, true)
+        .add(decimal(counts.academy ?? '0', true))
+        .toString();
+      delete counts.scientist;
+    }
+    save.productionUnits = counts;
+    const known = Array.isArray(save.researchedTechnologies)
+      ? save.researchedTechnologies
+      : [];
+    save.unlockedProductionUnits = [
+      ...(known.includes('woodworking') ? ['miner'] : []),
+      ...(known.includes('knowledgeSharing') ? ['scholar'] : []),
+    ];
+    save.constructedProductionUnits = units
+      .filter((u) => decimal(counts[u.id] ?? '0', true).gt(0))
+      .map((u) => u.id);
+    save.autoPopulationGrowth = {
+      enabled: false,
+      accumulator: 0,
+      foodReservePercent: balance.automaticGrowth.defaultReservePercent,
+    };
+    save.statisticsHistory = {};
+    save.statisticsSamplingAccumulator = 0;
+    const stats = { ...object(save.statistics) };
+    stats.totalPopulationCreated = decimal(
+      stats.maxPopulation ?? save.population,
+      true,
+    )
+      .max(decimal(save.population, true))
+      .toString();
+    stats.foodSpentOnGrowth = '0';
+    save.statistics = stats;
+    save.saveVersion = 3;
+  }
   if (save.saveVersion !== balance.saveVersion)
     throw new Error(
       'Unsupported save version. Use a save from this version of Civilization.xlsx.',
@@ -139,6 +179,14 @@ export function deserializeSave(value: unknown): GameState {
     throw new Error('Unknown production unit.');
   for (const unit of units)
     state.productionUnits[unit.id] = decimal(rawUnits[unit.id] ?? '0', true);
+  state.unlockedProductionUnits = ids(
+    raw.unlockedProductionUnits,
+    units.map((u) => u.id),
+  );
+  state.constructedProductionUnits = ids(
+    raw.constructedProductionUnits,
+    units.map((u) => u.id),
+  );
   if (representedPopulation(state).gt(state.population))
     throw new Error('Production units exceed population.');
   for (const id of new Set([
@@ -211,6 +259,15 @@ export function deserializeSave(value: unknown): GameState {
     throw new Error('Invalid current era.');
   state.currentEra = raw.currentEra;
   if (
+    state.reachedEras.some(
+      (id, index) =>
+        index > 0 &&
+        eras.find((e) => e.id === id)?.previous !==
+          state.reachedEras[index - 1],
+    )
+  )
+    throw new Error('Invalid era sequence.');
+  if (
     !state.reachedEras.includes('tribal') ||
     state.reachedEras.at(-1) !== state.currentEra
   )
@@ -219,6 +276,71 @@ export function deserializeSave(value: unknown): GameState {
   if (typeof settings.notifications !== 'boolean')
     throw new Error('Invalid settings.');
   state.settings = { notifications: settings.notifications };
+  const automatic = object(raw.autoPopulationGrowth);
+  if (
+    typeof automatic.enabled !== 'boolean' ||
+    typeof automatic.accumulator !== 'number' ||
+    !Number.isFinite(automatic.accumulator) ||
+    automatic.accumulator < 0 ||
+    automatic.accumulator > growthInterval(state) ||
+    typeof automatic.foodReservePercent !== 'number' ||
+    !balance.automaticGrowth.reserveOptions.includes(
+      automatic.foodReservePercent,
+    )
+  )
+    throw new Error('Invalid automatic growth settings.');
+  if (
+    automatic.enabled &&
+    !state.unlockedFeatures.includes('autoPopulationGrowth')
+  )
+    throw new Error('Automatic growth has not been discovered.');
+  state.autoPopulationGrowth = {
+    enabled: automatic.enabled,
+    accumulator: automatic.accumulator,
+    foodReservePercent: automatic.foodReservePercent,
+  };
+  if (
+    typeof raw.statisticsSamplingAccumulator !== 'number' ||
+    !Number.isFinite(raw.statisticsSamplingAccumulator) ||
+    raw.statisticsSamplingAccumulator < 0 ||
+    raw.statisticsSamplingAccumulator > balance.statistics.sampleIntervalSeconds
+  )
+    throw new Error('Invalid statistics sampling interval.');
+  state.statisticsSamplingAccumulator = raw.statisticsSamplingAccumulator;
+  const histories = object(raw.statisticsHistory);
+  if (
+    Object.keys(histories).some(
+      (id) => !statisticSeries.some((s) => s.id === id),
+    )
+  )
+    throw new Error('Unknown statistic series.');
+  for (const [id, history] of Object.entries(histories)) {
+    if (
+      !Array.isArray(history) ||
+      history.length > balance.statistics.maxSamples
+    )
+      throw new Error('Invalid statistics history size.');
+    if (
+      history.length &&
+      !evaluateCondition(
+        statisticSeries.find((s) => s.id === id)!.unlockCondition,
+        state,
+      )
+    )
+      throw new Error('Statistics series has not been discovered.');
+    let previous = -1;
+    state.statisticsHistory[id] = history.map((entry) => {
+      const sample = object(entry),
+        time = timestamp(sample.timestamp);
+      if (
+        time <= previous ||
+        time > state.statistics.totalPlayTime.toNumber() + 1e-7
+      )
+        throw new Error('Invalid statistics sample time.');
+      previous = time;
+      return { timestamp: time, value: decimal(sample.value).toString() };
+    });
+  }
   if (!Array.isArray(raw.eventLog) || raw.eventLog.length > balance.eventLimit)
     throw new Error('Invalid event log.');
   state.eventLog = raw.eventLog.map((value) => {

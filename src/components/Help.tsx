@@ -1,4 +1,11 @@
-import { Leaf, Users, Lightbulb, Sparkles } from 'lucide-react';
+import {
+  Leaf,
+  Users,
+  Lightbulb,
+  Sparkles,
+  Timer,
+  ChartLine,
+} from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { isFeatureUnlocked } from '../game/engine/conditions';
 export function HelpSheet() {
@@ -53,6 +60,29 @@ export function HelpSheet() {
               Entering a new era earns a Civilization point. Spend it on a skill
               in the Skills sheet. Bonuses from skills, technologies, and
               achievements multiply together.
+            </p>
+          </div>
+        )}
+        {isFeatureUnlocked(state, 'autoPopulationGrowth') && (
+          <div className="panel">
+            <Timer size={25} />
+            <h2>Let your community grow</h2>
+            <p>
+              Enable Auto Growth in Population. Each attempt uses the same Food
+              price as manual growth and protects your selected share of current
+              Food. Turn it off to save for upgrades. It also works while you’re
+              away.
+            </p>
+          </div>
+        )}
+        {isFeatureUnlocked(state, 'statistics') && (
+          <div className="panel">
+            <ChartLine size={25} />
+            <h2>Keep a record</h2>
+            <p>
+              Statistics charts your population as time passes, including your
+              time away. It counts people represented by production units, so
+              upgrades keep your population totals intact.
             </p>
           </div>
         )}

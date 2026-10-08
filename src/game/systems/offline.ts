@@ -5,6 +5,8 @@ import type { GameState } from '../types';
 export interface OfflineReport {
   awaySeconds: number;
   simulatedSeconds: number;
+  populationCreated: ReturnType<typeof D>;
+  foodSpentOnGrowth: ReturnType<typeof D>;
   produced: Record<string, ReturnType<typeof D>>;
 }
 export function applyOfflineProgress(
@@ -22,10 +24,22 @@ export function applyOfflineProgress(
         ? {
             awaySeconds,
             simulatedSeconds,
+            populationCreated: next.population.sub(state.population),
+            foodSpentOnGrowth: next.statistics.foodSpentOnGrowth.sub(
+              state.statistics.foodSpentOnGrowth,
+            ),
             produced: Object.fromEntries(
               Object.keys(state.resources).map((id) => [
                 id,
-                next.resources[id].sub(state.resources[id]),
+                (
+                  next.statistics[
+                    `total${id[0].toUpperCase()}${id.slice(1)}Produced`
+                  ] ?? D()
+                ).sub(
+                  state.statistics[
+                    `total${id[0].toUpperCase()}${id.slice(1)}Produced`
+                  ] ?? D(),
+                ),
               ]),
             ),
           }

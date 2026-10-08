@@ -7,7 +7,15 @@ import { D } from '../utils/numbers';
 import type { GameAction, GameState } from '../types';
 import { isFeatureUnlocked } from './conditions';
 import { activeEffects, resourceMultiplier } from './effects';
-import { populationCost, productionPerSecond } from './production';
+import { productionPerSecond } from './production';
+import {
+  autoGrowthActive,
+  growPopulation,
+  growthInterval,
+  nextGrowthSeconds,
+} from './population';
+import { sampleStatistics } from '../systems/statistics';
+import { units } from '../content/units';
 import { mutateUnitAction } from './units';
 import {
   canAdvance,
@@ -41,12 +49,49 @@ export function simulate(
   const next = cloneState(state);
   let remaining = seconds;
   while (remaining > 0) {
-    const step = Math.min(remaining, balance.offlineStepSeconds);
+    const automatic = autoGrowthActive(next);
+    const recording = isFeatureUnlocked(next, 'statistics');
+    const step = Math.min(
+      remaining,
+      balance.offlineStepSeconds,
+      automatic ? nextGrowthSeconds(next) : Infinity,
+      recording
+        ? Math.max(
+            0,
+            balance.statistics.sampleIntervalSeconds -
+              next.statisticsSamplingAccumulator,
+          )
+        : Infinity,
+    );
     const rates = productionPerSecond(next);
     for (const r of resources) addProduction(next, r.id, rates[r.id].mul(step));
     next.statistics.totalPlayTime = next.statistics.totalPlayTime.add(step);
     next.lastSimulationTime += step * 1000;
+    if (automatic) next.autoPopulationGrowth.accumulator += step;
+    if (recording) next.statisticsSamplingAccumulator += step;
+    if (
+      automatic &&
+      next.autoPopulationGrowth.accumulator >= growthInterval(next) - 1e-8
+    ) {
+      next.autoPopulationGrowth.accumulator = Math.max(
+        0,
+        next.autoPopulationGrowth.accumulator - growthInterval(next),
+      );
+      growPopulation(next, next.autoPopulationGrowth.foodReservePercent);
+    }
     settleProgression(next);
+    if (
+      recording &&
+      next.statisticsSamplingAccumulator >=
+        balance.statistics.sampleIntervalSeconds - 1e-8
+    ) {
+      next.statisticsSamplingAccumulator = Math.max(
+        0,
+        next.statisticsSamplingAccumulator -
+          balance.statistics.sampleIntervalSeconds,
+      );
+      sampleStatistics(next);
+    }
     remaining = Math.max(0, remaining - step);
   }
   next.lastSimulationTime = endTime;
@@ -70,24 +115,30 @@ export function applyAction(state: GameState, action: GameAction): GameState {
       break;
     }
     case 'grow': {
-      const cost = populationCost(next);
+      if (!growPopulation(next)) return state;
+      break;
+    }
+    case 'autoGrowth': {
+      if (!isFeatureUnlocked(next, 'autoPopulationGrowth')) return state;
+      if (action.enabled !== undefined && typeof action.enabled !== 'boolean')
+        return state;
       if (
-        !isFeatureUnlocked(next, 'population') ||
-        next.resources.food.lt(cost)
+        action.foodReservePercent !== undefined &&
+        !balance.automaticGrowth.reserveOptions.includes(
+          action.foodReservePercent,
+        )
       )
         return state;
-      next.resources.food = next.resources.food.sub(cost);
-      next.population = next.population.add(1);
       if (
-        next.population.eq(2) ||
-        next.population.div(5).eq(next.population.div(5).floor())
-      )
-        logEvent(
-          next,
-          `Population reached ${next.population.toString()}.`,
-          'milestone',
-          false,
-        );
+        action.enabled !== undefined &&
+        action.enabled !== next.autoPopulationGrowth.enabled
+      ) {
+        next.autoPopulationGrowth.enabled = action.enabled;
+        next.autoPopulationGrowth.accumulator = 0;
+      }
+      if (action.foodReservePercent !== undefined)
+        next.autoPopulationGrowth.foodReservePercent =
+          action.foodReservePercent;
       break;
     }
     case 'recruit':
@@ -95,6 +146,17 @@ export function applyAction(state: GameState, action: GameAction): GameState {
     case 'upgrade':
     case 'dismantle': {
       if (!mutateUnitAction(next, action)) return state;
+      if (
+        action.type === 'upgrade' &&
+        !next.constructedProductionUnits.includes(action.unitId)
+      ) {
+        next.constructedProductionUnits.push(action.unitId);
+        logEvent(
+          next,
+          `First ${units.find((u) => u.id === action.unitId)!.name} constructed.`,
+          'milestone',
+        );
+      }
       break;
     }
     case 'research': {
@@ -108,6 +170,10 @@ export function applyAction(state: GameState, action: GameAction): GameState {
       payCosts(next, tech.cost);
       next.researchedTechnologies.push(tech.id);
       grantEffects(next, tech.effects);
+      next.autoPopulationGrowth.accumulator = Math.min(
+        next.autoPopulationGrowth.accumulator,
+        growthInterval(next),
+      );
       next.statistics.technologiesResearched =
         next.statistics.technologiesResearched.add(1);
       logEvent(next, `${tech.name} researched.`, 'research');
@@ -132,7 +198,7 @@ export function applyAction(state: GameState, action: GameAction): GameState {
       next.reachedEras.push(era.id);
       grantEffects(next, era.onEnterEffects);
       next.statistics.eraTransitions = next.statistics.eraTransitions.add(1);
-      logEvent(next, `${era.name} reached. A new chapter begins.`, 'era');
+      logEvent(next, `A new era has begun: ${era.name}.`, 'era');
       break;
     }
     case 'settings':

@@ -5,6 +5,7 @@ export interface WorkforceFocus {
 }
 export const WorkbookNavigation = createContext<{
   openWorkforce: (resource: string) => void;
+  openSheet: (id: string) => void;
   workforceFocus: WorkforceFocus | null;
 } | null>(null);
 export function useWorkbookNavigation() {
