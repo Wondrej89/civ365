@@ -5,6 +5,14 @@ export type Condition =
   | { type: 'always' | 'never' }
   | { type: 'resourceAtLeast'; resource: string; value: Amount }
   | { type: 'populationAtLeast'; value: Amount }
+  | {
+      type:
+        | 'territoriesAtLeast'
+        | 'populationCapacityAtLeast'
+        | 'militaryPowerAtLeast';
+      value: Amount;
+    }
+  | { type: 'settlementsAtLeast'; value: Amount; minimumTier?: number }
   | { type: 'technologyOwned'; technologyId: string }
   | { type: 'achievementOwned'; achievementId: string }
   | { type: 'eraReached'; eraId: string }
@@ -34,6 +42,13 @@ export type GameEffect =
     }
   | { type: 'populationCostMultiplier'; value: Amount }
   | { type: 'populationGrowthIntervalMultiplier'; value: Amount }
+  | { type: 'settlementCapacityMultiplier'; settlement?: string; value: Amount }
+  | { type: 'settlementCostMultiplier'; resource?: string; value: Amount }
+  | { type: 'militaryPowerMultiplier'; unit?: string; value: Amount }
+  | {
+      type: 'militaryCasualtyMultiplier' | 'campaignDurationMultiplier';
+      value: Amount;
+    }
   | { type: 'unlockFeature' | 'unlockJob' | 'unlockUnit'; id: string }
   | { type: 'grantResource'; resource: string; value: Amount };
 
@@ -72,6 +87,44 @@ export interface ProductionUnitDefinition {
 export interface ResourceCost {
   resource: string;
   amount: Amount;
+}
+export interface SettlementDefinition {
+  id: string;
+  name: string;
+  description: string;
+  tier: number;
+  capacity: Amount;
+  costs: ResourceCost[];
+  upgradeFrom?: string;
+  unlockCondition: Condition;
+  effects?: GameEffect[];
+}
+export interface TerritoryDefinition {
+  id: string;
+  name: string;
+  settlementSlots: number;
+  effects?: GameEffect[];
+  strategicResources?: string[];
+}
+export interface MilitaryUnitDefinition {
+  id: string;
+  name: string;
+  description: string;
+  populationCost: number;
+  resourceCosts: ResourceCost[];
+  basePower: Amount;
+  unlockCondition: Condition;
+  effects?: GameEffect[];
+}
+export interface Campaign {
+  frontierIndex: string;
+  committedUnits: Record<string, Decimal>;
+  power: Decimal;
+  defense: Decimal;
+  durationSeconds: number;
+  elapsedSeconds: number;
+  casualtyRate: number;
+  victory: boolean;
 }
 export interface TechnologyDefinition {
   id: string;
@@ -148,6 +201,12 @@ export interface GameState {
   resources: Record<string, Decimal>;
   population: Decimal;
   productionUnits: Record<string, Decimal>;
+  ownedTerritories: Record<string, Decimal>;
+  settlements: Record<string, Decimal>;
+  militaryUnits: Record<string, Decimal>;
+  activeCampaign: Campaign | null;
+  /** Developer grant; normal capacity is derived from settlements and effects. */
+  populationCapacityBonus: Decimal;
   unlockedProductionUnits: string[];
   constructedProductionUnits: string[];
   autoPopulationGrowth: {
@@ -173,6 +232,17 @@ export type GameAction =
   | { type: 'gather'; resource: string }
   | { type: 'grow' }
   | { type: 'autoGrowth'; enabled?: boolean; foodReservePercent?: number }
+  | {
+      type: 'buildSettlement' | 'upgradeSettlement';
+      id: string;
+      amount: Amount | 'max';
+    }
+  | {
+      type: 'recruitMilitary' | 'demobilize';
+      id: string;
+      amount: Amount | 'max';
+    }
+  | { type: 'launchCampaign' }
   | {
       type: 'recruit' | 'release' | 'upgrade' | 'dismantle';
       unitId: string;

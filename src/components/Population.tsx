@@ -13,9 +13,15 @@ import { populationDistribution } from '../game/systems/statistics';
 import { formatNumber } from '../game/utils/numbers';
 import { visibleResources } from './common';
 import { GrowButton } from './Workforce';
+import {
+  capacityReached,
+  populationCapacity,
+} from '../game/engine/settlements';
+import { useWorkbookNavigation } from './navigation';
 export function PopulationSheet() {
   const { state } = useGame(),
     automation = isFeatureUnlocked(state, 'autoPopulationGrowth');
+  const { openSheet } = useWorkbookNavigation();
   return (
     <>
       <div className="sheet-heading">
@@ -28,6 +34,7 @@ export function PopulationSheet() {
       <div className="population-kpis">
         {[
           ['Total Population', state.population],
+          ['Population Capacity', populationCapacity(state)],
           ['Idle', idlePopulation(state)],
           ['Assigned', representedPopulation(state)],
         ].map(([name, value]) => (
@@ -37,6 +44,26 @@ export function PopulationSheet() {
           </div>
         ))}
       </div>
+      {capacityReached(state) && (
+        <section className="panel capacity-notice">
+          <strong>Population capacity reached.</strong>
+          <p>Expand your settlements or acquire more territory.</p>
+          <button
+            className="button"
+            onClick={() =>
+              openSheet(
+                isFeatureUnlocked(state, 'settlements')
+                  ? 'settlements'
+                  : 'research',
+              )
+            }
+          >
+            {isFeatureUnlocked(state, 'settlements')
+              ? 'Open Settlements'
+              : 'Research Agriculture and Settled Life'}
+          </button>
+        </section>
+      )}
       <div className="population-panels">
         <section className="panel population-panel">
           <h2>Manual growth</h2>
@@ -143,6 +170,7 @@ export function PopulationSheet() {
             .filter(
               (group) =>
                 group.id === 'idle' ||
+                group.id === 'military' ||
                 visibleResources(state).some((r) => r.id === group.id),
             )
             .map((group) => (

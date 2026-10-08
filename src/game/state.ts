@@ -1,5 +1,8 @@
 import { resources } from './content/resources';
 import { units } from './content/units';
+import { territories } from './content/territories';
+import { settlements } from './content/settlements';
+import { militaryUnits } from './content/military';
 import { balance } from './content/config';
 import { D } from './utils/numbers';
 import type { GameState } from './types';
@@ -17,6 +20,10 @@ export const statisticIds = [
   'achievementCount',
   'totalPopulationCreated',
   'foodSpentOnGrowth',
+  'totalSettlementsBuilt',
+  'territoriesConquered',
+  'militaryCasualties',
+  'campaignsCompleted',
 ];
 export function createInitialState(now = Date.now()): GameState {
   return {
@@ -27,6 +34,15 @@ export function createInitialState(now = Date.now()): GameState {
     resources: Object.fromEntries(resources.map((r) => [r.id, D()])),
     population: D(1),
     productionUnits: Object.fromEntries(units.map((u) => [u.id, D()])),
+    ownedTerritories: Object.fromEntries(
+      territories.map((t) => [t.id, D(t.id === 'homeland' ? 1 : 0)]),
+    ),
+    settlements: Object.fromEntries(
+      settlements.map((s) => [s.id, D(s.id === 'camp' ? 1 : 0)]),
+    ),
+    militaryUnits: Object.fromEntries(militaryUnits.map((u) => [u.id, D()])),
+    activeCampaign: null,
+    populationCapacityBonus: D(),
     unlockedProductionUnits: [],
     constructedProductionUnits: [],
     autoPopulationGrowth: {
@@ -46,7 +62,13 @@ export function createInitialState(now = Date.now()): GameState {
     statistics: Object.fromEntries(
       statisticIds.map((id) => [
         id,
-        D(id === 'maxPopulation' || id === 'totalPopulationCreated' ? 1 : 0),
+        D(
+          id === 'maxPopulation' ||
+            id === 'totalPopulationCreated' ||
+            id === 'totalSettlementsBuilt'
+            ? 1
+            : 0,
+        ),
       ]),
     ),
     settings: { notifications: true },
@@ -67,6 +89,15 @@ export function cloneState(state: GameState): GameState {
     ...state,
     resources: { ...state.resources },
     productionUnits: { ...state.productionUnits },
+    ownedTerritories: { ...state.ownedTerritories },
+    settlements: { ...state.settlements },
+    militaryUnits: { ...state.militaryUnits },
+    activeCampaign: state.activeCampaign
+      ? {
+          ...state.activeCampaign,
+          committedUnits: { ...state.activeCampaign.committedUnits },
+        }
+      : null,
     unlockedProductionUnits: [...state.unlockedProductionUnits],
     constructedProductionUnits: [...state.constructedProductionUnits],
     autoPopulationGrowth: { ...state.autoPopulationGrowth },

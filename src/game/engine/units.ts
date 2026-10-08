@@ -6,7 +6,7 @@ import type {
   GameState,
   ProductionUnitDefinition,
 } from '../types';
-import { D, sum } from '../utils/numbers';
+import { D } from '../utils/numbers';
 import { evaluateCondition } from './conditions';
 import { activeEffects } from './effects';
 
@@ -15,27 +15,15 @@ export const ownedUnits = (state: GameState, id: string) =>
   state.productionUnits[id] ?? D();
 export type UnitStatus = 'hidden' | 'revealed' | 'available' | 'owned';
 
-/** Derive the full population carried through a chain; never charge it twice. */
-export function getPopulationFootprint(
-  id: string,
-  ancestors: string[] = [],
-): ReturnType<typeof D> {
-  const unit = unitById(id);
-  if (!unit) throw new Error(`Unknown production unit: ${id}`);
-  if (ancestors.includes(id)) throw new Error('Cyclic production unit chain.');
-  if (unit.upgradeFrom)
-    return getPopulationFootprint(unit.upgradeFrom.unitId, [
-      ...ancestors,
-      id,
-    ]).mul(unit.upgradeFrom.amount);
-  return D(unit.populationCost ?? 1);
-}
-export const representedPopulation = (state: GameState) =>
-  sum(
-    units.map((u) => ownedUnits(state, u.id).mul(getPopulationFootprint(u.id))),
-  );
-export const idlePopulation = (state: GameState) =>
-  state.population.sub(representedPopulation(state));
+export {
+  getPopulationFootprint,
+  representedPopulation,
+  idlePopulation,
+} from './population-accounting';
+import {
+  getPopulationFootprint,
+  idlePopulation,
+} from './population-accounting';
 export function isUnitUnlocked(
   state: GameState,
   unit: ProductionUnitDefinition,

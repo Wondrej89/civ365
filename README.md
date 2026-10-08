@@ -1,6 +1,6 @@
 # Civilization.xlsx
 
-Hratelná browserová incremental hra ve stylu světlého tabulkového workbooku. Začněte s jediným člověkem, sbírejte Food, budujte produkční řetězce, objevujte technologie a projděte Agricultural, Bronze a Classical Age. Bez backendu, účtu nebo externích služeb.
+Hratelná browserová incremental hra ve stylu světlého tabulkového workbooku. Začněte s jediným člověkem, sbírejte Food, budujte produkční řetězce, objevujte technologie a rozvíjejte civilizaci až do Renaissance Age. Territory, settlements a armáda tvoří dlouhodobou investiční smyčku; Industrial Age je připravená jako další cíl. Bez backendu, účtu nebo externích služeb.
 
 ## Spuštění
 
@@ -49,11 +49,12 @@ Při dalších změnách vytvořte pracovní větev a PR do `main`. Po úspěšn
 3. Při populaci 5 se objeví Thinker a Research. Naberte Thinkera a Woodcuttera; ostatní mohou sbírat Food.
 4. V Research kupujte technologie. Language → Knowledge Sharing → Agriculture odemkne Farmer. Po vstupu do Agricultural Age vede Stoneworking → Mining k Minerovi; Bronze Age přidá Mathematics → Formal Education → Scholar. Každý vzniká z 5 jednotek předchozího tieru a dalších zdrojů. Například 1 Farmer spotřebuje 5 Gathererů, 20 Materials a 50 Food, stále reprezentuje 5 lidí a produkuje základní 4 Food/s.
 5. S Agriculture a populací 20 lze v Overview vstoupit do Agricultural Age. Stav se neresetuje; získáte 1 Civilization point a možnost výběru skillu.
-6. Settled Life → Natural Growth odemkne automatický růst v Population. Record Keeping odhalí Statistics a začne zaznamenávat historii.
-7. Mining + Writing, populace 50 a zásoba 250 Research umožní vstup do Bronze Age. Další technologie odemknou Farm, Workshop a Scholar; Census doplní graf rozložení populace.
-8. S populací 200, Mathematics, Construction a Formal Education vstupte do Classical Age. Institutional Learning odemkne Academy, Urban Communities a Public Health zrychlí automatický růst.
+6. Zakládající Camp má kapacitu 20 lidí a zabírá jediný územní slot. Settled Life odhalí Settlements a upgrade Camp → Settlement. Village Organization umožní Town s kapacitou 75. Settled Life → Natural Growth odemkne automatický růst v Population; Record Keeping odhalí Statistics.
+7. Organized Warfare odemkne Military a Territory už v Agricultural Age. Vojáci se rekrutují z Idle Population za Food a Materials, neposkytují produkci. Připravte převahu nad frontier, spusťte časovanou campaign a po vítězství postavte další settlement na novém slotu.
+8. Overview ukazuje checklist příští éry. Bronze potřebuje technologie, 50 lidí, dvě území a dva settlements; Classical 150 lidí, čtyři území a kapacitu 200. Medieval přidává požadavek na města a Military Power. Research samotný nestačí.
+9. Medieval a Renaissance přidávají další produkční, kapacitní a vojenské technologie. Industrial má vstup přes Steam Power, Mechanization a Early Industry; Factories zpřístupní čtvrtý produkční tier. Energy ani Economy zatím neexistují.
 
-Optimalizovaný testovací průchod se soustavným přerozdělováním populace a okamžitými nákupy dosahuje Classical Age přibližně za 29 simulovaných minut. Tempo je první balance pass; cílové pomalejší hraní bude vyžadovat další ladění. Populace Food nespotřebovává průběžně; MVP používá Food jako cenu růstu a upgradu.
+Optimalizovaný engine průchod dosáhl Agricultural / Bronze / Classical / Medieval / Renaissance za přibližně 5 min / 69 min / 2 h 19 min / 4 h 41 min / 8 h 28 min. Skutečné UI s běžnými akcemi a vývojovým zrychlením dosáhlo Medieval za 5 simulovaných hodin. Jde o první balance pass, nikoli záruku přesného času pro každého hráče; žádná éra nemá časový zámek. Populace Food nespotřebovává průběžně; MVP používá Food jako cenu růstu a upgradu.
 
 Workforce zobrazuje samostatné sloupce Food, Materials a Research. Tier 1 nabízí nábor +1 / +10 / Max a uvolnění −1 / −10 / All. Vyšší tiery nabízejí Upgrade 1 / Max, porovnání produkce a Dismantle 1 / All. Rozebrání vrátí předchozí jednotky, ale nevrací utracené zdroje. Overview ukazuje agregovanou produkci; odkazy otevřou a zvýrazní příslušný sloupec Workforce.
 
@@ -67,7 +68,12 @@ src/game/
   engine/
     conditions.ts           společný evaluator podmínek
     effects.ts              aktivní efekty, odvozené modifikátory
-    units.ts                řetězce, odvozená populace, nábor a upgrady
+    units.ts                produkční řetězce, nábor a upgrady
+    population-accounting.ts společný footprint workers + military + idle
+    settlements.ts          územní sloty, kapacita, stavba a upgrady
+    military.ts             nábor, demobilizace a odvozená vojenská síla
+    conquest.ts             škálovaný frontier, snapshot kampaně a ztráty
+    costs.ts                geometrické bulk ceny a dostupné množství
     production.ts           součet produkce tierů, preview, cena populace
     population.ts           jediný růst, automatizace, intervalové efekty
     simulation.ts           čisté akce a časová simulace
@@ -85,21 +91,21 @@ src/hooks/useGame.ts         useSyncExternalStore
 
 Engine nemá závislost na Reactu ani DOM. `applyAction` a `simulate` vracejí nový stav. Zdroje, populace, počty `productionUnits` i herní statistiky používají `break_infinity.js` Decimal; čísla typu `number` jsou čas, konfigurace a malé levely skillů. Decimal není přesná finanční aritmetika: zanedbatelné rozdíly se u velmi velkých částek zaokrouhlují.
 
-Jeden timer simuluje skutečně uplynulý čas po 100 ms, React dostává snapshot nejvýše každých 250 ms. Akce nejprve synchronizují čas, aby nábor nebo upgrade nezměnil zpětně minulou produkci. Offline výpočet používá stejnou funkci `simulate` s kroky nejvýše 10 s; tím průběžně vyhodnocuje achievementy a jejich bonusy. Během dlouhých neaktivních intervalů se započítá nejvýše 8 hodin. Nákupy a vstup do éry vyžadují hráčovu akci. Po Natural Growth lze zapnout automatický růst; živá i offline simulace volá stejnou `growPopulation` jako ruční tlačítko. Kroky končí také na hranicích intervalů automatizace a statistického samplování.
+Jeden timer simuluje skutečně uplynulý čas po 100 ms, React dostává snapshot nejvýše každých 250 ms. Akce nejprve synchronizují čas, aby nábor nebo upgrade nezměnil zpětně minulou produkci. Offline výpočet používá stejnou funkci `simulate` s kroky nejvýše 10 s; tím průběžně vyhodnocuje achievementy a jejich bonusy. Během dlouhých neaktivních intervalů se započítá nejvýše 8 hodin. Nákupy a vstup do éry vyžadují hráčovu akci. Po Natural Growth lze zapnout automatický růst; živá i offline simulace volá stejnou `growPopulation` jako ruční tlačítko. Kroky končí také na hranicích intervalů automatizace, kampaní a statistického samplování. Ruční i automatický růst respektuje Population Capacity; stará populace nad kapacitou se nesnižuje.
 
-`getPopulationFootprint(id)` rekurzivně násobí počty vstupních jednotek. Pro řetězec Gatherer → Farmer → Farm → Industrial Farm vrací 1 / 5 / 20 / 100 lidí. Platí `Total Population = Idle Population + Σ(owned × footprint)`. Upgrade a rozebrání zachovávají oba členy populace; jen nábor a uvolnění tieru 1 mění Idle Population. Max používá minimum dostupných vstupů a zdrojů, bez smyčky přes jednotlivé jednotky.
+`getPopulationFootprint(id)` rekurzivně násobí počty vstupních jednotek. Pro řetězec Gatherer → Farmer → Farm → Industrial Farm vrací 1 / 5 / 20 / 100 lidí. Platí `Total Population = Idle Population + Σ(productionUnits × footprint) + Σ(militaryUnits × populationCost)`. Upgrade a rozebrání zachovávají oba členy populace; jen nábor a uvolnění tieru 1 mění Idle Population. Max používá minimum dostupných vstupů a zdrojů, bez smyčky přes jednotlivé jednotky.
 
-Všechny progression systémy používají `Condition`: `resourceAtLeast`, `populationAtLeast`, `technologyOwned`, `achievementOwned`, `eraReached`, `featureUnlocked`, `statAtLeast`, `all`, `any`, `not` a konstanty `always`/`never`. Unlocky jsou trvalé a vyhodnocují se do ustáleného stavu. UI používá `isFeatureUnlocked`; sheet registry je v `components/sheets.ts`. Budoucí systémy a Wealth jsou zamčené a skryté.
+Všechny progression systémy používají `Condition`: `resourceAtLeast`, `populationAtLeast`, `technologyOwned`, `achievementOwned`, `eraReached`, `featureUnlocked`, `statAtLeast`, `territoriesAtLeast`, `settlementsAtLeast` (včetně minimumTier), `populationCapacityAtLeast`, `militaryPowerAtLeast`, `all`, `any`, `not` a konstanty `always`/`never`. Unlocky jsou trvalé a vyhodnocují se do ustáleného stavu. UI používá `isFeatureUnlocked`; sheet registry je v `components/sheets.ts`. Budoucí systémy a Wealth jsou zamčené a skryté.
 
-Jednotky, technologie, skilly, achievementy a éry sdílejí `GameEffect`. Aktivní efekty se odvozují z vlastnictví; základní definice se nemění. Podporovány jsou násobiče produkce/zdrojů/jednotek, ploché bonusy, cena růstu, interval automatického růstu a unlocky. Efekty jednotek se aplikují za každý vlastněný kus: ploché bonusy se násobí počtem, násobiče umocňují. Zmizí po rozebrání. `grantResource` je jednorázový efekt při nákupu či vstupu do éry; jednotky používají pouze průběžné efekty. Skill engine podporuje levely, rostoucí ceny, prerequisite levely i oboustranné vyloučení, i když MVP nabídka používá jen tři jednoduché volby.
+Jednotky, technologie, skilly, achievementy a éry sdílejí `GameEffect`. Aktivní efekty se odvozují z vlastnictví; základní definice se nemění. Podporovány jsou násobiče produkce/zdrojů/jednotek, ploché bonusy, cena růstu, interval automatického růstu, settlement capacity/cost, military power/casualties, campaign duration a unlocky. Settlement, territory a military definice mohou také poskytovat efekty. Efekty jednotek se aplikují za každý vlastněný kus: ploché bonusy se násobí počtem, násobiče umocňují. Zmizí po rozebrání. `grantResource` je jednorázový efekt při nákupu či vstupu do éry; jednotky používají pouze průběžné efekty. Skill engine podporuje levely, rostoucí ceny, prerequisite levely i oboustranné vyloučení, i když MVP nabídka používá jen tři jednoduché volby.
 
-Statistiky zahrnují vyprodukované zdroje (za celou hru, nezávisle na útratách), ruční kliknutí, nejvyšší populaci, simulovaný čas, počet technologií a přechodů érami. Record Keeping odemkne historii populace vzorkovanou každých 30 simulovaných sekund s maximem 2000 bodů na sérii; Census doplní rozložení podle váženého footprintu. Event log uchovává posledních 100 událostí.
+Statistiky zahrnují vyprodukované zdroje (za celou hru, nezávisle na útratách), ruční kliknutí, nejvyšší populaci, simulovaný čas, počet technologií a přechodů érami. Record Keeping odemkne historii populace vzorkovanou každých 30 simulovaných sekund s maximem 2000 bodů na sérii; Census doplní rozložení podle váženého footprintu včetně Military. Po odemčení příslušných features se navíc vzorkují Population Capacity, Owned Territories a Military Power. Event log uchovává posledních 100 událostí.
 
 ## Save systém
 
-Klíč localStorage: `civilization.xlsx.save`. Autosave každých 10 s, při skrytí stránky a odchodu. JSON obsahuje `saveVersion: 3`, čas vytvoření/uložení/simulace, Decimal částky jako řetězce, `productionUnits`, trvalé unlocky jednotek, nastavení a fázi automatického růstu, statistické série a sampling fázi, objevy, skilly, achievementy, éry, features, statistiky, nastavení a události. Export je Base64 UTF-8 text; import přijímá také JSON.
+Klíč localStorage: `civilization.xlsx.save`. Autosave každých 10 s, při skrytí stránky a odchodu. JSON obsahuje `saveVersion: 4`, čas vytvoření/uložení/simulace, Decimal částky jako řetězce, `productionUnits`, trvalé unlocky jednotek, nastavení a fázi automatického růstu, territory/settlement/military counts a snapshot activeCampaign, statistické série a sampling fázi, objevy, skilly, achievementy, éry, features, statistiky, nastavení a události. Export je Base64 UTF-8 text; import přijímá také JSON.
 
-Import kontroluje strukturu, ID obsahu, nezáporné konečné částky, celé počty jednotek, jejich vážený population footprint, odemčení jednotek, prerequisites, levely a konflikty skillů, éry, nastavení a event log. Nepodporované budoucí verze odmítá. `migrateSave` převádí verze 0 → 1 → 2 → 3. Staré `jobAssignments` převede do tieru 1; starý Farmer zabíral jen jednoho člověka, proto se každý změní na jednoho Gatherera. Zachová populaci, zdroje i objevy a vysvětlí převod v event logu. Migrace 2 → 3 zachová všechny stávající hodnoty, dříve odemčené Minery/Scholary a převede interní `scientist` na `academy`. Nová automatika začíná vypnutá s rezervou 10 % a historie prázdná. Poškozený automatický save zůstane jako `.recovery` kopie. Při nedostupném localStorage UI upozorní; export funguje i bez něj.
+Import kontroluje strukturu, ID obsahu, nezáporné konečné částky, celé počty jednotek, jejich vážený population footprint, odemčení jednotek, prerequisites, levely a konflikty skillů, éry, nastavení a event log. Nepodporované budoucí verze odmítá. `migrateSave` převádí verze 0 → 1 → 2 → 3 → 4. Staré `jobAssignments` převede do tieru 1; starý Farmer zabíral jen jednoho člověka, proto se každý změní na jednoho Gatherera. Zachová populaci, zdroje i objevy a vysvětlí převod v event logu. Migrace 2 → 3 zachová všechny stávající hodnoty, dříve odemčené Minery/Scholary a převede interní `scientist` na `academy`. Migrace 2 → 3 nastaví automatiku vypnutou s rezervou 10 % a historii prázdnou. Migrace 3 → 4 přidá jedno homeland, jeden Camp, prázdnou armádu a žádnou kampaň; zachová zdroje, populaci i původní historii. Populace nad novou kapacitou zůstává, další růst čeká na rozšíření domovů. Kapacita je odvozená, neukládá se jako nezávislá duplicitní hodnota. Poškozený automatický save zůstane jako `.recovery` kopie. Při nedostupném localStorage UI upozorní; export funguje i bez něj.
 
 Reset vyžaduje potvrzení. Před importem nebo resetem doporučujeme exportovat starý stav. Savům lze záměrně upravit hodnoty; jde o lokální single-player hru, nikoli ochranu proti cheatingu. Mezi více současně otevřenými záložkami není synchronizace, používejte jednu aktivní záložku.
 
@@ -124,7 +130,7 @@ Definice přidejte do exportovaných polí v `src/game/content/`. Hlavní loop m
 
 Tier 1 má `populationCost` (výchozí 1), vyšší tier má `upgradeFrom` bez další ceny populace. Nábor, upgrady, produkce, save i Workforce načtou jednotku z registry. Jedna jednotka může produkovat více zdrojů a ovlivňovat ostatní přes `effects`. Validace definic odmítne neplatný řetězec, cyklus, neznámý zdroj nebo dodatečnou cenu populace na vyšším tieru.
 
-Každý zdroj s viditelnými jednotkami své `category` automaticky vytvoří nový produkční sloupec. Volitelný `productionLabel` určuje název sloupce i odkazu v Overview. UI neobsahuje konkrétní převody mezi jednotkami. `visibilityCondition` a `unlockCondition` rozlišují hidden / revealed (`???`) / available / owned. Čtyři tiery každého současného řetězce jsou připravené v datech; tier 3 je postupně dostupný přes Advanced Agriculture, Bronze Working a Institutional Learning; tier 4 zůstává skrytý.
+Každý zdroj s viditelnými jednotkami své `category` automaticky vytvoří nový produkční sloupec. Volitelný `productionLabel` určuje název sloupce i odkazu v Overview. UI neobsahuje konkrétní převody mezi jednotkami. `visibilityCondition` a `unlockCondition` rozlišují hidden / revealed (`???`) / available / owned. Čtyři tiery každého současného řetězce jsou připravené v datech; tier 3 je postupně dostupný přes Advanced Agriculture, Bronze Working a Institutional Learning; tier 4 odemkne Factories v Industrial Age.
 
 ### Technologie (`content/technologies.ts`)
 
@@ -192,8 +198,10 @@ Nový zdroj přidejte do `content/resources.ts`: engine, produkce, formatter a s
 
 ## Rozsah a omezení
 
-Aktuální obsah sahá do Classical Age včetně prvních klasických technologií. Economy, Energy, Space a Prestige nejsou implementované ani viditelné. První vstup do každé nové éry dává Civilization point pro současný skill systém. Grafiku tvoří workbook, KPI, tabulky, SVG technologický strom a statistické grafy, bez složitých animací. Budoucí mechaniky s průběžnou spotřebou zdrojů budou potřebovat systém receptů; nynější jednotky zdroje spotřebovávají při upgradu a průběžně pouze produkují.
+Aktuální obsah zahrnuje hratelnou Medieval a Renaissance Age, 57 technologií, settlements, vojenské jednotky a conquest. Industrial Age obsahuje první vstupní obsah; další průmyslové systémy jsou budoucí rozšíření. Economy, Energy, Space a Prestige nejsou implementované ani viditelné. První vstup do každé nové éry dává Civilization point pro současný skill systém. Grafiku tvoří workbook, KPI, tabulky, SVG technologický strom a statistické grafy, bez složitých animací. Budoucí mechaniky s průběžnou spotřebou zdrojů budou potřebovat systém receptů; nynější jednotky zdroje spotřebovávají při upgradu a průběžně pouze produkují.
 
-Kritické unit/integration testy pokrývají odemykání, časovou produkci, workforce invarianty, technologie, podmínky, efekty, achievementy, přechod éry, skilly, save roundtrip/validaci/migraci, offline produkci a úplný průchod až do Classical Age, automatický růst, rezervu Food, statistické série a offline shodu. UI lze ověřit také přes reálný prohlížeč.
+Kritické unit/integration testy pokrývají odemykání, časovou produkci, workforce invarianty, technologie, podmínky, efekty, achievementy, přechod éry, skilly, save roundtrip/validaci/migraci, offline produkci a úplný průchod až do Renaissance Age, kapacitu a sloty, vojenský footprint, ztráty, kampaně a jejich offline pokračování, automatický růst, rezervu Food, statistické série a offline shodu. UI lze ověřit také přes reálný prohlížeč.
 
 Podrobný seznam nových technologií, pravidla automatického růstu a rezervy, sampling, rozšiřování větví/grafů a doporučené balance parametry jsou v [docs/progression.md](docs/progression.md).
+
+Aktuální pravidla území, settlements, armády, kampaní, epochální checklist a výsledky balance průchodů jsou v [docs/realm.md](docs/realm.md).

@@ -3,13 +3,32 @@ import { skills } from '../content/skills';
 import { achievements } from '../content/achievements';
 import { eras } from '../content/eras';
 import { units } from '../content/units';
+import { settlements } from '../content/settlements';
+import { territories } from '../content/territories';
+import { militaryUnits } from '../content/military';
 import type { GameEffect, GameState } from '../types';
 import { D } from '../utils/numbers';
 
 export function activeEffects(state: GameState): GameEffect[] {
   return [
-    ...units.flatMap((unit) => {
-      const count = state.productionUnits[unit.id] ?? D();
+    ...[
+      ...units.map((unit) => ({
+        unit,
+        count: state.productionUnits[unit.id] ?? D(),
+      })),
+      ...settlements.map((unit) => ({
+        unit,
+        count: state.settlements[unit.id] ?? D(),
+      })),
+      ...territories.map((unit) => ({
+        unit,
+        count: state.ownedTerritories[unit.id] ?? D(),
+      })),
+      ...militaryUnits.map((unit) => ({
+        unit,
+        count: state.militaryUnits[unit.id] ?? D(),
+      })),
+    ].flatMap(({ unit, count }) => {
       if (count.lte(0)) return [];
       return (unit.effects ?? [])
         .filter((e) => e.type !== 'grantResource')

@@ -1,113 +1,74 @@
 import { expect, it } from 'vitest';
 import { createInitialState } from '../state';
 import { applyAction, simulate } from '../engine/simulation';
-import { populationDistribution } from '../systems/statistics';
-import { canAdvance, technologyStatus } from '../systems/progression';
-import { idlePopulation, isUnitUnlocked, maxCreatable } from '../engine/units';
-import { technologies } from '../content/technologies';
-import { eras } from '../content/eras';
-import { units } from '../content/units';
-import { D } from '../utils/numbers';
+import { nextPlaythroughAction } from './helpers/playthrough';
+import { ownedTerritories, populationCapacity } from '../engine/settlements';
+import { militaryPower } from '../engine/military';
+import { idlePopulation } from '../engine/population-accounting';
+import { deserializeSave, serializeSave } from '../systems/save';
 
-it('reaches Classical Age from ten opening clicks without free resources, unlocks, or population', () => {
+it('reaches Renaissance from a new save through settlements and conquest without grants or time gates', () => {
   let state = createInitialState(1000);
   for (let i = 0; i < 10; i++)
     state = applyAction(state, { type: 'gather', resource: 'food' });
-  state = applyAction(state, { type: 'grow' });
-  state = applyAction(state, {
-    type: 'recruit',
-    unitId: 'gatherer',
-    amount: 'max',
-  });
   const milestones: Record<string, number> = {};
   for (
-    let time = 5;
-    time <= 10800 && state.currentEra !== 'classical';
-    time += 5
+    let time = 0;
+    time <= 48 * 3600 && state.currentEra !== 'renaissance';
+    time += 30
   ) {
-    state = simulate(state, 5);
-    if (state.unlockedFeatures.includes('autoPopulationGrowth')) {
-      if (!state.autoPopulationGrowth.enabled)
-        state = applyAction(state, { type: 'autoGrowth', enabled: true });
-    } else state = applyAction(state, { type: 'grow' });
-    const population = state.population.toNumber();
-    if (population >= 5) {
-      for (const [resource, id] of [
-        ['research', 'thinker'],
-        ['materials', 'woodcutter'],
-      ]) {
-        const allocation = populationDistribution(state).find(
-          (g) => g.id === resource,
-        )!.value;
-        if (allocation.eq(0) && idlePopulation(state).eq(0))
-          state = applyAction(state, {
-            type: 'release',
-            unitId: 'gatherer',
-            amount: 1,
-          });
-        if (allocation.eq(0))
-          state = applyAction(state, {
-            type: 'recruit',
-            unitId: id,
-            amount: 1,
-          });
+    for (let i = 0; i < 1000; i++) {
+      const action = nextPlaythroughAction(state);
+      if (!action) break;
+      const next = applyAction(state, action);
+      if (next === state)
+        throw Error(
+          `Player policy proposed an invalid action: ${JSON.stringify(action)}`,
+        );
+      if (next.currentEra !== state.currentEra) {
+        milestones[next.currentEra] = time;
+        console.log(
+          'Realm milestone',
+          next.currentEra,
+          time,
+          'seconds',
+          next.population.toString(),
+          ownedTerritories(next).toString(),
+          'territories',
+        );
       }
+      state = next;
+      if (i === 999) throw Error('Player policy cycled without time advancing');
     }
-    for (const [resource, id, share] of [
-      ['research', 'thinker', 0.3],
-      ['materials', 'woodcutter', 0.25],
-      ['food', 'gatherer', 0.45],
-    ] as const) {
-      const current = populationDistribution(state).find(
-        (g) => g.id === resource,
-      )!.value;
-      const wanted = D(Math.floor(population * share))
-        .sub(current)
-        .max(0)
-        .min(idlePopulation(state));
-      if (wanted.gt(0))
-        state = applyAction(state, {
-          type: 'recruit',
-          unitId: id,
-          amount: wanted,
-        });
-    }
-    if (idlePopulation(state).gt(0))
-      state = applyAction(state, {
-        type: 'recruit',
-        unitId: 'gatherer',
-        amount: 'max',
-      });
-    for (const technology of technologies)
-      if (technologyStatus(state, technology) === 'available')
-        state = applyAction(state, { type: 'research', id: technology.id });
-    for (const unit of units.filter((u) => u.upgradeFrom))
-      if (isUnitUnlocked(state, unit) && maxCreatable(state, unit).gt(0))
-        state = applyAction(state, {
-          type: 'upgrade',
-          unitId: unit.id,
-          amount: 'max',
-        });
-    for (const era of eras)
-      if (canAdvance(state, era)) {
-        state = applyAction(state, { type: 'advance', id: era.id });
-        milestones[era.id] = time;
-      }
+    state = simulate(state, 30);
+    if (time % 3600 === 0)
+      console.log(
+        'Balance hour',
+        time / 3600,
+        state.currentEra,
+        'population',
+        state.population.toString(),
+        'capacity',
+        populationCapacity(state).toString(),
+        'territories',
+        ownedTerritories(state).toString(),
+        'power',
+        militaryPower(state).toString(),
+        'research',
+        state.resources.research.toString(),
+        'techs',
+        state.researchedTechnologies.length,
+      );
   }
-  console.log('Expanded progression (simulated seconds):', milestones);
-  expect(state.currentEra).toBe('classical');
+  console.log('Realm progression seconds:', milestones);
+  expect(state.currentEra).toBe('renaissance');
+  expect(milestones.bronze).toBeGreaterThan(1200);
+  expect(milestones.classical).toBeGreaterThan(3600);
+  expect(milestones.medieval).toBeGreaterThan(7200);
   expect(state.statistics.totalManualClicks.eq(10)).toBe(true);
-  expect(state.unlockedFeatures).toEqual(
-    expect.arrayContaining([
-      'autoPopulationGrowth',
-      'statistics',
-      'populationDistribution',
-    ]),
-  );
-  expect(state.researchedTechnologies).toEqual(
-    expect.arrayContaining(['mining', 'writing', 'formalEducation']),
-  );
-  expect(state.statisticsHistory.population.length).toBeGreaterThan(10);
-  expect(state.resources.food.gte(0)).toBe(true);
-  expect(state.resources.materials.gte(0)).toBe(true);
-}, 20000);
+  expect(state.statistics.territoriesConquered.gte(9)).toBe(true);
+  expect(state.statistics.militaryCasualties.gt(0)).toBe(true);
+  expect(state.population.lte(populationCapacity(state))).toBe(true);
+  expect(idlePopulation(state).gte(0)).toBe(true);
+  expect(() => deserializeSave(JSON.parse(serializeSave(state)))).not.toThrow();
+}, 120000);

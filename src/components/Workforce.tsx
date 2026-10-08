@@ -12,7 +12,6 @@ import { gameStore } from '../game/store';
 import { resources } from '../game/content/resources';
 import {
   getPopulationFootprint,
-  representedPopulation,
   idlePopulation,
   ownedUnits,
   productionChains,
@@ -36,19 +35,27 @@ import type {
 } from '../game/types';
 import { ResourceIcon } from './common';
 import { useWorkbookNavigation } from './navigation';
+import { capacityReached } from '../game/engine/settlements';
+import {
+  productionPopulation,
+  militaryPopulation,
+} from '../game/engine/population-accounting';
 
 export function GrowButton() {
   const { state } = useGame(),
     cost = populationCost(state),
-    affordable = state.resources.food.gte(cost);
+    affordable = state.resources.food.gte(cost),
+    capped = capacityReached(state);
   return (
     <button
       className="button grow-button"
-      disabled={!affordable}
+      disabled={!affordable || capped}
       title={
-        affordable
-          ? 'Welcome one more person'
-          : `Need ${formatNumber(cost.sub(state.resources.food))} more Food`
+        capped
+          ? 'Population capacity reached. Expand your settlements or acquire more territory.'
+          : affordable
+            ? 'Welcome one more person'
+            : `Need ${formatNumber(cost.sub(state.resources.food))} more Food`
       }
       onClick={() => gameStore.dispatch({ type: 'grow' })}
     >
@@ -57,6 +64,7 @@ export function GrowButton() {
         Grow Population
         <small>
           {formatNumber(cost)} Food
+          {capped && ' · Population capacity reached.'}
           {!affordable &&
             ` · need ${formatNumber(cost.sub(state.resources.food))} more`}
         </small>
@@ -365,8 +373,17 @@ export function WorkforceSheet() {
         <span className="accounting-symbol">=</span>
         <div>
           <span>In production units</span>
-          <strong>{formatNumber(representedPopulation(state), 0)}</strong>
+          <strong>{formatNumber(productionPopulation(state), 0)}</strong>
         </div>
+        {state.unlockedFeatures.includes('military') && (
+          <>
+            <span className="accounting-symbol">+</span>
+            <div>
+              <span>Military</span>
+              <strong>{formatNumber(militaryPopulation(state), 0)}</strong>
+            </div>
+          </>
+        )}
         <span className="accounting-symbol">+</span>
         <div className="idle-account">
           <span>Idle Population</span>

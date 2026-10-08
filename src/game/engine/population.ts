@@ -5,6 +5,7 @@ import { isFeatureUnlocked } from './conditions';
 import { populationCost } from './production';
 import { logEvent } from '../systems/progression';
 import { D } from '../utils/numbers';
+import { capacityReached } from './settlements';
 import type { GameState } from '../types';
 
 export function growthInterval(state: GameState) {
@@ -40,6 +41,7 @@ export function growPopulation(state: GameState, reservePercent = 0): boolean {
   const protectedFood = state.resources.food.mul(reservePercent / 100);
   if (
     !isFeatureUnlocked(state, 'population') ||
+    capacityReached(state) ||
     state.resources.food.lt(cost) ||
     state.resources.food.sub(cost).lt(protectedFood)
   )

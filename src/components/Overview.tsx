@@ -17,7 +17,15 @@ import { balance } from '../game/content/config';
 import { resources } from '../game/content/resources';
 import { eras } from '../game/content/eras';
 import { guidance } from '../game/content/guidance';
-import { canAdvance } from '../game/systems/progression';
+import { EraProgress } from './EraProgress';
+import {
+  ownedTerritories,
+  populationCapacity,
+  settlementCount,
+  settlementSlots,
+  capacityReached,
+} from '../game/engine/settlements';
+import { militaryPower } from '../game/engine/military';
 import { activeEffects, resourceMultiplier } from '../game/engine/effects';
 import { D, formatNumber } from '../game/utils/numbers';
 import {
@@ -35,7 +43,6 @@ export function Overview() {
   const { openWorkforce, openSheet } = useWorkbookNavigation();
   const { state } = useGame();
   const era = eras.find((e) => e.id === state.currentEra)!;
-  const nextEra = eras.find((e) => canAdvance(state, e));
   const goal = guidance.find(
     (g) =>
       evaluateCondition(g.visible, state) &&
@@ -74,9 +81,11 @@ export function Overview() {
           <span>
             Growth:{' '}
             <strong>
-              {autoGrowthActive(state)
-                ? `Auto · next attempt in ${formatNumber(nextGrowthSeconds(state), 1)} s`
-                : 'Manual'}
+              {capacityReached(state)
+                ? 'Population capacity reached.'
+                : autoGrowthActive(state)
+                  ? `Auto · next attempt in ${formatNumber(nextGrowthSeconds(state), 1)} s`
+                  : 'Manual'}
             </strong>
           </span>
           <button className="button" onClick={() => openSheet('population')}>
@@ -112,30 +121,54 @@ export function Overview() {
           />
         ))}
       </div>
-      {nextEra && (
-        <div className="era-banner">
-          <div className="era-banner-icon">
-            <Sprout size={28} />
-          </div>
-          <div>
-            <span className="eyebrow">A NEW CHAPTER AWAITS</span>
-            <h2>Your civilization is ready for {nextEra.name}.</h2>
-            <p>
-              Advance without resetting your progress. Earn one Civilization
-              point.
-            </p>
-          </div>
+      <div className="realm-overview">
+        {isFeatureUnlocked(state, 'settlements') && (
+          <>
+            <button
+              className="panel realm-overview-card"
+              onClick={() => openSheet('settlements')}
+            >
+              <span>Settlements</span>
+              <strong>
+                {formatNumber(settlementCount(state), 0)} /{' '}
+                {formatNumber(settlementSlots(state), 0)} slots
+              </strong>
+              <small>
+                Capacity {formatNumber(populationCapacity(state), 0)}
+              </small>
+            </button>
+            <button
+              className="panel realm-overview-card"
+              onClick={() =>
+                openSheet(
+                  isFeatureUnlocked(state, 'territory')
+                    ? 'territory'
+                    : 'settlements',
+                )
+              }
+            >
+              <span>Territory</span>
+              <strong>{formatNumber(ownedTerritories(state), 0)}</strong>
+              <small>Room for new settlements</small>
+            </button>
+          </>
+        )}
+        {isFeatureUnlocked(state, 'military') && (
           <button
-            className="button primary"
-            onClick={() =>
-              gameStore.dispatch({ type: 'advance', id: nextEra.id })
-            }
+            className="panel realm-overview-card"
+            onClick={() => openSheet('military')}
           >
-            Advance to {nextEra.name}
-            <ArrowRight size={17} />
+            <span>Military Power</span>
+            <strong>{formatNumber(militaryPower(state))}</strong>
+            <small>
+              {state.activeCampaign
+                ? 'Campaign in progress'
+                : 'Prepare your next campaign'}
+            </small>
           </button>
-        </div>
-      )}
+        )}
+      </div>
+      <EraProgress />
       <div className="overview-columns">
         <div className="main-column">
           <div className="panel gathering">

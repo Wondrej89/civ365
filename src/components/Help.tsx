@@ -5,6 +5,9 @@ import {
   Sparkles,
   Timer,
   ChartLine,
+  Building2,
+  Swords,
+  Map,
 } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { isFeatureUnlocked } from '../game/engine/conditions';
@@ -38,6 +41,7 @@ export function HelpSheet() {
               Spend Food to welcome new people. The cost grows with your
               population. Open Workforce to recruit from Idle Population.
               Upgrades combine lower-tier units; dismantling restores them.
+              Growth stops at Population Capacity, even with Auto Growth.
             </p>
           </div>
         )}
@@ -60,6 +64,43 @@ export function HelpSheet() {
               Entering a new era earns a Civilization point. Spend it on a skill
               in the Skills sheet. Bonuses from skills, technologies, and
               achievements multiply together.
+            </p>
+          </div>
+        )}
+        {isFeatureUnlocked(state, 'settlements') && (
+          <div className="panel">
+            <Building2 size={25} />
+            <h2>Make room to grow</h2>
+            <p>
+              Settlements provide Population Capacity. Upgrade your Founding
+              Camp, then research Village Organization for Towns. New
+              settlements use one territory slot; upgrades keep the same slot.
+              Materials and Food pay for both. Overview lists every requirement
+              for your next era.
+            </p>
+          </div>
+        )}
+        {isFeatureUnlocked(state, 'military') && (
+          <div className="panel">
+            <Swords size={25} />
+            <h2>Prepare an army</h2>
+            <p>
+              Recruit soldiers from Idle Population using Food and Materials.
+              Soldiers remain part of your population and produce no resources.
+              Demobilizing returns them to Idle Population. Compare Military
+              Power with the next frontier before committing your army.
+            </p>
+          </div>
+        )}
+        {isFeatureUnlocked(state, 'territory') && (
+          <div className="panel">
+            <Map size={25} />
+            <h2>Expand your realm</h2>
+            <p>
+              Launch one campaign in Territory. Your army stays committed until
+              it finishes, including while you’re away. Victory adds a territory
+              slot for another settlement. Casualties also reduce Population; a
+              stronger army reduces losses and finishes sooner.
             </p>
           </div>
         )}

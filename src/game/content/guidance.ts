@@ -65,6 +65,20 @@ export const guidance: {
     target: 20,
   },
   {
+    id: 'homes',
+    visible: { type: 'eraReached', eraId: 'agricultural' },
+    complete: { type: 'settlementsAtLeast', value: 1, minimumTier: 2 },
+    title: 'Room for a larger community',
+    text: 'Research Settled Life and Village Organization. In Settlements, upgrade your Founding Camp to a Settlement, then a Town. Homes provide Population Capacity.',
+  },
+  {
+    id: 'frontier',
+    visible: { type: 'settlementsAtLeast', value: 1, minimumTier: 2 },
+    complete: { type: 'territoriesAtLeast', value: 2 },
+    title: 'Beyond the first homeland',
+    text: 'Research Organized Warfare. Recruit an army from Idle Population, then compare its power with the frontier in Territory. Victory gives room for another settlement.',
+  },
+  {
     id: 'choose',
     visible: { type: 'featureUnlocked', featureId: 'skillTree' },
     complete: {

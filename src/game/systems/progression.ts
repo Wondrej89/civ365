@@ -28,7 +28,7 @@ export function logEvent(
 ) {
   state.eventLog.push({
     id: state.nextEventId++,
-    time: state.lastSimulationTime,
+    time: Math.round(state.lastSimulationTime),
     message,
     kind,
     notify,
