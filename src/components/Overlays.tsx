@@ -5,6 +5,7 @@ import { resources } from '../game/content/resources';
 import { isFeatureUnlocked } from '../game/engine/conditions';
 import { formatDuration, formatNumber } from '../game/utils/numbers';
 import { ResourceIcon } from './common';
+import { balance } from '../game/content/config';
 export function OfflineModal() {
   const { state, report } = useGame();
   if (!report) return null;
@@ -56,6 +57,18 @@ export function OfflineModal() {
             spending {formatNumber(report.foodSpentOnGrowth)} Food.
           </p>
         )}
+        {report.territoriesConquered.gt(0) && (
+          <p className="offline-growth">
+            Campaigns acquired {formatNumber(report.territoriesConquered, 0)}{' '}
+            new territory.
+          </p>
+        )}
+        {report.populationLost.gt(0) && (
+          <p className="offline-growth">
+            Campaign casualties: {formatNumber(report.populationLost, 0)}{' '}
+            people.
+          </p>
+        )}
         {report.awaySeconds > report.simulatedSeconds && (
           <p className="offline-cap">
             <Clock size={14} />
@@ -94,7 +107,7 @@ export function Toasts() {
   );
 }
 export function DebugPanel() {
-  const { speed } = useGame();
+  const { speed, state } = useGame();
   if (!import.meta.env.DEV) return null;
   return (
     <details className="debug-panel">
@@ -111,16 +124,42 @@ export function DebugPanel() {
             'population',
             'speed',
             'technologies',
+            'territory',
+            'settlement',
+            'capacity',
+            'military',
+            'campaign',
           ] as const
         ).map((action) => (
-          <button key={action} onClick={() => gameStore.debug(action)}>
+          <button
+            key={action}
+            disabled={
+              (action === 'settlement' &&
+                !state.unlockedFeatures.includes('settlements')) ||
+              (action === 'military' &&
+                (!state.unlockedFeatures.includes('military') ||
+                  !!state.activeCampaign)) ||
+              (action === 'campaign' && !state.activeCampaign)
+            }
+            onClick={() => gameStore.debug(action)}
+          >
             {action === 'population'
               ? '+10 Population'
               : action === 'speed'
                 ? `${speed === 1 ? '×10' : speed === 10 ? '×100' : speed === 100 ? '×1000' : '×1'} simulation speed`
                 : action === 'technologies'
-                  ? 'Unlock all MVP technologies'
-                  : `+100 ${action[0].toUpperCase()}${action.slice(1)}`}
+                  ? 'Unlock era techs'
+                  : action === 'territory'
+                    ? '+ Territory'
+                    : action === 'settlement'
+                      ? '+ Settlement'
+                      : action === 'capacity'
+                        ? '+100 Population Capacity'
+                        : action === 'military'
+                          ? '+ Military Units'
+                          : action === 'campaign'
+                            ? 'Complete Campaign'
+                            : `+100 ${action[0].toUpperCase()}${action.slice(1)}`}
           </button>
         ))}
         <button
@@ -131,6 +170,17 @@ export function DebugPanel() {
           Reset save
         </button>
       </div>
+      <p className="debug-scaling">
+        Scaling: Research ×
+        {balance.technologyCosts[state.currentEra]?.research ?? 1} · Materials ×
+        {balance.technologyCosts[state.currentEra]?.materials ?? 1} · settlement
+        costs ×{balance.settlements.costGrowth} per new home · army costs ×
+        {balance.military.recruitCostGrowth} per soldier · defense{' '}
+        {balance.conquest.baseDefense} × {balance.conquest.defenseGrowth}
+        ^conquests · growth ×{balance.populationGrowth.multiplier} / ×
+        {balance.populationGrowth.laterMultiplier} / ×
+        {balance.populationGrowth.lateMultiplier}
+      </p>
     </details>
   );
 }

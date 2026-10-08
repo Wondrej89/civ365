@@ -1,12 +1,12 @@
 # Progression, automatizace a statistiky
 
-Tato iterace rozšiřuje současný engine, `Condition`, `GameEffect`, tiered units a statický GitHub Pages build. Technologie mají 31 uzlů: původních šest a 25 nových. Economy a Wealth zůstávají skryté.
+Tento dokument popisuje technologický strom, automatizaci a registry grafů. Aktuální obsah má 57 technologií; nová smyčka Territory → Settlements → Population → Army → Conquest a úplné požadavky epoch jsou v [realm.md](realm.md). Economy a Wealth zůstávají skryté.
 
-## Přidané technologie
+## Základní technologie automatizace a produkce
 
 | Éra          | Technologie            | Výsledek                                               |
 | ------------ | ---------------------- | ------------------------------------------------------ |
-| Agricultural | Settled Life           | Otevře cestu k automatizaci populace.                  |
+| Agricultural | Settled Life           | Odemkne Settlements a cestu k automatizaci.            |
 | Agricultural | Natural Growth         | Odemkne Automatic Population Growth.                   |
 | Agricultural | Irrigation             | +25 % produkce Farmerů.                                |
 | Agricultural | Animal Husbandry       | +25 % Food produkce.                                   |
@@ -17,16 +17,16 @@ Tato iterace rozšiřuje současný engine, `Condition`, `GameEffect`, tiered un
 | Agricultural | Writing                | +35 % Research produkce.                               |
 | Agricultural | Organized Settlements  | Zkrátí interval automatického růstu z 10 na 7 sekund.  |
 | Bronze       | Metallurgy             | +35 % Materials produkce.                              |
-| Bronze       | Bronze Working         | Odemkne Workshop.                                      |
+| Bronze       | Bronze Working         | Odemkne Workshop a Spearman.                           |
 | Bronze       | Wheel                  | +20 % Materials produkce.                              |
 | Bronze       | Advanced Agriculture   | Odemkne Farm.                                          |
 | Bronze       | Census                 | Odemkne graf rozložení populace.                       |
 | Bronze       | Mathematics            | +30 % Research produkce.                               |
-| Bronze       | Construction           | +20 % Materials produkce a −10 % ceny růstu.           |
+| Bronze       | Construction           | +20 % Materials; levnější růst a stavby, City.         |
 | Bronze       | Formal Education       | Odemkne Scholar.                                       |
 | Classical    | Engineering            | +40 % Materials produkce.                              |
 | Classical    | Philosophy             | +40 % Research produkce.                               |
-| Classical    | Urban Planning         | −10 % ceny růstu; navazuje na ni Urban Communities.    |
+| Classical    | Urban Planning         | −10 % ceny růstu a +25 % settlement capacity.          |
 | Classical    | Institutional Learning | Odemkne Academy.                                       |
 | Classical    | Craftsmanship          | +30 % produkce Workshopů.                              |
 | Classical    | Urban Communities      | Zkrátí interval automatického růstu ze 7 na 4 sekundy. |
@@ -36,15 +36,11 @@ Původní Foraging, Tool Making, Woodworking, Language, Knowledge Sharing a Agri
 
 ## Éry a produkční řetězce
 
-| Vstup do éry     | Požadavky                                                       |
-| ---------------- | --------------------------------------------------------------- |
-| Agricultural Age | Agriculture a alespoň 20 lidí.                                  |
-| Bronze Age       | Mining, Writing, alespoň 50 lidí a 250 Research v zásobě.       |
-| Classical Age    | Mathematics, Construction, Formal Education a alespoň 200 lidí. |
+Požadavky příští éry ukazuje Overview jako checklist technologií, populace, území, kapacity, settlement tiers a vojenské síly. Přesné hodnoty jsou centrálně v `balance.eraRequirements` a jejich tabulka v [realm.md](realm.md#epochy-a-nové-technologie).
 
-Přechod se provádí v Overview. Zachová zdroje, populaci i jednotky, zapíše událost a při prvním vstupu přidá jeden Civilization point. Research požadované při vstupu do Bronze Age se nespotřebují. Každá éra zpřístupní nákup své další části stromu.
+Přechod zachová zdroje, populaci i jednotky, zapíše událost a při prvním vstupu přidá jeden Civilization point. Každá éra zpřístupní nákup své další části stromu; nemá časový zámek.
 
-Gatherer → Farmer → Farm, Woodcutter → Miner → Workshop a Thinker → Scholar → Academy jsou hratelné. Tier 4 zůstává připravený v datech a skrytý. Všechny upgrady od tieru 2 potřebují Materials a předchozí jednotky; libovolné další ceny určuje pole `costs`. Základní jednotky potřebují jen Idle Population, takže Woodcutter vždy poskytuje cestu k Materials bez předchozí investice Materials. Lze také ručně sbírat Materials.
+Gatherer → Farmer → Farm, Woodcutter → Miner → Workshop a Thinker → Scholar → Academy jsou hratelné. Tier 4 odemkne Factories v Industrial Age. Všechny upgrady od tieru 2 potřebují Materials a předchozí jednotky; libovolné další ceny určuje pole `costs`. Základní jednotky potřebují jen Idle Population, takže Woodcutter vždy poskytuje cestu k Materials bez předchozí investice Materials. Lze také ručně sbírat Materials.
 
 Převody 5 → 1 a poté 4 → 1 zachovávají původní footprint 1 / 5 / 20 / 100 lidí. Farm a Workshop mají základní produkci 28/s, Academy 8.4/s: před dalšími bonusy je to 1.75× produkce čtyř vstupních jednotek. Rozebrání vrací nižší jednotky; utracené zdroje se nevracejí.
 
@@ -52,13 +48,13 @@ Převody 5 → 1 a poté 4 → 1 zachovávají původní footprint 1 / 5 / 20 / 
 
 Po Settled Life → Natural Growth se v Population objeví přepínač, interval, odpočet, Food Reserve a přehled technologických modifikátorů. Výchozí stav je OFF, rezerva 10 %. Přepnutí OFF/ON zahájí nový interval. Ruční Grow Population zůstává dostupný.
 
-Jediná funkce `growPopulation` ověřuje cenu, odečte Food a přidá jednoho člověka do Idle Population. Ruční akce i automatické události používají právě tuto funkci. Automatika při každém intervalu zkusí jeden růst; neúspěšný pokus čeká na další interval. Cena se přepočítá z aktuální populace a efektů.
+Jediná funkce `growPopulation` ověřuje Population Capacity i cenu, odečte Food a přidá jednoho člověka do Idle Population. Ruční akce i automatické události používají právě tuto funkci. Automatika při každém intervalu zkusí jeden růst; neúspěšný pokus čeká na další interval. Cena se přepočítá z aktuální populace a efektů.
 
-Rezerva chrání 0 / 10 / 25 / 50 % zásoby **před konkrétním pokusem**. Při 100 Food, rezervě 25 % a ceně 80 se růst neprovede; při ceně 70 ano, zůstane 30 Food. Rezerva není pevná dlouhodobá hranice: při příštím pokusu se přepočítá z nové zásoby. Ruční tlačítko ji může utratit. Pokud chcete Food hromadit na upgrade, automatiku lze dočasně vypnout.
+Rezerva chrání 0 / 10 / 25 / 50 % zásoby **před konkrétním pokusem**. Při 100 Food, rezervě 25 % a ceně 80 se růst neprovede; při ceně 70 ano, zůstane 30 Food. Rezerva není pevná dlouhodobá hranice: při příštím pokusu se přepočítá z nové zásoby. Ruční tlačítko ji může utratit. Ruční i automatický růst se zastaví při dosažení kapacity; Population odkazuje na Settlements. Pokud chcete Food hromadit na upgrade, automatiku lze dočasně vypnout.
 
 Interval se násobí obecnými efekty `populationGrowthIntervalMultiplier`, nikoli přepínáním podle ID technologií. Kombinace 0.7 × (4/7) × 0.5 dává 10 → 7 → 4 → 2 sekund. Základní interval, minimální interval a volby rezervy jsou v `content/config.ts`.
 
-Živá i offline simulace používá stejný `simulate`. Kroky končí také na hranicích růstu a statistického samplování, aby produkce, cena, rezerva i nové bonusy platily ve správném pořadí. Offline limit zůstává 8 hodin. Offline report rozlišuje skutečně vyprodukované Food a Food spotřebované růstem a uvádí počet nových lidí.
+Živá i offline simulace používá stejný `simulate`. Kroky končí také na hranicích růstu a statistického samplování, aby produkce, cena, rezerva i nové bonusy platily ve správném pořadí. Offline limit zůstává 8 hodin. Offline report rozlišuje skutečně vyprodukované Food a Food spotřebované růstem a uvádí počet nových lidí. Zvlášť uvádí vojenské ztráty a získaná území.
 
 ## Technologický strom
 
@@ -74,7 +70,7 @@ Record Keeping založí první sample Population. Další vznikají každých 30
 
 Historie je omezená na posledních 2000 bodů na sérii, což při výchozím intervalu představuje přibližně 16 hodin 40 minut simulované hry. `retainSamples` v `systems/statistics.ts` odděluje retenční politiku; pozdější downsampling může zachovat starší agregované body bez změny simulace nebo grafu. Historická pole se při klonování stavu nekopírují; nový sample vytváří nové pole jen pro příslušnou sérii.
 
-Statistics vykresluje obecný čárový graf ze skutečně uložených samples, KPI aktuální/maximální/celkem vytvořené populace a Idle/Assigned. „Total population created“ zahrnuje zakládajícího člověka. Po Census se přidá sloupcový graf rozložení; počítá lidi reprezentované jednotkami, takže jedna Farm přidá 20 lidí do Food Production.
+Statistics vykresluje obecný čárový graf ze skutečně uložených samples, KPI aktuální/maximální/celkem vytvořené populace a Idle/Assigned. „Total population created“ zahrnuje zakládajícího člověka. Po Census se přidá sloupcový graf rozložení; počítá lidi reprezentované jednotkami, takže jedna Farm přidá 20 lidí do Food Production. Military se počítá samostatně a stále je součástí celkové populace. Po odemčení features se přidají také historické série Population Capacity, Owned Territories a Military Power.
 
 Další historický graf přidejte do `statisticSeries` v `content/statistics.ts`, například:
 
@@ -92,18 +88,18 @@ Engine automaticky začne sérii vzorkovat po splnění podmínky, save ji ulož
 
 ## Save a ověření
 
-`saveVersion` je 3, migrace běží 0 → 1 → 2 → 3. Verze 2 zachovává zdroje, populace, jednotky, technologie, skilly a achievementy; nové hodnoty dostanou bezpečné defaults. Původní interní ID `scientist` se beze ztráty počtu převádí na `academy`. Staré unlocky Miner/Scholar zůstávají trvale dostupné. Statistiky starých saves začnou bez historie; nelze zpětně rekonstruovat neuložené průběhy. Import ověřuje intervalové fáze, rezervu, limity historie, timestampy i nezáporné hodnoty.
+`saveVersion` je 4, migrace běží 0 → 1 → 2 → 3 → 4. Migrace zachovávají zdroje, populaci, jednotky, technologie, skilly a achievementy. Verze 2 převádí `scientist` na `academy`, zachovává staré unlocky Miner/Scholar a založí nové údaje automatizace a historie. Verze 3 přidává bezpečné defaults území, Camp a armády; populace nad kapacitou zůstává. Historii nelze zpětně rekonstruovat. Import ověřuje fáze, rezervu, limity historie, timestampy, footprint workers + military i snapshot kampaně.
 
-Testy zahrnují růst, rezervy, hranice intervalů, živou/offline shodu, samplování a uložení, migrace, odhalování stromu a přechody érami. Automatický průchod engine dosáhl Agricultural / Bronze / Classical přibližně za 4 / 16 / 29 minut simulované hry při průběžném rozdělování populace a okamžitých nákupech. Reálný průchod UI z nového save dosáhl Agricultural Age za 11 minut 40 sekund a Bronze Age za 26 minut 40 sekund; používal jen běžná tlačítka a vývojové zrychlení, bez přidávání zdrojů nebo populace. Všech 98 testů, TypeScript, lint i build prošly. Chromium ověřil desktop/mobil, import verze 2, automatický i offline růst, grafy a statický build pod cestou `/civ365/` bez chyb načítání.
+Testy pokrývají automatizaci, statistiky, novou investiční smyčku, migrace a dosažitelnost Renaissance. Engine průchod dosáhl Classical za 2 h 19 min a Medieval za 4 h 41 min; skutečné UI dosáhlo Medieval za 5 simulovaných hodin bez grantů. Podrobné výsledky a balance parametry jsou v [realm.md](realm.md).
 
 ## Co ladit dále
 
-Balance je první průchod, nikoli finální tempo. Optimalizovaný automatický hráč dosahuje Classical Age rychleji než orientačních 1–3 hodiny. Pro další ladění jsou nejúčinnější:
+Balance je první průchod, nikoli finální tempo. Náklady, kapacita a conquest nyní přirozeně omezují rychlost. Pro další ladění sledujte více systémů současně; samotný Research neříká, jak rychle hráč projde éry. Pro další ladění jsou nejúčinnější:
 
 - `content/config.ts`: násobiče cen Research/Materials pro jednotlivé éry; nemění šest původních tribal cen.
 - `content/units.ts`: ceny `costs`, základní produkce, převody `upgradeFrom` a bonusy okolním tierům. Změna footprintu vyžaduje zhodnocení migrace; změna ceny nebo produkce ne.
-- `content/config.ts`: základní cena populace, násobič 1.12 do populace 20 a 1.02 nad ní. Mírnější pozdější růst umožňuje dosáhnout 200 lidí bez nepřekonatelné exponenciální ceny.
+- `content/config.ts`: základní cena populace, násobič 1.12 do populace 20, 1.012 do 400 a 1.004 nad ní. Pozdní mírnější růst zachovává dosažitelnost Renaissance.
 - `content/technologies.ts`: jednotlivé ceny, prerequisites, produkční bonusy a intervalové efekty automatizace.
-- `content/eras.ts`: požadavky na populaci, technologie a zásoby při přechodu.
+- `content/eras.ts`: podmínky přechodu; jejich číselné hodnoty jsou v `balance.eraRequirements`.
 
 Samplovací interval a limit historie ladí velikost save a přesnost grafu, nikoli ekonomiku hry.

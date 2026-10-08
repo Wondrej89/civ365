@@ -69,6 +69,30 @@ export const features: FeatureDefinition[] = [
     notify: true,
   },
   {
+    id: 'settlements',
+    name: 'Settlements',
+    unlockCondition: { type: 'technologyOwned', technologyId: 'settledLife' },
+    notify: true,
+  },
+  {
+    id: 'military',
+    name: 'Military',
+    unlockCondition: {
+      type: 'technologyOwned',
+      technologyId: 'organizedWarfare',
+    },
+    notify: true,
+  },
+  {
+    id: 'territory',
+    name: 'Territory',
+    unlockCondition: {
+      type: 'technologyOwned',
+      technologyId: 'organizedWarfare',
+    },
+    notify: true,
+  },
+  {
     id: 'statistics',
     name: 'Statistics',
     unlockCondition: { type: 'technologyOwned', technologyId: 'recordKeeping' },

@@ -66,7 +66,7 @@ export const units: ProductionUnitDefinition[] = [
       { resource: 'food', amount: 5000 },
     ],
     baseProduction: [{ resource: 'food', amount: 150 }],
-    unlockCondition: { type: 'never' },
+    unlockCondition: { type: 'technologyOwned', technologyId: 'factories' },
   },
   {
     id: 'woodcutter',
@@ -122,7 +122,7 @@ export const units: ProductionUnitDefinition[] = [
     upgradeFrom: { unitId: 'workshop', amount: 5 },
     costs: [{ resource: 'materials', amount: 5000 }],
     baseProduction: [{ resource: 'materials', amount: 150 }],
-    unlockCondition: { type: 'never' },
+    unlockCondition: { type: 'technologyOwned', technologyId: 'factories' },
   },
   {
     id: 'thinker',
@@ -191,6 +191,6 @@ export const units: ProductionUnitDefinition[] = [
         value: 1.1,
       },
     ],
-    unlockCondition: { type: 'never' },
+    unlockCondition: { type: 'technologyOwned', technologyId: 'factories' },
   },
 ];

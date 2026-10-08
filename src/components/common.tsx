@@ -12,6 +12,7 @@ import { D, formatNumber } from '../game/utils/numbers';
 import { productionPerSecond } from '../game/engine/production';
 import { isFeatureUnlocked } from '../game/engine/conditions';
 import type { GameState, ResourceCost } from '../game/types';
+import { populationCapacity } from '../game/engine/settlements';
 
 export const resourceIcon: Record<string, LucideIcon> = {
   food: Leaf,
@@ -83,11 +84,15 @@ export function PopulationKpi({ state }: { state: GameState }) {
       </div>
       <div className="kpi-value">
         {formatNumber(state.population, 0)}
+        <span className="population-cap">
+          {' '}
+          / {formatNumber(populationCapacity(state), 0)}
+        </span>
         <span className="kpi-unit">
           {state.population.eq(1) ? 'person' : 'people'}
         </span>
       </div>
-      <p>Your civilization, one person at a time.</p>
+      <p>People / Population Capacity</p>
     </div>
   );
 }

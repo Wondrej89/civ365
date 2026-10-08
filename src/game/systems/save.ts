@@ -3,6 +3,14 @@ import { createInitialState, statisticIds } from '../state';
 import { balance } from '../content/config';
 import { resources } from '../content/resources';
 import { units } from '../content/units';
+import { settlements } from '../content/settlements';
+import { militaryUnits } from '../content/military';
+import { territories } from '../content/territories';
+import {
+  ownedTerritories,
+  settlementCount,
+  settlementSlots,
+} from '../engine/settlements';
 import { technologies } from '../content/technologies';
 import { skills } from '../content/skills';
 import { achievements } from '../content/achievements';
@@ -156,6 +164,27 @@ export function migrateSave(value: unknown): Obj {
     save.statistics = stats;
     save.saveVersion = 3;
   }
+  if (save.saveVersion === 3) {
+    save.ownedTerritories = Object.fromEntries(
+      territories.map((t) => [t.id, t.id === 'homeland' ? '1' : '0']),
+    );
+    save.settlements = Object.fromEntries(
+      settlements.map((s) => [s.id, s.id === 'camp' ? '1' : '0']),
+    );
+    save.militaryUnits = Object.fromEntries(
+      militaryUnits.map((u) => [u.id, '0']),
+    );
+    save.activeCampaign = null;
+    save.populationCapacityBonus = '0';
+    save.statistics = {
+      ...object(save.statistics),
+      totalSettlementsBuilt: '1',
+      territoriesConquered: '0',
+      militaryCasualties: '0',
+      campaignsCompleted: '0',
+    };
+    save.saveVersion = 4;
+  }
   if (save.saveVersion !== balance.saveVersion)
     throw new Error(
       'Unsupported save version. Use a save from this version of Civilization.xlsx.',
@@ -179,6 +208,23 @@ export function deserializeSave(value: unknown): GameState {
     throw new Error('Unknown production unit.');
   for (const unit of units)
     state.productionUnits[unit.id] = decimal(rawUnits[unit.id] ?? '0', true);
+  const counts = (value: unknown, definitions: { id: string }[]) => {
+    const source = object(value);
+    if (Object.keys(source).some((id) => !definitions.some((d) => d.id === id)))
+      throw new Error('Unknown settlement, military unit or territory.');
+    return Object.fromEntries(
+      definitions.map((d) => [d.id, decimal(source[d.id] ?? '0', true)]),
+    );
+  };
+  state.ownedTerritories = counts(raw.ownedTerritories, territories);
+  state.settlements = counts(raw.settlements, settlements);
+  state.militaryUnits = counts(raw.militaryUnits, militaryUnits);
+  state.populationCapacityBonus = decimal(raw.populationCapacityBonus);
+  if (
+    ownedTerritories(state).lt(1) ||
+    settlementCount(state).gt(settlementSlots(state))
+  )
+    throw new Error('Settlements exceed territory slots.');
   state.unlockedProductionUnits = ids(
     raw.unlockedProductionUnits,
     units.map((u) => u.id),
@@ -299,6 +345,50 @@ export function deserializeSave(value: unknown): GameState {
     accumulator: automatic.accumulator,
     foodReservePercent: automatic.foodReservePercent,
   };
+  if (raw.activeCampaign !== null) {
+    const campaign = object(raw.activeCampaign);
+    const power = decimal(campaign.power),
+      defense = decimal(campaign.defense);
+    const frontierIndex = decimal(campaign.frontierIndex, true);
+    if (
+      !frontierIndex.eq(state.statistics.territoriesConquered.add(1)) ||
+      power.lte(0) ||
+      defense.lte(0) ||
+      typeof campaign.victory !== 'boolean' ||
+      campaign.victory !== power.gte(defense) ||
+      typeof campaign.durationSeconds !== 'number' ||
+      !Number.isFinite(campaign.durationSeconds) ||
+      campaign.durationSeconds <= 0 ||
+      typeof campaign.elapsedSeconds !== 'number' ||
+      !Number.isFinite(campaign.elapsedSeconds) ||
+      campaign.elapsedSeconds < 0 ||
+      campaign.elapsedSeconds > campaign.durationSeconds ||
+      typeof campaign.casualtyRate !== 'number' ||
+      !Number.isFinite(campaign.casualtyRate) ||
+      campaign.casualtyRate < 0 ||
+      campaign.casualtyRate >= 1 ||
+      !state.unlockedFeatures.includes('territory')
+    )
+      throw new Error('Invalid campaign.');
+    const committedUnits = counts(campaign.committedUnits, militaryUnits);
+    if (
+      militaryUnits.some(
+        (u) => !committedUnits[u.id].eq(state.militaryUnits[u.id]),
+      ) ||
+      sum(Object.values(committedUnits)).lte(0)
+    )
+      throw new Error('Campaign army is inconsistent.');
+    state.activeCampaign = {
+      frontierIndex: frontierIndex.toString(),
+      committedUnits,
+      power,
+      defense,
+      durationSeconds: campaign.durationSeconds,
+      elapsedSeconds: campaign.elapsedSeconds,
+      casualtyRate: campaign.casualtyRate,
+      victory: campaign.victory,
+    };
+  }
   if (
     typeof raw.statisticsSamplingAccumulator !== 'number' ||
     !Number.isFinite(raw.statisticsSamplingAccumulator) ||
@@ -372,6 +462,24 @@ export function deserializeSave(value: unknown): GameState {
     )
   )
     throw new Error('Save contains an undiscovered unit.');
+  if (
+    militaryUnits.some(
+      (unit) =>
+        state.militaryUnits[unit.id].gt(0) &&
+        (!state.unlockedFeatures.includes('military') ||
+          !evaluateCondition(unit.unlockCondition, state)),
+    )
+  )
+    throw new Error('Save contains an undiscovered military unit.');
+  if (
+    settlements.some(
+      (settlement) =>
+        settlement.tier > 0 &&
+        state.settlements[settlement.id].gt(0) &&
+        !evaluateCondition(settlement.unlockCondition, state),
+    )
+  )
+    throw new Error('Save contains an undiscovered settlement.');
   state.statistics.assignedWorkers = representedPopulation(state);
   return state;
 }
@@ -386,6 +494,18 @@ export function serializeSave(state: GameState, now = Date.now()): string {
     population: state.population.toString(),
     resources: decimals(state.resources),
     productionUnits: decimals(state.productionUnits),
+    ownedTerritories: decimals(state.ownedTerritories),
+    settlements: decimals(state.settlements),
+    militaryUnits: decimals(state.militaryUnits),
+    populationCapacityBonus: state.populationCapacityBonus.toString(),
+    activeCampaign: state.activeCampaign
+      ? {
+          ...state.activeCampaign,
+          committedUnits: decimals(state.activeCampaign.committedUnits),
+          power: state.activeCampaign.power.toString(),
+          defense: state.activeCampaign.defense.toString(),
+        }
+      : null,
     statistics: decimals(state.statistics),
   });
 }

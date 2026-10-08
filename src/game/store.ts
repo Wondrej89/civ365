@@ -2,6 +2,10 @@ import { createInitialState, cloneState } from './state';
 import { balance } from './content/config';
 import { resources } from './content/resources';
 import { technologies } from './content/technologies';
+import { eras } from './content/eras';
+import { idlePopulation } from './engine/population-accounting';
+import { availableSlots } from './engine/settlements';
+import { finishCampaign } from './engine/conquest';
 import { applyAction, addProduction, simulate } from './engine/simulation';
 import { settleProgression } from './systems/progression';
 import { applyOfflineProgress, type OfflineReport } from './systems/offline';
@@ -128,21 +132,61 @@ export const gameStore = {
       | 'research'
       | 'population'
       | 'speed'
-      | 'technologies',
+      | 'technologies'
+      | 'territory'
+      | 'settlement'
+      | 'capacity'
+      | 'military'
+      | 'campaign',
   ) {
     if (!import.meta.env.DEV) return;
     sync();
     current = cloneState(current);
     if (resources.some((r) => r.id === action))
       addProduction(current, action, D(100));
-    if (action === 'population')
+    if (action === 'population') {
       current.population = current.population.add(10);
+      current.statistics.totalPopulationCreated =
+        current.statistics.totalPopulationCreated.add(10);
+    }
+    if (action === 'territory')
+      current.ownedTerritories.frontier =
+        current.ownedTerritories.frontier.add(1);
+    if (
+      action === 'settlement' &&
+      current.unlockedFeatures.includes('settlements') &&
+      availableSlots(current).gte(1)
+    ) {
+      current.settlements.settlement = current.settlements.settlement.add(1);
+      current.statistics.totalSettlementsBuilt =
+        current.statistics.totalSettlementsBuilt.add(1);
+    }
+    if (action === 'capacity')
+      current.populationCapacityBonus =
+        current.populationCapacityBonus.add(100);
+    if (
+      action === 'military' &&
+      !current.activeCampaign &&
+      current.unlockedFeatures.includes('military')
+    )
+      current.militaryUnits.levy = current.militaryUnits.levy.add(
+        idlePopulation(current).min(10).floor(),
+      );
+    if (action === 'campaign' && current.activeCampaign) {
+      current.activeCampaign.elapsedSeconds =
+        current.activeCampaign.durationSeconds;
+      finishCampaign(current);
+    }
     if (action === 'speed') {
       const speeds = [1, 10, 100, 1000];
       speed = speeds[(speeds.indexOf(speed) + 1) % speeds.length];
     }
-    if (action === 'technologies')
-      current.researchedTechnologies = technologies.map((t) => t.id);
+    if (action === 'technologies') {
+      const index = eras.findIndex((e) => e.id === current.currentEra);
+      current.researchedTechnologies = technologies
+        .filter((t) => eras.findIndex((e) => e.id === t.era) <= index)
+        .map((t) => t.id);
+    }
     settleProgression(current);
     publish();
   },

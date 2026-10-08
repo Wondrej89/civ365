@@ -17,6 +17,9 @@ import {
 import { sampleStatistics } from '../systems/statistics';
 import { units } from '../content/units';
 import { mutateUnitAction } from './units';
+import { mutateSettlementAction } from './settlements';
+import { mutateMilitaryAction } from './military';
+import { launchCampaign, finishCampaign } from './conquest';
 import {
   canAdvance,
   canAfford,
@@ -54,6 +57,13 @@ export function simulate(
     const step = Math.min(
       remaining,
       balance.offlineStepSeconds,
+      next.activeCampaign
+        ? Math.max(
+            0,
+            next.activeCampaign.durationSeconds -
+              next.activeCampaign.elapsedSeconds,
+          )
+        : Infinity,
       automatic ? nextGrowthSeconds(next) : Infinity,
       recording
         ? Math.max(
@@ -67,6 +77,10 @@ export function simulate(
     for (const r of resources) addProduction(next, r.id, rates[r.id].mul(step));
     next.statistics.totalPlayTime = next.statistics.totalPlayTime.add(step);
     next.lastSimulationTime += step * 1000;
+    if (next.activeCampaign) {
+      next.activeCampaign.elapsedSeconds += step;
+      finishCampaign(next);
+    }
     if (automatic) next.autoPopulationGrowth.accumulator += step;
     if (recording) next.statisticsSamplingAccumulator += step;
     if (
@@ -94,12 +108,23 @@ export function simulate(
     }
     remaining = Math.max(0, remaining - step);
   }
-  next.lastSimulationTime = endTime;
+  next.lastSimulationTime = Math.round(endTime);
   return next;
 }
 export function applyAction(state: GameState, action: GameAction): GameState {
   const next = cloneState(state);
   switch (action.type) {
+    case 'buildSettlement':
+    case 'upgradeSettlement':
+      if (!mutateSettlementAction(next, action)) return state;
+      break;
+    case 'recruitMilitary':
+    case 'demobilize':
+      if (!mutateMilitaryAction(next, action)) return state;
+      break;
+    case 'launchCampaign':
+      if (!launchCampaign(next)) return state;
+      break;
     case 'gather': {
       const gather = balance.manualGathering[action.resource];
       if (!gather || !isFeatureUnlocked(next, gather.feature)) return state;
@@ -206,5 +231,9 @@ export function applyAction(state: GameState, action: GameAction): GameState {
       break;
   }
   settleProgression(next);
+  next.autoPopulationGrowth.accumulator = Math.min(
+    next.autoPopulationGrowth.accumulator,
+    growthInterval(next),
+  );
   return next;
 }

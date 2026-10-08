@@ -1,5 +1,11 @@
 import type { Condition, GameState } from '../types';
 import { D } from '../utils/numbers';
+import {
+  ownedTerritories,
+  populationCapacity,
+  settlementCount,
+} from './settlements';
+import { militaryPower } from './military';
 export const isFeatureUnlocked = (state: GameState, id: string) =>
   state.unlockedFeatures.includes(id);
 export function evaluateCondition(
@@ -15,6 +21,14 @@ export function evaluateCondition(
       return (state.resources[condition.resource] ?? D()).gte(condition.value);
     case 'populationAtLeast':
       return state.population.gte(condition.value);
+    case 'territoriesAtLeast':
+      return ownedTerritories(state).gte(condition.value);
+    case 'populationCapacityAtLeast':
+      return populationCapacity(state).gte(condition.value);
+    case 'settlementsAtLeast':
+      return settlementCount(state, condition.minimumTier).gte(condition.value);
+    case 'militaryPowerAtLeast':
+      return militaryPower(state).gte(condition.value);
     case 'technologyOwned':
       return state.researchedTechnologies.includes(condition.technologyId);
     case 'achievementOwned':

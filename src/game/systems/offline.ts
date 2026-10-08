@@ -7,6 +7,8 @@ export interface OfflineReport {
   simulatedSeconds: number;
   populationCreated: ReturnType<typeof D>;
   foodSpentOnGrowth: ReturnType<typeof D>;
+  populationLost: ReturnType<typeof D>;
+  territoriesConquered: ReturnType<typeof D>;
   produced: Record<string, ReturnType<typeof D>>;
 }
 export function applyOfflineProgress(
@@ -24,7 +26,15 @@ export function applyOfflineProgress(
         ? {
             awaySeconds,
             simulatedSeconds,
-            populationCreated: next.population.sub(state.population),
+            populationCreated: next.statistics.totalPopulationCreated.sub(
+              state.statistics.totalPopulationCreated,
+            ),
+            populationLost: next.statistics.militaryCasualties.sub(
+              state.statistics.militaryCasualties,
+            ),
+            territoriesConquered: next.statistics.territoriesConquered.sub(
+              state.statistics.territoriesConquered,
+            ),
             foodSpentOnGrowth: next.statistics.foodSpentOnGrowth.sub(
               state.statistics.foodSpentOnGrowth,
             ),

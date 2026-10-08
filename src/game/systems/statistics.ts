@@ -9,6 +9,7 @@ import {
   idlePopulation,
 } from '../engine/units';
 import { D, sum } from '../utils/numbers';
+import { militaryPopulation } from '../engine/population-accounting';
 import type { GameState, StatisticSample } from '../types';
 
 /** Retention is isolated here so a future downsampler can replace it. */
@@ -59,5 +60,15 @@ export function populationDistribution(state: GameState) {
             ),
         ),
       })),
+    ...(state.unlockedFeatures.includes('military')
+      ? [
+          {
+            id: 'military',
+            name: 'Military',
+            color: '#bd7070',
+            value: militaryPopulation(state),
+          },
+        ]
+      : []),
   ];
 }
