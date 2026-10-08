@@ -190,13 +190,13 @@ describe('technology, effects, achievements, and eras', () => {
         s,
         technologies.find((t) => t.id === 'toolMaking')!,
       ),
-    ).toBe('hidden');
+    ).toBe('revealed');
     const first = buy(s, 'foraging'),
       tools = buy(first, 'toolMaking');
     expect(tools.researchedTechnologies).toEqual(['foraging', 'toolMaking']);
     expect(tools.resources.materials.eq(990)).toBe(true);
     expect(buy(tools, 'toolMaking')).toBe(tools);
-    expect(technologyStatus(tools, technologies[0])).toBe('purchased');
+    expect(technologyStatus(tools, technologies[0])).toBe('researched');
   });
   it('multiplicatively combines technology and skill bonuses without changing base data', () => {
     let s = applyAction(developed(), {
@@ -409,9 +409,9 @@ describe('saves and offline production', () => {
     delete raw.settings;
     delete raw.reachedEras;
     delete raw.announcedEras;
-    expect(migrateSave(raw).saveVersion).toBe(2);
+    expect(migrateSave(raw).saveVersion).toBe(3);
     expect(deserializeSave(raw).settings.notifications).toBe(true);
-    expect(() => migrateSave({ saveVersion: 3 })).toThrow('Unsupported');
+    expect(() => migrateSave({ saveVersion: 4 })).toThrow('Unsupported');
   });
   it('uses the same simulation offline, including achievements and their changing bonuses', () => {
     const s = applyAction(developed(), {

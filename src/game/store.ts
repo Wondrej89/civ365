@@ -137,7 +137,10 @@ export const gameStore = {
       addProduction(current, action, D(100));
     if (action === 'population')
       current.population = current.population.add(10);
-    if (action === 'speed') speed = speed === 1 ? 10 : 1;
+    if (action === 'speed') {
+      const speeds = [1, 10, 100, 1000];
+      speed = speeds[(speeds.indexOf(speed) + 1) % speeds.length];
+    }
     if (action === 'technologies')
       current.researchedTechnologies = technologies.map((t) => t.id);
     settleProgression(current);

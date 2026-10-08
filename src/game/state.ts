@@ -15,6 +15,8 @@ export const statisticIds = [
   'technologiesResearched',
   'assignedWorkers',
   'achievementCount',
+  'totalPopulationCreated',
+  'foodSpentOnGrowth',
 ];
 export function createInitialState(now = Date.now()): GameState {
   return {
@@ -25,6 +27,15 @@ export function createInitialState(now = Date.now()): GameState {
     resources: Object.fromEntries(resources.map((r) => [r.id, D()])),
     population: D(1),
     productionUnits: Object.fromEntries(units.map((u) => [u.id, D()])),
+    unlockedProductionUnits: [],
+    constructedProductionUnits: [],
+    autoPopulationGrowth: {
+      enabled: false,
+      accumulator: 0,
+      foodReservePercent: balance.automaticGrowth.defaultReservePercent,
+    },
+    statisticsHistory: {},
+    statisticsSamplingAccumulator: 0,
     researchedTechnologies: [],
     purchasedSkills: {},
     achievements: [],
@@ -33,7 +44,10 @@ export function createInitialState(now = Date.now()): GameState {
     announcedEras: [],
     unlockedFeatures: ['manualGathering'],
     statistics: Object.fromEntries(
-      statisticIds.map((id) => [id, D(id === 'maxPopulation' ? 1 : 0)]),
+      statisticIds.map((id) => [
+        id,
+        D(id === 'maxPopulation' || id === 'totalPopulationCreated' ? 1 : 0),
+      ]),
     ),
     settings: { notifications: true },
     eventLog: [
@@ -53,6 +67,10 @@ export function cloneState(state: GameState): GameState {
     ...state,
     resources: { ...state.resources },
     productionUnits: { ...state.productionUnits },
+    unlockedProductionUnits: [...state.unlockedProductionUnits],
+    constructedProductionUnits: [...state.constructedProductionUnits],
+    autoPopulationGrowth: { ...state.autoPopulationGrowth },
+    statisticsHistory: { ...state.statisticsHistory },
     researchedTechnologies: [...state.researchedTechnologies],
     purchasedSkills: { ...state.purchasedSkills },
     achievements: [...state.achievements],

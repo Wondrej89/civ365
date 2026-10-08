@@ -57,6 +57,29 @@ export const features: FeatureDefinition[] = [
       value: 1,
     },
   },
+  {
+    id: 'settlementPlanning',
+    name: 'Settlement Planning',
+    unlockCondition: { type: 'technologyOwned', technologyId: 'settledLife' },
+  },
+  {
+    id: 'autoPopulationGrowth',
+    name: 'Automatic Population Growth',
+    unlockCondition: { type: 'technologyOwned', technologyId: 'naturalGrowth' },
+    notify: true,
+  },
+  {
+    id: 'statistics',
+    name: 'Statistics',
+    unlockCondition: { type: 'technologyOwned', technologyId: 'recordKeeping' },
+    notify: true,
+  },
+  {
+    id: 'populationDistribution',
+    name: 'Population Distribution',
+    unlockCondition: { type: 'technologyOwned', technologyId: 'census' },
+    notify: true,
+  },
   ...['economy', 'energy', 'space', 'prestige'].map((id) => ({
     id,
     name: id,

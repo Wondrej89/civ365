@@ -2,11 +2,13 @@ import { features } from '../content/features';
 import { achievements } from '../content/achievements';
 import { eras } from '../content/eras';
 import { technologies } from '../content/technologies';
+import { units } from '../content/units';
 import { skills } from '../content/skills';
 import { balance } from '../content/config';
 import { evaluateCondition, isFeatureUnlocked } from '../engine/conditions';
 import { activeEffects } from '../engine/effects';
-import { representedPopulation } from '../engine/units';
+import { representedPopulation, isUnitUnlocked } from '../engine/units';
+import { sampleStatistics } from './statistics';
 import { D } from '../utils/numbers';
 import type {
   GameState,
@@ -50,22 +52,33 @@ export function payCosts(state: GameState, costs: ResourceCost[]) {
     );
 }
 export type TechnologyStatus =
-  'hidden' | 'revealed' | 'available' | 'purchased';
+  'hidden' | 'revealed' | 'available' | 'researched';
 export function technologyStatus(
   state: GameState,
   tech: TechnologyDefinition,
 ): TechnologyStatus {
-  if (state.researchedTechnologies.includes(tech.id)) return 'purchased';
+  if (state.researchedTechnologies.includes(tech.id)) return 'researched';
   if (
     !isFeatureUnlocked(state, 'technologyTree') ||
     !evaluateCondition(tech.visibilityCondition, state)
   )
     return 'hidden';
-  return tech.prerequisites.every((id) =>
-    state.researchedTechnologies.includes(id),
-  ) && evaluateCondition(tech.unlockCondition, state)
-    ? 'available'
-    : 'revealed';
+  const known = (id: string) => state.researchedTechnologies.includes(id);
+  const eligible = (t: TechnologyDefinition) =>
+    t.prerequisites.every(known) && evaluateCondition(t.unlockCondition, state);
+  if (eligible(tech)) return 'available';
+  const era = eras.find((e) => e.id === tech.era);
+  const reached = state.reachedEras.includes(tech.era);
+  const nextEraFrontier =
+    era?.previous === state.currentEra && tech.prerequisites.every(known);
+  if (!reached && !nextEraFrontier) return 'hidden';
+  return tech.prerequisites.every(
+    (id) =>
+      known(id) ||
+      technologies.some((parent) => parent.id === id && eligible(parent)),
+  )
+    ? 'revealed'
+    : 'hidden';
 }
 export function skillCost(state: GameState, skill: SkillDefinition) {
   return D(skill.cost).mul(
@@ -145,6 +158,20 @@ export function settleProgression(state: GameState) {
       state.announcedEras.push(era.id);
       logEvent(state, `New era available: ${era.name}.`, 'era');
     }
+  for (const unit of units)
+    if (
+      !state.unlockedProductionUnits.includes(unit.id) &&
+      isUnitUnlocked(state, unit)
+    ) {
+      state.unlockedProductionUnits.push(unit.id);
+      logEvent(
+        state,
+        `New production unit unlocked: ${unit.name}.`,
+        'milestone',
+        unit.tier > 1,
+      );
+    }
+  sampleStatistics(state, true);
 }
 export const technologyById = (id: string) =>
   technologies.find((t) => t.id === id);

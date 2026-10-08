@@ -39,7 +39,7 @@ export const units: ProductionUnitDefinition[] = [
       { resource: 'materials', amount: 100 },
       { resource: 'food', amount: 250 },
     ],
-    baseProduction: [{ resource: 'food', amount: 20 }],
+    baseProduction: [{ resource: 'food', amount: 28 }],
     effects: [
       {
         type: 'unitProductionMultiplier',
@@ -48,7 +48,11 @@ export const units: ProductionUnitDefinition[] = [
         value: 1.1,
       },
     ],
-    unlockCondition: { type: 'never' },
+    unlockCondition: {
+      type: 'technologyOwned',
+      technologyId: 'advancedAgriculture',
+    },
+    visibilityCondition: { type: 'eraReached', eraId: 'bronze' },
   },
   {
     id: 'industrialFarm',
@@ -88,7 +92,7 @@ export const units: ProductionUnitDefinition[] = [
       { resource: 'food', amount: 40 },
     ],
     baseProduction: [{ resource: 'materials', amount: 4 }],
-    unlockCondition: { type: 'technologyOwned', technologyId: 'woodworking' },
+    unlockCondition: { type: 'technologyOwned', technologyId: 'mining' },
     visibilityCondition: {
       type: 'technologyOwned',
       technologyId: 'toolMaking',
@@ -105,8 +109,9 @@ export const units: ProductionUnitDefinition[] = [
       { resource: 'materials', amount: 200 },
       { resource: 'food', amount: 100 },
     ],
-    baseProduction: [{ resource: 'materials', amount: 20 }],
-    unlockCondition: { type: 'never' },
+    baseProduction: [{ resource: 'materials', amount: 28 }],
+    unlockCondition: { type: 'technologyOwned', technologyId: 'bronzeWorking' },
+    visibilityCondition: { type: 'eraReached', eraId: 'bronze' },
   },
   {
     id: 'factory',
@@ -144,14 +149,14 @@ export const units: ProductionUnitDefinition[] = [
     baseProduction: [{ resource: 'research', amount: 1.2 }],
     unlockCondition: {
       type: 'technologyOwned',
-      technologyId: 'knowledgeSharing',
+      technologyId: 'formalEducation',
     },
     visibilityCondition: { type: 'technologyOwned', technologyId: 'language' },
   },
   {
-    id: 'scientist',
-    name: 'Scientist',
-    description: 'Develop systematic ways of understanding the world.',
+    id: 'academy',
+    name: 'Academy',
+    description: 'A lasting home for study and discovery.',
     category: 'research',
     tier: 3,
     upgradeFrom: { unitId: 'scholar', amount: 4 },
@@ -159,16 +164,20 @@ export const units: ProductionUnitDefinition[] = [
       { resource: 'research', amount: 150 },
       { resource: 'materials', amount: 200 },
     ],
-    baseProduction: [{ resource: 'research', amount: 6 }],
-    unlockCondition: { type: 'never' },
+    baseProduction: [{ resource: 'research', amount: 8.4 }],
+    unlockCondition: {
+      type: 'technologyOwned',
+      technologyId: 'institutionalLearning',
+    },
+    visibilityCondition: { type: 'eraReached', eraId: 'classical' },
   },
   {
     id: 'laboratory',
     name: 'Laboratory',
-    description: 'Give Scientists a place to work together.',
+    description: 'Equip Academies for specialized research.',
     category: 'research',
     tier: 4,
-    upgradeFrom: { unitId: 'scientist', amount: 5 },
+    upgradeFrom: { unitId: 'academy', amount: 5 },
     costs: [
       { resource: 'research', amount: 1000 },
       { resource: 'materials', amount: 3000 },
@@ -177,7 +186,7 @@ export const units: ProductionUnitDefinition[] = [
     effects: [
       {
         type: 'unitProductionMultiplier',
-        unit: 'scientist',
+        unit: 'academy',
         resource: 'research',
         value: 1.1,
       },

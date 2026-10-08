@@ -33,6 +33,7 @@ export type GameEffect =
       value: Amount;
     }
   | { type: 'populationCostMultiplier'; value: Amount }
+  | { type: 'populationGrowthIntervalMultiplier'; value: Amount }
   | { type: 'unlockFeature' | 'unlockJob' | 'unlockUnit'; id: string }
   | { type: 'grantResource'; resource: string; value: Amount };
 
@@ -84,6 +85,20 @@ export interface TechnologyDefinition {
   visibilityCondition: Condition;
   unlockCondition: Condition;
   lockedPreview?: boolean;
+  branch?: string;
+  treePosition?: { x: number; y: number };
+}
+export interface StatisticSample {
+  /** Whole seconds of simulated play, independent of development speed and wall clock. */
+  timestamp: number;
+  value: string;
+}
+export interface StatisticSeriesDefinition {
+  id: string;
+  name: string;
+  color: string;
+  sampleValue: (state: GameState) => Amount;
+  unlockCondition: Condition;
 }
 export interface SkillDefinition {
   id: string;
@@ -133,6 +148,15 @@ export interface GameState {
   resources: Record<string, Decimal>;
   population: Decimal;
   productionUnits: Record<string, Decimal>;
+  unlockedProductionUnits: string[];
+  constructedProductionUnits: string[];
+  autoPopulationGrowth: {
+    enabled: boolean;
+    accumulator: number;
+    foodReservePercent: number;
+  };
+  statisticsHistory: Record<string, StatisticSample[]>;
+  statisticsSamplingAccumulator: number;
   researchedTechnologies: string[];
   purchasedSkills: Record<string, number>;
   achievements: string[];
@@ -148,6 +172,7 @@ export interface GameState {
 export type GameAction =
   | { type: 'gather'; resource: string }
   | { type: 'grow' }
+  | { type: 'autoGrowth'; enabled?: boolean; foodReservePercent?: number }
   | {
       type: 'recruit' | 'release' | 'upgrade' | 'dismantle';
       unitId: string;
