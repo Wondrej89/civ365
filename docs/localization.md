@@ -50,12 +50,14 @@ Extraktor sbírá UI message IDs, content texty, chybové zprávy a event templa
 
 ## Save v5
 
+Aktuální formát je v6. Níže popsaný převod v4 → v5 dál probíhá před novým převodem armády, měst a kampaní v [growth-warfare.md](growth-warfare.md).
+
 Migrace v4 → v5 přidá `settings.language: 'en'`. U již zakoupených Organized Settlements doplní Organized Warfare; u Classical Army nově požadované Organized Warfare, Archery a Engineering. Zachová všechny ostatní objevy, zdroje, pracovníky, populaci, armádu, kampaně a historii. Doplní pouze nové hrany těchto dvou definic; poškozené původní prerequisites dál odmítá validace. Běžné nové nákupy už musí splnit všechny podmínky a zaplatit cenu.
 
-JSON import ověřuje podporovaný jazyk a strukturu event descriptorů. Migrace v0/v1/v2/v3 pokračují přes v4 až do v5; populace nad kapacitou se stále nesnižuje.
+JSON import ověřuje podporovaný jazyk a strukturu event descriptorů. Migrace v0/v1/v2/v3 pokračují přes v4 a v5 až do v6; populace nad kapacitou se stále nesnižuje.
 
 ## Ověření tempa
 
-Po změně rané vojenské cesty optimalizovaný hráč z nového save bez grantů dosáhl Agricultural za 5 minut, Bronze za 57 minut, Classical za 2 h 2 min 30 s, Medieval za 4 h 34 min a Renaissance za 8 h 21 min. Armáda je dostupná dříve, dlouhodobé multisystémové gates zůstávají. Toto jsou výsledky testovací politiky, ne přesný časový slib každému hráči.
+V předchozí research/localization iteraci optimalizovaný hráč z nového save bez grantů dosáhl Agricultural za 5 minut, Bronze za 57 minut, Classical za 2 h 2 min 30 s, Medieval za 4 h 34 min a Renaissance za 8 h 21 min. Armáda je dostupná dříve, dlouhodobé multisystémové gates zůstávají. Toto jsou výsledky testovací politiky, ne přesný časový slib každému hráči.
 
-131 testů ověřilo původní engine i nové prerequisites, navigační pořadí, locale roundtrip, v4 grandfathering, event descriptors, legacy event rozpoznání a fallback/interpolaci. Chromium ověřil EN/CS přes reload, export/import a reset, dynamický překlad názvu/resource/eventu přidáním dočasného testovacího katalogu, nemožnost koupit Classical Army bez Archery/Engineering, cyklování a centrování uzlů při 75/100/125 % zoomu a všechny mobilní sheets bez přetékání a JavaScript chyb. Samostatný browser test produkčního buildu pod `/civ365/` ověřil assety bez 404, migraci v4, uložený jazyk, navigaci výzkumu a mobilní zobrazení; neobjevily se JavaScript chyby ani development tools.
+V předchozí iteraci 131 testů ověřilo původní engine i nové prerequisites, navigační pořadí, locale roundtrip, v4 grandfathering, event descriptors, legacy event rozpoznání a fallback/interpolaci. Chromium ověřil EN/CS přes reload, export/import a reset, dynamický překlad názvu/resource/eventu přidáním dočasného testovacího katalogu, nemožnost koupit Classical Army bez Archery/Engineering, cyklování a centrování uzlů při 75/100/125 % zoomu a všechny mobilní sheets bez přetékání a JavaScript chyb. Samostatný browser test produkčního buildu pod `/civ365/` ověřil assety bez 404, migraci v4, uložený jazyk, navigaci výzkumu a mobilní zobrazení; neobjevily se JavaScript chyby ani development tools.

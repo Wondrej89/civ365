@@ -80,14 +80,20 @@ export function upgradePreview(
     ),
   };
 }
-export function populationCost(state: GameState) {
+export function populationCost(
+  state: GameState,
+  population = state.population,
+) {
   const config = balance.populationGrowth;
-  const early = state.population.sub(1).min(config.scalingBreakpoint - 1);
-  const later = state.population
+  const early = population
+    .sub(1)
+    .max(0)
+    .min(config.scalingBreakpoint - 1);
+  const later = population
     .sub(config.scalingBreakpoint)
     .max(0)
     .min(config.lateScalingBreakpoint - config.scalingBreakpoint);
-  const late = state.population.sub(config.lateScalingBreakpoint).max(0);
+  const late = population.sub(config.lateScalingBreakpoint).max(0);
   return D(config.baseFoodCost)
     .mul(D(config.multiplier).pow(early))
     .mul(D(config.laterMultiplier).pow(later))

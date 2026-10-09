@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { resources } from '../game/content/resources';
 import { D, formatNumber } from '../game/utils/numbers';
-import { productionPerSecond } from '../game/engine/production';
+import { netProductionPerSecond as productionPerSecond } from '../game/engine/economy';
 import { isFeatureUnlocked } from '../game/engine/conditions';
 import type { GameState, ResourceCost } from '../game/types';
 import { populationCapacity } from '../game/engine/settlements';
@@ -39,7 +39,7 @@ export function ResourceLedger({ state }: { state: GameState }) {
     <div className="panel ledger">
       <div className="panel-heading">
         <h2>{tr('Resource ledger')}</h2>
-        <span className="subtle">{tr('Live production')}</span>
+        <span className="subtle">{tr('Net production after army upkeep')}</span>
       </div>
       <table>
         <thead>
@@ -63,8 +63,11 @@ export function ResourceLedger({ state }: { state: GameState }) {
               <td className="numeric strong">
                 {formatNumber(state.resources[r.id])}
               </td>
-              <td className="numeric rate">
-                +{formatNumber(rates[r.id])}
+              <td
+                className={`numeric rate${rates[r.id].lt(0) ? ' negative-rate' : ''}`}
+              >
+                {rates[r.id].gte(0) ? '+' : ''}
+                {formatNumber(rates[r.id])}
                 <span className="unit"> {tr('/s')}</span>
               </td>
             </tr>
@@ -123,7 +126,8 @@ export function ResourceKpi({
       <div className="kpi-value">
         {formatNumber(state.resources[id])}
         <span className="kpi-rate">
-          +{formatNumber(productionPerSecond(state)[id])}
+          {productionPerSecond(state)[id].gte(0) ? '+' : ''}
+          {formatNumber(productionPerSecond(state)[id])}
           {tr('/s')}
         </span>
       </div>

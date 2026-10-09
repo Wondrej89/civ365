@@ -7,6 +7,7 @@ export interface OfflineReport {
   simulatedSeconds: number;
   populationCreated: ReturnType<typeof D>;
   foodSpentOnGrowth: ReturnType<typeof D>;
+  militaryUpkeepSpent: Record<string, ReturnType<typeof D>>;
   populationLost: ReturnType<typeof D>;
   territoriesConquered: ReturnType<typeof D>;
   produced: Record<string, ReturnType<typeof D>>;
@@ -37,6 +38,14 @@ export function applyOfflineProgress(
             ),
             foodSpentOnGrowth: next.statistics.foodSpentOnGrowth.sub(
               state.statistics.foodSpentOnGrowth,
+            ),
+            militaryUpkeepSpent: Object.fromEntries(
+              ['food', 'materials'].map((id) => [
+                id,
+                next.statistics[id + 'SpentOnMilitary'].sub(
+                  state.statistics[id + 'SpentOnMilitary'],
+                ),
+              ]),
             ),
             produced: Object.fromEntries(
               Object.keys(state.resources).map((id) => [

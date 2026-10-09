@@ -43,9 +43,14 @@ export type GameEffect =
     }
   | { type: 'populationCostMultiplier'; value: Amount }
   | { type: 'populationGrowthIntervalMultiplier'; value: Amount }
+  | {
+      type: 'populationGrowthAmountMultiplier' | 'populationGrowthPerCity';
+      value: Amount;
+    }
   | { type: 'settlementCapacityMultiplier'; settlement?: string; value: Amount }
   | { type: 'settlementCostMultiplier'; resource?: string; value: Amount }
   | { type: 'militaryPowerMultiplier'; unit?: string; value: Amount }
+  | { type: 'militaryUpkeepMultiplier'; resource?: string; value: Amount }
   | {
       type: 'militaryCasualtyMultiplier' | 'campaignDurationMultiplier';
       value: Amount;
@@ -107,14 +112,21 @@ export interface TerritoryDefinition {
   effects?: GameEffect[];
   strategicResources?: string[];
 }
+export interface MilitaryTierDefinition {
+  name: string;
+  era: string;
+  resourceCosts: ResourceCost[];
+  upkeep: ResourceCost[];
+  basePower: Amount;
+  unlockCondition: Condition;
+}
 export interface MilitaryUnitDefinition {
   id: string;
   name: string;
   description: string;
   populationCost: number;
-  resourceCosts: ResourceCost[];
-  basePower: Amount;
   unlockCondition: Condition;
+  tiers: MilitaryTierDefinition[];
   effects?: GameEffect[];
 }
 export interface Campaign {
@@ -126,6 +138,14 @@ export interface Campaign {
   elapsedSeconds: number;
   casualtyRate: number;
   victory: boolean;
+  targetId: string;
+  rewardTerritory: string;
+  rewardResource: string | null;
+  productionBonus: Decimal;
+  initialReadiness: number;
+  lowestReadiness: number;
+  casualtyMultiplier: number;
+  legacyLosses: Record<string, Decimal> | null;
 }
 export interface TechnologyDefinition {
   id: string;
@@ -207,6 +227,10 @@ export interface GameState {
   ownedTerritories: Record<string, Decimal>;
   settlements: Record<string, Decimal>;
   militaryUnits: Record<string, Decimal>;
+  militaryTiers: Record<string, number>;
+  militaryReadiness: number;
+  settlementInvestments: Record<string, Decimal>;
+  territoryProductionBonuses: Record<string, Decimal>;
   activeCampaign: Campaign | null;
   /** Developer grant; normal capacity is derived from settlements and effects. */
   populationCapacityBonus: Decimal;
@@ -245,7 +269,8 @@ export type GameAction =
       id: string;
       amount: Amount | 'max';
     }
-  | { type: 'launchCampaign' }
+  | { type: 'upgradeMilitary'; id: string }
+  | { type: 'launchCampaign'; targetId?: string }
   | {
       type: 'recruit' | 'release' | 'upgrade' | 'dismantle';
       unitId: string;

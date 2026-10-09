@@ -72,6 +72,7 @@ function scan(file) {
         add(node.arguments[1]);
         add(node.arguments[2]);
       }
+      if (name === 'tier') add(node.arguments[0]);
     }
     if (ts.isNewExpression(node) && node.expression.getText(ast) === 'Error')
       add(node.arguments?.[0]);

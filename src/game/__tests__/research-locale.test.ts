@@ -178,7 +178,7 @@ describe('saved locale and legacy discoveries', () => {
     const original = JSON.stringify(raw);
     const loaded = deserializeSave(raw);
     expect(loaded.settings.language).toBe('en');
-    expect(loaded.saveVersion).toBe(5);
+    expect(loaded.saveVersion).toBe(6);
     expect(loaded.researchedTechnologies).toEqual(
       expect.arrayContaining([
         ...old.researchedTechnologies,

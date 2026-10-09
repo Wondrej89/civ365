@@ -38,7 +38,11 @@ import {
 } from './common';
 import { GrowButton } from './Workforce';
 import { useWorkbookNavigation } from './navigation';
-import { autoGrowthActive, nextGrowthSeconds } from '../game/engine/population';
+import {
+  autoGrowthActive,
+  nextGrowthSeconds,
+  populationGrowthAmount,
+} from '../game/engine/population';
 
 export function Overview() {
   const { t: tr, formatNumber, formatEvent, formatTime } = useI18n();
@@ -87,8 +91,9 @@ export function Overview() {
               {capacityReached(state)
                 ? tr('Population capacity reached.')
                 : autoGrowthActive(state)
-                  ? tr('Auto · next attempt in {0} s', {
-                      '0': formatNumber(nextGrowthSeconds(state), 1),
+                  ? tr('Auto · +{people} in {seconds} s', {
+                      people: formatNumber(populationGrowthAmount(state), 0),
+                      seconds: formatNumber(nextGrowthSeconds(state), 1),
                     })
                   : tr('Manual')}
             </strong>

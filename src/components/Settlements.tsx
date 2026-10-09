@@ -2,6 +2,7 @@ import { useI18n } from '../i18n/LocaleContext';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
 import { settlements } from '../game/content/settlements';
+import { balance } from '../game/content/config';
 import { evaluateCondition } from '../game/engine/conditions';
 import {
   ownedTerritories,
@@ -149,6 +150,13 @@ export function SettlementsSheet() {
                     <h3>
                       {tr('Upgrade from')} {tr(source.name)}
                     </h3>
+                    <p className="sheet-note">
+                      {tr('Each further {tier} upgrade costs ×{factor}.', {
+                        tier: tr(s.name),
+                        factor:
+                          balance.settlements.upgradeCostGrowth[s.id] ?? 1,
+                      })}
+                    </p>
                     <Costs costs={costs} state={state} />
                     <div className="realm-actions">
                       {[1, 'max'].map((n) => (

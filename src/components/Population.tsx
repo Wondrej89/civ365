@@ -8,8 +8,9 @@ import {
   growthInterval,
   growthModifiers,
   nextGrowthSeconds,
+  populationGrowthAmount,
+  growthCost,
 } from '../game/engine/population';
-import { populationCost } from '../game/engine/production';
 import { populationDistribution } from '../game/systems/statistics';
 
 import { visibleResources } from './common';
@@ -30,7 +31,7 @@ export function PopulationSheet() {
       <div className="sheet-heading">
         <div>
           <div className="eyebrow">{tr('PEOPLE MAKE A CIVILIZATION')}</div>
-          <h1>{tr('Room for one more.')}</h1>
+          <h1>{tr('A growing community.')}</h1>
           <p>{tr('Grow your community and choose how your people work.')}</p>
         </div>
       </div>
@@ -70,9 +71,9 @@ export function PopulationSheet() {
       <div className="population-panels">
         <section className="panel population-panel">
           <h2>{tr('Manual growth')}</h2>
-          <p>{tr('Next Population Cost')}</p>
+          <p>{tr('Food for a full growth step')}</p>
           <strong className="growth-cost">
-            {formatNumber(populationCost(state))} {tr('Food')}
+            {formatNumber(growthCost(state))} {tr('Food')}
           </strong>
           <GrowButton />
           <p className="sheet-note">
@@ -111,6 +112,10 @@ export function PopulationSheet() {
               <span className="toggle" />
             </label>
             <dl className="growth-details">
+              <div>
+                <dt>{tr('People per growth step')}</dt>
+                <dd>+{formatNumber(populationGrowthAmount(state), 0)}</dd>
+              </div>
               <div>
                 <dt>{tr('Next growth attempt')}</dt>
                 <dd>
@@ -153,17 +158,30 @@ export function PopulationSheet() {
             </dl>
             <p className="sheet-note">
               {tr(
-                'Each attempt protects the selected share of your current Food. If Food is insufficient, growth waits for the next interval. The same rules apply while you are away.',
+                'Each step protects your Food reserve and can create a smaller group if Food or capacity is limited. The same rules apply while you are away.',
               )}
             </p>
             {growthModifiers(state).length > 0 && (
               <div className="growth-modifiers">
-                <h3>{tr('Interval modifiers')}</h3>
+                <h3>{tr('Growth modifiers')}</h3>
                 {growthModifiers(state).map((m) => (
-                  <div key={m.name}>
+                  <div key={m.name + m.type}>
                     <span>{tr(m.name)}</span>
                     <strong>
-                      −{formatNumber(m.value.neg().add(1).mul(100), 1)}%
+                      {m.type === 'populationGrowthIntervalMultiplier'
+                        ? tr('−{percent}% interval', {
+                            percent: formatNumber(
+                              m.value.neg().add(1).mul(100),
+                              1,
+                            ),
+                          })
+                        : m.type === 'populationGrowthPerCity'
+                          ? tr('+{amount} per City/Metropolis', {
+                              amount: formatNumber(m.value, 0),
+                            })
+                          : tr('×{amount} people', {
+                              amount: formatNumber(m.value, 1),
+                            })}
                     </strong>
                   </div>
                 ))}

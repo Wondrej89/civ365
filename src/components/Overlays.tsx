@@ -53,6 +53,16 @@ export function OfflineModal() {
               </div>
             ))}
         </div>
+        {Object.entries(report.militaryUpkeepSpent)
+          .filter(([, amount]) => amount.gt(0))
+          .map(([id, amount]) => (
+            <p className="offline-growth" key={id}>
+              {tr('Army upkeep consumed {amount} {resource}.', {
+                amount: formatNumber(amount),
+                resource: tr(resources.find((r) => r.id === id)!.name),
+              })}
+            </p>
+          ))}
         {report.populationCreated.gt(0) && (
           <p className="offline-growth">
             {tr('Your community grew by')}{' '}
@@ -207,7 +217,9 @@ export function DebugPanel() {
         {tr('^conquests · growth ×')}
         {balance.populationGrowth.multiplier} / ×
         {balance.populationGrowth.laterMultiplier} / ×
-        {balance.populationGrowth.lateMultiplier}
+        {balance.populationGrowth.lateMultiplier} {tr('· City upgrades ×')}
+        {balance.settlements.upgradeCostGrowth.city} {tr('· counter strength')}
+        {balance.military.counterStrength}
       </p>
     </details>
   );

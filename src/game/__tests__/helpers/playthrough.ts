@@ -17,13 +17,13 @@ import {
   maxSettlementAction,
 } from '../../engine/settlements';
 import {
-  militaryPower,
   militaryUnlocked,
   powerPerMilitaryUnit,
   maxMilitaryRecruit,
   militaryQuote,
+  canUpgradeMilitary,
 } from '../../engine/military';
-import { frontierDefense } from '../../engine/conquest';
+import { campaignPreview, frontierOptions } from '../../engine/conquest';
 import { isUnitUnlocked, maxCreatable } from '../../engine/units';
 import { populationDistribution } from '../../systems/statistics';
 import {
@@ -55,6 +55,13 @@ export function nextPlaythroughAction(state: GameState): GameAction | null {
     'formalEducation',
     'construction',
     'classicalArmy',
+    'horsemanship',
+    'supplyLines',
+    'urbanCommunities',
+    'publicHealth',
+    'sanitation',
+    'civilAdministration',
+    'professionalArmy',
     'institutionalLearning',
     'printingPress',
     'scientificMethod',
@@ -98,9 +105,11 @@ export function nextPlaythroughAction(state: GameState): GameAction | null {
   const visibleMilitary = militaryUnits.filter((u) =>
     militaryUnlocked(state, u),
   );
-  const best = visibleMilitary.sort((a, b) =>
-    powerPerMilitaryUnit(state, b).cmp(powerPerMilitaryUnit(state, a)),
-  )[0];
+  for (const unit of visibleMilitary)
+    if (canUpgradeMilitary(state, unit))
+      return { type: 'upgradeMilitary', id: unit.id };
+  const best = visibleMilitary[0];
+  const frontier = frontierOptions(state).find((t) => t.difficulty === 0)!;
   const territoryRequirement = nextEra?.requirements.find(
     (c) => c.type === 'territoriesAtLeast',
   );
@@ -114,41 +123,46 @@ export function nextPlaythroughAction(state: GameState): GameAction | null {
     militaryRequirement?.type === 'militaryPowerAtLeast'
       ? D(militaryRequirement.value)
       : D();
-  if (needTerritory)
-    neededPower = neededPower.max(frontierDefense(state).mul(1.4));
+  if (needTerritory) neededPower = neededPower.max(frontier.defense.mul(1.3));
+  const average = visibleMilitary
+    .reduce((n, u) => n.add(powerPerMilitaryUnit(state, u)), D())
+    .div(Math.max(1, visibleMilitary.length));
   let desiredArmy = best
-    ? neededPower.div(powerPerMilitaryUnit(state, best)).ceil()
+    ? neededPower.div(average.mul(state.militaryReadiness)).ceil()
     : D();
   if (desiredArmy.gt(state.population.sub(state.population.mul(0.2).max(10))))
     desiredArmy = D();
+  const desiredPerRole = desiredArmy
+    .div(Math.max(1, visibleMilitary.length))
+    .ceil();
+  desiredArmy = desiredPerRole.mul(visibleMilitary.length);
   if (state.activeCampaign) desiredArmy = militaryPopulation(state);
   if (!state.activeCampaign) {
     for (const unit of militaryUnits) {
-      const count = state.militaryUnits[unit.id];
-      if (count.gt(0) && (unit.id !== best?.id || count.gt(desiredArmy)))
+      const desired = visibleMilitary.includes(unit) ? desiredPerRole : D();
+      if (state.militaryUnits[unit.id].gt(desired))
         return {
           type: 'demobilize',
           id: unit.id,
-          amount: unit.id !== best?.id ? 'max' : count.sub(desiredArmy),
+          amount: state.militaryUnits[unit.id].sub(desired),
         };
     }
     if (
       needTerritory &&
-      militaryPower(state).gte(frontierDefense(state).mul(1.4))
+      campaignPreview(state, frontier.id).minimumPower.gte(
+        frontier.defense.mul(1.15),
+      )
     )
-      return { type: 'launchCampaign' };
-    if (
-      best &&
-      desiredArmy.gt(state.militaryUnits[best.id]) &&
-      maxMilitaryRecruit(state, best).gt(0)
-    )
-      return {
-        type: 'recruitMilitary',
-        id: best.id,
-        amount: desiredArmy
-          .sub(state.militaryUnits[best.id])
-          .min(maxMilitaryRecruit(state, best)),
-      };
+      return { type: 'launchCampaign', targetId: frontier.id };
+    for (const unit of visibleMilitary) {
+      const missing = desiredPerRole.sub(state.militaryUnits[unit.id]);
+      if (missing.gt(0) && maxMilitaryRecruit(state, unit).gt(0))
+        return {
+          type: 'recruitMilitary',
+          id: unit.id,
+          amount: missing.min(maxMilitaryRecruit(state, unit)),
+        };
+    }
   }
   const groups = populationDistribution(state);
   const groupValue = (id: string) =>
@@ -156,7 +170,7 @@ export function nextPlaythroughAction(state: GameState): GameAction | null {
   const economy = state.population.sub(desiredArmy);
   const target: Record<string, ReturnType<typeof D>> = {
     food: D(),
-    materials: economy.mul(0.3).floor().max(1),
+    materials: economy.mul(0.35).floor().max(1),
     research: economy.mul(0.3).floor().max(1),
   };
   target.food = economy.sub(target.materials).sub(target.research);
@@ -223,7 +237,7 @@ export function nextPlaythroughAction(state: GameState): GameAction | null {
       return { type: 'recruit', unitId: 'gatherer', amount: 'max' };
   } else if (
     !state.activeCampaign &&
-    state.militaryUnits[best.id].lt(desiredArmy) &&
+    visibleMilitary.some((u) => state.militaryUnits[u.id].lt(desiredPerRole)) &&
     idlePopulation(state).lte(0) &&
     canAfford(state, militaryQuote(state, best))
   ) {

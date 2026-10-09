@@ -55,16 +55,29 @@ function realm(era = 'classical') {
   state.settlements.city = D(1);
   state.settlements.town = D(1);
   state.statistics.totalSettlementsBuilt = D(2);
+  state.settlementInvestments = {
+    camp: D(1),
+    settlement: D(2),
+    town: D(2),
+    city: D(1),
+    metropolis: D(),
+  };
+  state.militaryTiers.infantry = 1;
   settleProgression(state);
   return state;
 }
-function armed(amount = 100, unit = 'heavyInfantry') {
+function armed(amount = 100, tier = 2) {
   const state = realm();
   state.statistics.territoriesConquered = D();
   state.ownedTerritories.frontier = D();
   state.settlements.town = D();
   state.statistics.totalSettlementsBuilt = D(1);
-  return applyAction(state, { type: 'recruitMilitary', id: unit, amount });
+  state.militaryTiers.infantry = tier;
+  return applyAction(state, {
+    type: 'recruitMilitary',
+    id: 'infantry',
+    amount,
+  });
 }
 
 describe('settlement capacity and investment', () => {
@@ -195,13 +208,14 @@ describe('settlement capacity and investment', () => {
       classical.effects.pop();
     }
     state.statistics.totalSettlementsBuilt = D(1);
+    state.settlementInvestments.city = D();
     expect(
       D(
         settlementQuote(
           state,
           settlements.find((s) => s.id === 'city')!,
         )[0].amount,
-      ).eq(2500 * 0.8),
+      ).eq(25000 * 0.8),
     ).toBe(true);
   });
 });
@@ -209,14 +223,14 @@ describe('settlement capacity and investment', () => {
 describe('population in an army', () => {
   it('recruitment charges Food/Materials, assigns idle people and returns them when demobilized', () => {
     const state = realm(),
-      unit = militaryUnits.find((u) => u.id === 'spearman')!,
+      unit = militaryUnits.find((u) => u.id === 'infantry')!,
       cost = militaryQuote(state, unit, 10);
     const next = applyAction(state, {
       type: 'recruitMilitary',
       id: unit.id,
       amount: 10,
     });
-    expect(next.militaryUnits.spearman.eq(10)).toBe(true);
+    expect(next.militaryUnits.infantry.eq(10)).toBe(true);
     expect(next.population.eq(state.population)).toBe(true);
     expect(idlePopulation(next).eq(190)).toBe(true);
     expect(militaryPopulation(next).eq(10)).toBe(true);
@@ -237,26 +251,39 @@ describe('population in an army', () => {
   it('rejects locked recruitment, lack of people, lack of resources and malformed amounts', () => {
     const fresh = createInitialState(1000);
     expect(
-      applyAction(fresh, { type: 'recruitMilitary', id: 'levy', amount: 1 }),
+      applyAction(fresh, {
+        type: 'recruitMilitary',
+        id: 'infantry',
+        amount: 1,
+      }),
     ).toBe(fresh);
     const state = realm();
     state.resources.food = D();
     expect(
-      applyAction(state, { type: 'recruitMilitary', id: 'levy', amount: 1 }),
+      applyAction(state, {
+        type: 'recruitMilitary',
+        id: 'infantry',
+        amount: 1,
+      }),
     ).toBe(state);
     for (const amount of [-1, 0.5, 'bad'])
       expect(
-        applyAction(state, { type: 'recruitMilitary', id: 'levy', amount }),
+        applyAction(state, { type: 'recruitMilitary', id: 'infantry', amount }),
       ).toBe(state);
     state.resources.food = D('1e8');
     state.productionUnits.gatherer = state.population;
     expect(
-      applyAction(state, { type: 'recruitMilitary', id: 'levy', amount: 1 }),
+      applyAction(state, {
+        type: 'recruitMilitary',
+        id: 'infantry',
+        amount: 1,
+      }),
     ).toBe(state);
   });
   it('Max and single recruitment share the same escalating bill', () => {
     const state = realm(),
-      unit = militaryUnits.find((u) => u.id === 'levy')!;
+      unit = militaryUnits.find((u) => u.id === 'infantry')!;
+    state.militaryTiers.infantry = 0;
     state.resources.food = D(100);
     const max = maxMilitaryRecruit(state, unit);
     const bulk = applyAction(state, {
@@ -271,7 +298,7 @@ describe('population in an army', () => {
         id: unit.id,
         amount: 1,
       });
-    expect(bulk.militaryUnits.levy.eq(max)).toBe(true);
+    expect(bulk.militaryUnits.infantry.eq(max)).toBe(true);
     expect(bulk.resources.food.toNumber()).toBeCloseTo(
       singles.resources.food.toNumber(),
       8,
@@ -280,7 +307,7 @@ describe('population in an army', () => {
   });
   it('uses generic power modifiers and population footprints rather than unit counts for the distribution', () => {
     const state = realm(),
-      unit = militaryUnits.find((u) => u.id === 'spearman')!;
+      unit = militaryUnits.find((u) => u.id === 'infantry')!;
     unit.populationCost = 2;
     try {
       const next = applyAction(state, {
@@ -296,7 +323,7 @@ describe('population in an army', () => {
           .value.eq(20),
       ).toBe(true);
       const medieval = realm('medieval');
-      medieval.militaryUnits.spearman = D(10);
+      medieval.militaryUnits.infantry = D(10);
       expect(militaryPower(medieval).toNumber()).toBeCloseTo(30 * 1.15 * 1.5);
     } finally {
       unit.populationCost = 1;
@@ -313,7 +340,7 @@ describe('population in an army', () => {
     });
     state = applyAction(state, {
       type: 'recruitMilitary',
-      id: 'levy',
+      id: 'infantry',
       amount: 10,
     });
     expect(productionPerSecond(state).food.toNumber()).toBeCloseTo(
@@ -329,8 +356,8 @@ describe('deterministic campaigns in the shared simulation', () => {
     expect(state.activeCampaign).not.toBeNull();
     for (const action of [
       { type: 'launchCampaign' as const },
-      { type: 'recruitMilitary' as const, id: 'levy', amount: 1 },
-      { type: 'demobilize' as const, id: 'heavyInfantry', amount: 1 },
+      { type: 'recruitMilitary' as const, id: 'infantry', amount: 1 },
+      { type: 'demobilize' as const, id: 'infantry', amount: 1 },
     ])
       expect(applyAction(state, action)).toBe(state);
     const halfway = simulate(state, state.activeCampaign!.durationSeconds / 2);
@@ -349,23 +376,25 @@ describe('deterministic campaigns in the shared simulation', () => {
     );
     const next = simulate(running, prediction.durationSeconds);
     expect(next.activeCampaign).toBeNull();
-    expect(next.ownedTerritories.frontier.eq(1)).toBe(true);
+    expect(next.ownedTerritories[prediction.target.territory].eq(1)).toBe(true);
     expect(next.statistics.territoriesConquered.eq(1)).toBe(true);
     expect(next.population.lt(state.population)).toBe(true);
-    expect(
-      next.militaryUnits.heavyInfantry.lt(state.militaryUnits.heavyInfantry),
-    ).toBe(true);
+    expect(next.militaryUnits.infantry.lt(state.militaryUnits.infantry)).toBe(
+      true,
+    );
     expect(next.statistics.totalPopulationCreated.eq(200)).toBe(true);
-    expect(simulate(next, 100).ownedTerritories.frontier.eq(1)).toBe(true);
+    expect(simulate(next, 100).statistics.territoriesConquered.eq(1)).toBe(
+      true,
+    );
     expect(settlementSlots(next).eq(2)).toBe(true);
     expect(populationCapacity(next).eq(populationCapacity(state))).toBe(true);
   });
   it('predictably loses a weak campaign without destroying the whole army or granting territory', () => {
-    const state = armed(20, 'levy');
+    const state = armed(10, 0);
     expect(campaignForecast(state).victory).toBe(false);
     const next = simulate(applyAction(state, { type: 'launchCampaign' }), 600);
     expect(next.ownedTerritories.frontier.eq(0)).toBe(true);
-    expect(next.militaryUnits.levy.gt(0)).toBe(true);
+    expect(next.militaryUnits.infantry.gt(0)).toBe(true);
     expect(next.population.lt(state.population)).toBe(true);
   });
   it('has an unbounded configurable defense curve and generic casualty modifiers', () => {
@@ -410,7 +439,7 @@ describe('deterministic campaigns in the shared simulation', () => {
     expect(live.activeCampaign).toBeNull();
   });
   it('keeps fractional campaign completion times compatible with the save timestamp format', () => {
-    const state = applyAction(armed(55, 'levy'), { type: 'launchCampaign' });
+    const state = applyAction(armed(55, 0), { type: 'launchCampaign' });
     expect(Number.isInteger(state.activeCampaign!.durationSeconds)).toBe(false);
     const next = simulate(state, 300);
     expect(
@@ -471,6 +500,8 @@ describe('era gates, discoveries and migration', () => {
           'archery',
           'aqueducts',
           'classicalArmy',
+          'supplyLines',
+          'horsemanship',
         ].includes(id),
     );
     raw.unlockedFeatures = raw.unlockedFeatures.filter(
@@ -487,7 +518,7 @@ describe('era gates, discoveries and migration', () => {
       delete raw[key];
     const original = JSON.stringify(raw),
       loaded = deserializeSave(raw);
-    expect(loaded.saveVersion).toBe(5);
+    expect(loaded.saveVersion).toBe(6);
     expect(loaded.population.eq(500)).toBe(true);
     expect(loaded.productionUnits.gatherer.eq(100)).toBe(true);
     expect(loaded.researchedTechnologies).toEqual(
@@ -510,13 +541,13 @@ describe('era gates, discoveries and migration', () => {
     raw.settlements.city = '99';
     expect(() => deserializeSave(raw)).toThrow();
     raw.settlements.city = '1';
-    raw.militaryUnits.heavyInfantry = '500';
+    raw.militaryUnits.infantry = '500';
     expect(() => deserializeSave(raw)).toThrow();
-    raw.militaryUnits.heavyInfantry = '100';
+    raw.militaryUnits.infantry = '100';
     raw.activeCampaign.elapsedSeconds = -1;
     expect(() => deserializeSave(raw)).toThrow();
     raw.activeCampaign.elapsedSeconds = 0;
-    raw.activeCampaign.committedUnits.heavyInfantry = '99';
+    raw.activeCampaign.committedUnits.infantry = '99';
     expect(() => deserializeSave(raw)).toThrow();
   });
   it('samples new series only after their features and keeps Military in the weighted distribution', () => {

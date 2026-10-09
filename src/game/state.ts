@@ -24,6 +24,8 @@ export const statisticIds = [
   'territoriesConquered',
   'militaryCasualties',
   'campaignsCompleted',
+  'foodSpentOnMilitary',
+  'materialsSpentOnMilitary',
 ];
 export function createInitialState(now = Date.now()): GameState {
   return {
@@ -41,6 +43,14 @@ export function createInitialState(now = Date.now()): GameState {
       settlements.map((s) => [s.id, D(s.id === 'camp' ? 1 : 0)]),
     ),
     militaryUnits: Object.fromEntries(militaryUnits.map((u) => [u.id, D()])),
+    militaryTiers: Object.fromEntries(militaryUnits.map((u) => [u.id, 0])),
+    militaryReadiness: 1,
+    settlementInvestments: Object.fromEntries(
+      settlements.map((s) => [s.id, D(s.id === 'camp' ? 1 : 0)]),
+    ),
+    territoryProductionBonuses: Object.fromEntries(
+      ['food', 'materials', 'research'].map((id) => [id, D()]),
+    ),
     activeCampaign: null,
     populationCapacityBonus: D(),
     unlockedProductionUnits: [],
@@ -93,6 +103,9 @@ export function cloneState(state: GameState): GameState {
     ownedTerritories: { ...state.ownedTerritories },
     settlements: { ...state.settlements },
     militaryUnits: { ...state.militaryUnits },
+    militaryTiers: { ...state.militaryTiers },
+    settlementInvestments: { ...state.settlementInvestments },
+    territoryProductionBonuses: { ...state.territoryProductionBonuses },
     activeCampaign: state.activeCampaign
       ? {
           ...state.activeCampaign,

@@ -410,9 +410,9 @@ describe('saves and offline production', () => {
     delete raw.settings;
     delete raw.reachedEras;
     delete raw.announcedEras;
-    expect(migrateSave(raw).saveVersion).toBe(5);
+    expect(migrateSave(raw).saveVersion).toBe(6);
     expect(deserializeSave(raw).settings.notifications).toBe(true);
-    expect(() => migrateSave({ saveVersion: 6 })).toThrow('Unsupported');
+    expect(() => migrateSave({ saveVersion: 7 })).toThrow('Unsupported');
   });
   it('uses the same simulation offline, including achievements and their changing bonuses', () => {
     const s = applyAction(developed(), {

@@ -4,8 +4,9 @@ import { balance } from '../content/config';
 import { resources } from '../content/resources';
 import { units } from '../content/units';
 import { settlements } from '../content/settlements';
-import { militaryUnits } from '../content/military';
-import { territories } from '../content/territories';
+import { militaryUnits, legacyMilitary } from '../content/military';
+import { territories, frontierTypes } from '../content/territories';
+import { militaryTier } from '../engine/military';
 import {
   ownedTerritories,
   settlementCount,
@@ -88,6 +89,28 @@ function validateMessage(
     ...(source.values !== undefined
       ? { values: values as Record<string, string | number> }
       : {}),
+  };
+}
+function migrateMilitary(value: unknown) {
+  const counts = Object.fromEntries(
+    militaryUnits.map((u) => [u.id, new Decimal(0)]),
+  );
+  const tiers = Object.fromEntries(militaryUnits.map((u) => [u.id, 0]));
+  for (const [id, raw] of Object.entries(object(value))) {
+    const n = decimal(raw, true);
+    if (Object.hasOwn(legacyMilitary, id)) {
+      const legacy = legacyMilitary[id];
+      counts[legacy.role] = counts[legacy.role].add(n);
+      if (n.gt(0))
+        tiers[legacy.role] = Math.max(tiers[legacy.role], legacy.tier);
+    } else if (!Object.hasOwn(counts, id) || n.gt(0))
+      throw new Error('Unknown legacy military unit.');
+  }
+  return {
+    counts: Object.fromEntries(
+      Object.entries(counts).map(([id, n]) => [id, n.toString()]),
+    ),
+    tiers,
   };
 }
 /** Chain legacy versions before validating the current format. Never invent population. */
@@ -199,7 +222,7 @@ export function migrateSave(value: unknown): Obj {
       settlements.map((s) => [s.id, s.id === 'camp' ? '1' : '0']),
     );
     save.militaryUnits = Object.fromEntries(
-      militaryUnits.map((u) => [u.id, '0']),
+      Object.keys(legacyMilitary).map((id) => [id, '0']),
     );
     save.activeCampaign = null;
     save.populationCapacityBonus = '0';
@@ -228,6 +251,72 @@ export function migrateSave(value: unknown): Obj {
       ...new Set([...known, ...known.flatMap((id) => additions[id] ?? [])]),
     ];
     save.saveVersion = 5;
+  }
+  if (save.saveVersion === 5) {
+    const army = migrateMilitary(save.militaryUnits);
+    save.militaryUnits = army.counts;
+    save.militaryTiers = army.tiers;
+    save.militaryReadiness = 1;
+    if (army.tiers.cavalry > 0)
+      save.researchedTechnologies = [
+        ...new Set([
+          ...ids(
+            save.researchedTechnologies,
+            technologies.map((t) => t.id),
+          ),
+          'horsemanship',
+        ]),
+      ];
+    const existing = object(save.settlements);
+    save.settlementInvestments = Object.fromEntries(
+      settlements.map((s) => [
+        s.id,
+        s.tier === 0
+          ? '1'
+          : sum(
+              settlements
+                .filter((t) => t.tier >= s.tier)
+                .map((t) => decimal(existing[t.id] ?? '0', true)),
+            ).toString(),
+      ]),
+    );
+    save.territoryProductionBonuses = {
+      food: '0',
+      materials: '0',
+      research: '0',
+    };
+    if (save.activeCampaign !== null) {
+      const old = object(save.activeCampaign);
+      if (
+        typeof old.casualtyRate !== 'number' ||
+        !Number.isFinite(old.casualtyRate) ||
+        old.casualtyRate < 0 ||
+        old.casualtyRate >= 1
+      )
+        throw new Error('Invalid legacy campaign.');
+      const rate = old.casualtyRate;
+      const losses = migrateMilitary(
+        Object.fromEntries(
+          Object.entries(object(old.committedUnits)).map(([id, n]) => [
+            id,
+            decimal(n, true).mul(rate).floor().toString(),
+          ]),
+        ),
+      ).counts;
+      save.activeCampaign = {
+        ...old,
+        committedUnits: migrateMilitary(old.committedUnits).counts,
+        targetId: 'legacy',
+        rewardTerritory: 'frontier',
+        rewardResource: null,
+        productionBonus: '0',
+        initialReadiness: 1,
+        lowestReadiness: 1,
+        casualtyMultiplier: 1,
+        legacyLosses: losses,
+      };
+    }
+    save.saveVersion = 6;
   }
   if (save.saveVersion !== balance.saveVersion)
     throw new Error(
@@ -263,6 +352,48 @@ export function deserializeSave(value: unknown): GameState {
   state.ownedTerritories = counts(raw.ownedTerritories, territories);
   state.settlements = counts(raw.settlements, settlements);
   state.militaryUnits = counts(raw.militaryUnits, militaryUnits);
+  state.settlementInvestments = counts(raw.settlementInvestments, settlements);
+  if (
+    settlements.some((s) =>
+      state.settlementInvestments[s.id].lt(state.settlements[s.id]),
+    )
+  )
+    throw new Error('Invalid settlement investment history.');
+  const tierValues = object(raw.militaryTiers);
+  if (
+    Object.keys(tierValues).some(
+      (id) => !militaryUnits.some((u) => u.id === id),
+    )
+  )
+    throw new Error('Unknown military category.');
+  for (const unit of militaryUnits) {
+    const tier = tierValues[unit.id] ?? 0;
+    if (
+      typeof tier !== 'number' ||
+      !Number.isInteger(tier) ||
+      tier < 0 ||
+      tier >= unit.tiers.length
+    )
+      throw new Error('Invalid military tier.');
+    state.militaryTiers[unit.id] = tier;
+  }
+  if (
+    typeof raw.militaryReadiness !== 'number' ||
+    !Number.isFinite(raw.militaryReadiness) ||
+    raw.militaryReadiness < balance.military.minimumReadiness ||
+    raw.militaryReadiness > 1
+  )
+    throw new Error('Invalid army readiness.');
+  state.militaryReadiness = raw.militaryReadiness;
+  const bonuses = object(raw.territoryProductionBonuses);
+  if (
+    Object.keys(bonuses).some(
+      (id) => !['food', 'materials', 'research'].includes(id),
+    )
+  )
+    throw new Error('Unknown territory production bonus.');
+  for (const id of ['food', 'materials', 'research'])
+    state.territoryProductionBonuses[id] = decimal(bonuses[id] ?? '0');
   state.populationCapacityBonus = decimal(raw.populationCapacityBonus);
   if (
     ownedTerritories(state).lt(1) ||
@@ -400,8 +531,32 @@ export function deserializeSave(value: unknown): GameState {
     const power = decimal(campaign.power),
       defense = decimal(campaign.defense);
     const frontierIndex = decimal(campaign.frontierIndex, true);
+    const reward = frontierTypes.find((t) => t.id === campaign.targetId);
+    const legacy = campaign.targetId === 'legacy';
+    const productionBonus = decimal(campaign.productionBonus);
     if (
       !frontierIndex.eq(state.statistics.territoriesConquered.add(1)) ||
+      (!legacy &&
+        (!reward ||
+          campaign.rewardTerritory !== reward.territory ||
+          campaign.rewardResource !== reward.resource)) ||
+      (legacy &&
+        (campaign.rewardTerritory !== 'frontier' ||
+          campaign.rewardResource !== null ||
+          !productionBonus.eq(0))) ||
+      productionBonus.gt(1) ||
+      typeof campaign.initialReadiness !== 'number' ||
+      !Number.isFinite(campaign.initialReadiness) ||
+      campaign.initialReadiness < balance.military.minimumReadiness ||
+      campaign.initialReadiness > 1 ||
+      typeof campaign.lowestReadiness !== 'number' ||
+      !Number.isFinite(campaign.lowestReadiness) ||
+      campaign.lowestReadiness < balance.military.minimumReadiness ||
+      campaign.lowestReadiness > campaign.initialReadiness ||
+      typeof campaign.casualtyMultiplier !== 'number' ||
+      !Number.isFinite(campaign.casualtyMultiplier) ||
+      campaign.casualtyMultiplier <= 0 ||
+      campaign.casualtyMultiplier > 10 ||
       power.lte(0) ||
       defense.lte(0) ||
       typeof campaign.victory !== 'boolean' ||
@@ -421,6 +576,17 @@ export function deserializeSave(value: unknown): GameState {
     )
       throw new Error('Invalid campaign.');
     const committedUnits = counts(campaign.committedUnits, militaryUnits);
+    const legacyLosses =
+      campaign.legacyLosses === null
+        ? null
+        : counts(campaign.legacyLosses, militaryUnits);
+    if (
+      (legacy && !legacyLosses) ||
+      (!legacy && legacyLosses) ||
+      (legacyLosses &&
+        militaryUnits.some((u) => legacyLosses[u.id].gt(committedUnits[u.id])))
+    )
+      throw new Error('Invalid legacy campaign losses.');
     if (
       militaryUnits.some(
         (u) => !committedUnits[u.id].eq(state.militaryUnits[u.id]),
@@ -437,6 +603,14 @@ export function deserializeSave(value: unknown): GameState {
       elapsedSeconds: campaign.elapsedSeconds,
       casualtyRate: campaign.casualtyRate,
       victory: campaign.victory,
+      targetId: campaign.targetId as string,
+      rewardTerritory: campaign.rewardTerritory as string,
+      rewardResource: campaign.rewardResource as string | null,
+      productionBonus,
+      initialReadiness: campaign.initialReadiness,
+      lowestReadiness: campaign.lowestReadiness,
+      casualtyMultiplier: campaign.casualtyMultiplier,
+      legacyLosses,
     };
   }
   if (
@@ -520,10 +694,21 @@ export function deserializeSave(value: unknown): GameState {
       (unit) =>
         state.militaryUnits[unit.id].gt(0) &&
         (!state.unlockedFeatures.includes('military') ||
-          !evaluateCondition(unit.unlockCondition, state)),
+          !evaluateCondition(unit.unlockCondition, state) ||
+          !evaluateCondition(militaryTier(state, unit).unlockCondition, state)),
     )
   )
     throw new Error('Save contains an undiscovered military unit.');
+  if (
+    militaryUnits.some(
+      (unit) =>
+        state.militaryTiers[unit.id] > 0 &&
+        (!state.unlockedFeatures.includes('military') ||
+          !evaluateCondition(unit.unlockCondition, state) ||
+          !evaluateCondition(militaryTier(state, unit).unlockCondition, state)),
+    )
+  )
+    throw new Error('Save contains an undiscovered military tier.');
   if (
     settlements.some(
       (settlement) =>
@@ -550,6 +735,8 @@ export function serializeSave(state: GameState, now = Date.now()): string {
     ownedTerritories: decimals(state.ownedTerritories),
     settlements: decimals(state.settlements),
     militaryUnits: decimals(state.militaryUnits),
+    settlementInvestments: decimals(state.settlementInvestments),
+    territoryProductionBonuses: decimals(state.territoryProductionBonuses),
     populationCapacityBonus: state.populationCapacityBonus.toString(),
     activeCampaign: state.activeCampaign
       ? {
@@ -557,6 +744,10 @@ export function serializeSave(state: GameState, now = Date.now()): string {
           committedUnits: decimals(state.activeCampaign.committedUnits),
           power: state.activeCampaign.power.toString(),
           defense: state.activeCampaign.defense.toString(),
+          productionBonus: state.activeCampaign.productionBonus.toString(),
+          legacyLosses: state.activeCampaign.legacyLosses
+            ? decimals(state.activeCampaign.legacyLosses)
+            : null,
         }
       : null,
     statistics: decimals(state.statistics),

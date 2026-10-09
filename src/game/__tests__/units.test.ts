@@ -384,7 +384,7 @@ describe('tiered saves, legacy migration and offline progress', () => {
     state = action(state, 'recruit', 'thinker', 5);
     state = action(state, 'upgrade', 'scholar');
     const loaded = importSave(exportSave(state));
-    expect(loaded.saveVersion).toBe(5);
+    expect(loaded.saveVersion).toBe(6);
     expect(loaded.productionUnits.farmer.eq(2)).toBe(true);
     expect(loaded.productionUnits.scholar.eq(1)).toBe(true);
     expect(idlePopulation(loaded).eq(idlePopulation(state))).toBe(true);
