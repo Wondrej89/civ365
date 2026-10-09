@@ -1,8 +1,11 @@
+import { useI18n } from '../i18n/LocaleContext';
 import { Award, Check, Circle } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { achievements } from '../game/content/achievements';
-import { formatNumber } from '../game/utils/numbers';
+
 export function AchievementsSheet() {
+  const { t: tr, formatNumber } = useI18n();
+
   const { state } = useGame(),
     visible = achievements.filter(
       (a) => !a.hidden || state.achievements.includes(a.id),
@@ -11,24 +14,26 @@ export function AchievementsSheet() {
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">SMALL MOMENTS, LASTING IMPACT</div>
-          <h1>Look how far you’ve come.</h1>
+          <div className="eyebrow">{tr('SMALL MOMENTS, LASTING IMPACT')}</div>
+          <h1>{tr('Look how far you’ve come.')}</h1>
           <p>
-            Milestones are earned automatically. Their bonuses stay with you.
+            {tr(
+              'Milestones are earned automatically. Their bonuses stay with you.',
+            )}
           </p>
         </div>
         <span className="era-chip">
           <Award size={18} />
-          {formatNumber(state.achievements.length, 0)} earned
+          {formatNumber(state.achievements.length, 0)} {tr('earned')}
         </span>
       </div>
       <div className="panel achievement-list">
         <table>
           <thead>
             <tr>
-              <th>Milestone</th>
-              <th>Reward</th>
-              <th className="numeric">Status</th>
+              <th>{tr('Milestone')}</th>
+              <th>{tr('Reward')}</th>
+              <th className="numeric">{tr('Status')}</th>
             </tr>
           </thead>
           <tbody>
@@ -42,18 +47,18 @@ export function AchievementsSheet() {
                         <Award size={24} strokeWidth={1.5} />
                       </span>
                       <span>
-                        <strong>{a.name}</strong>
-                        <small>{a.description}</small>
+                        <strong>{tr(a.name)}</strong>
+                        <small>{tr(a.description)}</small>
                       </span>
                     </span>
                   </td>
-                  <td>{a.reward}</td>
+                  <td>{tr(a.reward)}</td>
                   <td className="numeric">
                     <span
                       className={`achievement-status ${owned ? 'earned' : ''}`}
                     >
                       {owned ? <Check size={14} /> : <Circle size={12} />}
-                      {owned ? 'Earned' : 'In progress'}
+                      {owned ? tr('Earned') : tr('In progress')}
                     </span>
                   </td>
                 </tr>

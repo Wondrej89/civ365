@@ -1,12 +1,15 @@
+import { useI18n } from '../i18n/LocaleContext';
 import { Sprout, X, ArrowRight, Clock, Wrench } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
 import { resources } from '../game/content/resources';
 import { isFeatureUnlocked } from '../game/engine/conditions';
-import { formatDuration, formatNumber } from '../game/utils/numbers';
+
 import { ResourceIcon } from './common';
 import { balance } from '../game/content/config';
 export function OfflineModal() {
+  const { t: tr, formatDuration, formatNumber } = useI18n();
+
   const { state, report } = useGame();
   if (!report) return null;
   return (
@@ -19,7 +22,7 @@ export function OfflineModal() {
       >
         <button
           className="modal-close"
-          aria-label="Dismiss offline report"
+          aria-label={tr('Dismiss offline report')}
           onClick={gameStore.dismissOffline}
         >
           <X size={19} />
@@ -27,11 +30,11 @@ export function OfflineModal() {
         <div className="modal-symbol">
           <Sprout size={29} />
         </div>
-        <div className="eyebrow">YOUR PEOPLE KEPT GOING</div>
-        <h2 id="offline-title">Welcome back.</h2>
+        <div className="eyebrow">{tr('YOUR PEOPLE KEPT GOING')}</div>
+        <h2 id="offline-title">{tr('Welcome back.')}</h2>
         <p>
-          Away for <strong>{formatDuration(report.awaySeconds)}</strong>. Here’s
-          what your civilization produced.
+          {tr('Away for')} <strong>{formatDuration(report.awaySeconds)}</strong>
+          {tr('. Here’s what your civilization produced.')}
         </p>
         <div className="offline-resources">
           {resources
@@ -44,7 +47,7 @@ export function OfflineModal() {
               <div key={r.id}>
                 <span>
                   <ResourceIcon id={r.id} />
-                  {r.name}
+                  {tr(r.name)}
                 </span>
                 <strong>+{formatNumber(report.produced[r.id])}</strong>
               </div>
@@ -52,27 +55,32 @@ export function OfflineModal() {
         </div>
         {report.populationCreated.gt(0) && (
           <p className="offline-growth">
-            Your community grew by{' '}
-            <strong>{formatNumber(report.populationCreated, 0)} people</strong>,
-            spending {formatNumber(report.foodSpentOnGrowth)} Food.
+            {tr('Your community grew by')}{' '}
+            <strong>
+              {formatNumber(report.populationCreated, 0)} {tr('people')}
+            </strong>
+            {tr(', spending')} {formatNumber(report.foodSpentOnGrowth)}{' '}
+            {tr('Food.')}
           </p>
         )}
         {report.territoriesConquered.gt(0) && (
           <p className="offline-growth">
-            Campaigns acquired {formatNumber(report.territoriesConquered, 0)}{' '}
-            new territory.
+            {tr('Campaigns acquired')}{' '}
+            {formatNumber(report.territoriesConquered, 0)}{' '}
+            {tr('new territory.')}
           </p>
         )}
         {report.populationLost.gt(0) && (
           <p className="offline-growth">
-            Campaign casualties: {formatNumber(report.populationLost, 0)}{' '}
-            people.
+            {tr('Campaign casualties:')}{' '}
+            {formatNumber(report.populationLost, 0)} {tr('people.')}
           </p>
         )}
         {report.awaySeconds > report.simulatedSeconds && (
           <p className="offline-cap">
             <Clock size={14} />
-            Production capped at {formatDuration(report.simulatedSeconds)}.
+            {tr('Production capped at')}{' '}
+            {formatDuration(report.simulatedSeconds)}.
           </p>
         )}
         <button
@@ -80,7 +88,7 @@ export function OfflineModal() {
           autoFocus
           onClick={gameStore.dismissOffline}
         >
-          Back to my civilization
+          {tr('Back to my civilization')}
           <ArrowRight size={17} />
         </button>
       </section>
@@ -88,6 +96,8 @@ export function OfflineModal() {
   );
 }
 export function Toasts() {
+  const { formatEvent } = useI18n();
+
   const { state } = useGame();
   if (!state.settings.notifications) return null;
   const events = state.eventLog
@@ -100,20 +110,22 @@ export function Toasts() {
           <span className="toast-icon">
             <Sprout size={17} />
           </span>
-          <span>{e.message}</span>
+          <span>{formatEvent(e)}</span>
         </div>
       ))}
     </div>
   );
 }
 export function DebugPanel() {
+  const { t: tr } = useI18n();
+
   const { speed, state } = useGame();
   if (!import.meta.env.DEV) return null;
   return (
     <details className="debug-panel">
       <summary>
         <Wrench size={13} />
-        Developer tools
+        {tr('Developer tools')}
       </summary>
       <div>
         {(
@@ -144,40 +156,56 @@ export function DebugPanel() {
             onClick={() => gameStore.debug(action)}
           >
             {action === 'population'
-              ? '+10 Population'
+              ? tr('+10 Population')
               : action === 'speed'
-                ? `${speed === 1 ? '×10' : speed === 10 ? '×100' : speed === 100 ? '×1000' : '×1'} simulation speed`
+                ? tr('{0} simulation speed', {
+                    '0':
+                      speed === 1
+                        ? '×10'
+                        : speed === 10
+                          ? '×100'
+                          : speed === 100
+                            ? '×1000'
+                            : '×1',
+                  })
                 : action === 'technologies'
-                  ? 'Unlock era techs'
+                  ? tr('Unlock era techs')
                   : action === 'territory'
-                    ? '+ Territory'
+                    ? tr('+ Territory')
                     : action === 'settlement'
-                      ? '+ Settlement'
+                      ? tr('+ Settlement')
                       : action === 'capacity'
-                        ? '+100 Population Capacity'
+                        ? tr('+100 Population Capacity')
                         : action === 'military'
-                          ? '+ Military Units'
+                          ? tr('+ Military Units')
                           : action === 'campaign'
-                            ? 'Complete Campaign'
-                            : `+100 ${action[0].toUpperCase()}${action.slice(1)}`}
+                            ? tr('Complete Campaign')
+                            : tr('+100 {0}{1}', {
+                                '0': action[0].toUpperCase(),
+                                '1': action.slice(1),
+                              })}
           </button>
         ))}
         <button
           onClick={() => {
-            if (window.confirm('Reset the current save?')) gameStore.reset();
+            if (window.confirm(tr('Reset the current save?')))
+              gameStore.reset();
           }}
         >
-          Reset save
+          {tr('Reset save')}
         </button>
       </div>
       <p className="debug-scaling">
-        Scaling: Research ×
-        {balance.technologyCosts[state.currentEra]?.research ?? 1} · Materials ×
-        {balance.technologyCosts[state.currentEra]?.materials ?? 1} · settlement
-        costs ×{balance.settlements.costGrowth} per new home · army costs ×
-        {balance.military.recruitCostGrowth} per soldier · defense{' '}
+        {tr('Scaling: Research ×')}
+        {balance.technologyCosts[state.currentEra]?.research ?? 1}{' '}
+        {tr('· Materials ×')}
+        {balance.technologyCosts[state.currentEra]?.materials ?? 1}{' '}
+        {tr('· settlement costs ×')}
+        {balance.settlements.costGrowth} {tr('per new home · army costs ×')}
+        {balance.military.recruitCostGrowth} {tr('per soldier · defense')}{' '}
         {balance.conquest.baseDefense} × {balance.conquest.defenseGrowth}
-        ^conquests · growth ×{balance.populationGrowth.multiplier} / ×
+        {tr('^conquests · growth ×')}
+        {balance.populationGrowth.multiplier} / ×
         {balance.populationGrowth.laterMultiplier} / ×
         {balance.populationGrowth.lateMultiplier}
       </p>

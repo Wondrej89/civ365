@@ -19,17 +19,23 @@ import type {
   SkillDefinition,
   EraDefinition,
 } from '../types';
+import type { Message } from '../../i18n/types';
+import { message as eventMessage, translate } from '../../i18n/core';
 
 export function logEvent(
   state: GameState,
-  message: string,
+  message: string | Message,
   kind: GameEvent['kind'] = 'milestone',
   notify = true,
 ) {
   state.eventLog.push({
     id: state.nextEventId++,
     time: Math.round(state.lastSimulationTime),
-    message,
+    message:
+      typeof message === 'string'
+        ? message
+        : translate('en', message.key, message.values),
+    translation: typeof message === 'string' ? eventMessage(message) : message,
     kind,
     notify,
   });
@@ -138,7 +144,11 @@ export function settleProgression(state: GameState) {
       ) {
         state.unlockedFeatures.push(f.id);
         changed = true;
-        if (f.notify) logEvent(state, `New feature discovered: ${f.name}.`);
+        if (f.notify)
+          logEvent(
+            state,
+            eventMessage('New feature discovered: {0}.', { '0': f.name }),
+          );
       }
     for (const a of achievements)
       if (
@@ -149,14 +159,22 @@ export function settleProgression(state: GameState) {
         state.statistics.achievementCount = D(state.achievements.length);
         grantEffects(state, a.effects);
         changed = true;
-        logEvent(state, `Achievement unlocked: ${a.name}.`, 'achievement');
+        logEvent(
+          state,
+          eventMessage('Achievement unlocked: {0}.', { '0': a.name }),
+          'achievement',
+        );
       }
     if (!changed) break;
   }
   for (const era of eras)
     if (canAdvance(state, era) && !state.announcedEras.includes(era.id)) {
       state.announcedEras.push(era.id);
-      logEvent(state, `New era available: ${era.name}.`, 'era');
+      logEvent(
+        state,
+        eventMessage('New era available: {0}.', { '0': era.name }),
+        'era',
+      );
     }
   for (const unit of units)
     if (
@@ -166,7 +184,7 @@ export function settleProgression(state: GameState) {
       state.unlockedProductionUnits.push(unit.id);
       logEvent(
         state,
-        `New production unit unlocked: ${unit.name}.`,
+        eventMessage('New production unit unlocked: {0}.', { '0': unit.name }),
         'milestone',
         unit.tier > 1,
       );

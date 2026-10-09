@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import {
   Leaf,
   Boxes,
@@ -13,6 +14,7 @@ import { productionPerSecond } from '../game/engine/production';
 import { isFeatureUnlocked } from '../game/engine/conditions';
 import type { GameState, ResourceCost } from '../game/types';
 import { populationCapacity } from '../game/engine/settlements';
+import { translate } from '../i18n/core';
 
 export const resourceIcon: Record<string, LucideIcon> = {
   food: Leaf,
@@ -30,19 +32,21 @@ export const visibleResources = (state: GameState) =>
       !r.meta && (r.initiallyVisible || isFeatureUnlocked(state, r.feature)),
   );
 export function ResourceLedger({ state }: { state: GameState }) {
+  const { t: tr, formatNumber } = useI18n();
+
   const rates = productionPerSecond(state);
   return (
     <div className="panel ledger">
       <div className="panel-heading">
-        <h2>Resource ledger</h2>
-        <span className="subtle">Live production</span>
+        <h2>{tr('Resource ledger')}</h2>
+        <span className="subtle">{tr('Live production')}</span>
       </div>
       <table>
         <thead>
           <tr>
-            <th>Resource</th>
-            <th className="numeric">Available</th>
-            <th className="numeric">Per second</th>
+            <th>{tr('Resource')}</th>
+            <th className="numeric">{tr('Available')}</th>
+            <th className="numeric">{tr('Per second')}</th>
           </tr>
         </thead>
         <tbody>
@@ -53,7 +57,7 @@ export function ResourceLedger({ state }: { state: GameState }) {
                   <span className="resource-icon" style={{ color: r.color }}>
                     <ResourceIcon id={r.id} />
                   </span>
-                  {r.name}
+                  {tr(r.name)}
                 </span>
               </td>
               <td className="numeric strong">
@@ -61,7 +65,7 @@ export function ResourceLedger({ state }: { state: GameState }) {
               </td>
               <td className="numeric rate">
                 +{formatNumber(rates[r.id])}
-                <span className="unit"> /s</span>
+                <span className="unit"> {tr('/s')}</span>
               </td>
             </tr>
           ))}
@@ -70,17 +74,19 @@ export function ResourceLedger({ state }: { state: GameState }) {
       <div className="table-foot">
         <span className="tiny-dot" />
         {isFeatureUnlocked(state, 'jobs')
-          ? 'Your workers keep producing while you’re away.'
-          : 'Start gathering to write your first row.'}
+          ? tr('Your workers keep producing while you’re away.')
+          : tr('Start gathering to write your first row.')}
       </div>
     </div>
   );
 }
 export function PopulationKpi({ state }: { state: GameState }) {
+  const { t: tr, formatNumber } = useI18n();
+
   return (
     <div className="kpi">
       <div className="kpi-label">
-        <Users size={16} /> Population
+        <Users size={16} /> {tr('Population')}
       </div>
       <div className="kpi-value">
         {formatNumber(state.population, 0)}
@@ -89,10 +95,10 @@ export function PopulationKpi({ state }: { state: GameState }) {
           / {formatNumber(populationCapacity(state), 0)}
         </span>
         <span className="kpi-unit">
-          {state.population.eq(1) ? 'person' : 'people'}
+          {state.population.eq(1) ? tr('person') : tr('people')}
         </span>
       </div>
-      <p>People / Population Capacity</p>
+      <p>{tr('People / Population Capacity')}</p>
     </div>
   );
 }
@@ -105,26 +111,31 @@ export function ResourceKpi({
   id: string;
   onOpenProduction?: (resource: string) => void;
 }) {
+  const { t: tr, formatNumber } = useI18n();
+
   const r = resources.find((r) => r.id === id)!;
   return (
     <div className="kpi">
       <div className="kpi-label">
         <ResourceIcon id={id} size={16} />
-        {r.name}
+        {tr(r.name)}
       </div>
       <div className="kpi-value">
         {formatNumber(state.resources[id])}
         <span className="kpi-rate">
-          +{formatNumber(productionPerSecond(state)[id])}/s
+          +{formatNumber(productionPerSecond(state)[id])}
+          {tr('/s')}
         </span>
       </div>
-      <p>{r.description}</p>
+      <p>{tr(r.description)}</p>
       {onOpenProduction && (
         <button
           className="production-link"
           onClick={() => onOpenProduction(id)}
         >
-          Open {r.productionLabel ?? `${r.name} Production`}
+          {tr('Open')}{' '}
+          {tr(r.productionLabel ?? '') ||
+            tr('{0} Production', { '0': tr(r.name) })}
           <ArrowUpRight size={13} />
         </button>
       )}
@@ -138,6 +149,8 @@ export function Costs({
   costs: ResourceCost[];
   state: GameState;
 }) {
+  const { formatNumber, t: tr } = useI18n();
+
   return (
     <div className="costs">
       {costs.map((c) => (
@@ -149,7 +162,7 @@ export function Costs({
         >
           <ResourceIcon id={c.resource} size={14} />
           {formatNumber(c.amount)}{' '}
-          {resources.find((r) => r.id === c.resource)?.name}
+          {tr(resources.find((r) => r.id === c.resource)?.name ?? '')}
         </span>
       ))}
     </div>
@@ -158,9 +171,18 @@ export function Costs({
 export function costReason(costs: ResourceCost[], state: GameState) {
   return costs
     .filter((c) => (state.resources[c.resource] ?? D()).lt(c.amount))
-    .map(
-      (c) =>
-        `${formatNumber(D(c.amount).sub(state.resources[c.resource]))} more ${resources.find((r) => r.id === c.resource)?.name ?? c.resource}`,
+    .map((c) =>
+      translate(state.settings.language, '{amount} more {resource}', {
+        amount: formatNumber(
+          D(c.amount).sub(state.resources[c.resource]),
+          2,
+          state.settings.language,
+        ),
+        resource: translate(
+          state.settings.language,
+          resources.find((r) => r.id === c.resource)?.name ?? c.resource,
+        ),
+      }),
     )
     .join(', ');
 }

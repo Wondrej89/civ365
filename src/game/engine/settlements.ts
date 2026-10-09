@@ -1,3 +1,4 @@
+import { message } from '../../i18n/core';
 import { settlements } from '../content/settlements';
 import { territories } from '../content/territories';
 import { balance } from '../content/config';
@@ -140,7 +141,11 @@ export function mutateSettlementAction(
       state.statistics.totalSettlementsBuilt.add(n);
   logEvent(
     state,
-    `${building ? 'Built' : 'Upgraded to'} ${n.toString()} ${definition.name}.`,
+    message('{0} {1} {2}.', {
+      '0': building ? 'Built' : 'Upgraded to',
+      '1': n.toString(),
+      '2': definition.name,
+    }),
     'milestone',
   );
   return true;

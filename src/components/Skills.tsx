@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import {
   ArrowRight,
   Check,
@@ -10,36 +11,41 @@ import { useGame } from '../hooks/useGame';
 import { skills } from '../game/content/skills';
 import { skillBlockReason, skillCost } from '../game/systems/progression';
 import { gameStore } from '../game/store';
-import { formatNumber } from '../game/utils/numbers';
+
 const branchIcons = [Users, Hammer, BookOpen];
 export function SkillsSheet() {
+  const { t: tr, formatNumber } = useI18n();
+
   const { state } = useGame();
   return (
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">THE WAY YOU GROW</div>
-          <h1>Choose what matters.</h1>
+          <div className="eyebrow">{tr('THE WAY YOU GROW')}</div>
+          <h1>{tr('Choose what matters.')}</h1>
           <p>
-            Discoveries tell you what is possible. Skills decide your direction.
+            {tr(
+              'Discoveries tell you what is possible. Skills decide your direction.',
+            )}
           </p>
         </div>
         <div className="point-balance">
           <Sparkles size={23} />
           <span>
             <strong>
-              {formatNumber(state.resources.civilizationPoints, 0)} Civilization
-              points
+              {formatNumber(state.resources.civilizationPoints, 0)}{' '}
+              {tr('Civilization points')}
             </strong>
-            <small>Earned when you enter a new age</small>
+            <small>{tr('Earned when you enter a new age')}</small>
           </span>
         </div>
       </div>
       <div className="skill-intro">
         <Sparkles size={18} />
         <p>
-          Your first point, your first choice. Learn one skill; its bonus stays
-          with your civilization.
+          {tr(
+            'Your first point, your first choice. Learn one skill; its bonus stays with your civilization.',
+          )}
         </p>
       </div>
       <div className="skill-grid">
@@ -52,35 +58,37 @@ export function SkillsSheet() {
               className={`panel skill-card ${level ? 'purchased' : ''}`}
               key={s.id}
             >
-              <span className="branch-name">{s.branch}</span>
+              <span className="branch-name">{tr(s.branch ?? '')}</span>
               <div className="skill-icon">
                 <Icon size={31} strokeWidth={1.4} />
               </div>
-              <h2>{s.name}</h2>
-              <p>{s.description}</p>
+              <h2>{tr(s.name)}</h2>
+              <p>{tr(s.description)}</p>
               <div className="skill-level">
-                Level {formatNumber(level, 0)} / {formatNumber(s.maxLevel, 0)}
+                {tr('Level')} {formatNumber(level, 0)} /{' '}
+                {formatNumber(s.maxLevel, 0)}
               </div>
               <button
                 className="button"
                 disabled={!!reason}
-                title={reason ?? `Learn ${s.name}`}
+                title={tr(reason ?? '') || tr('Learn {0}', { '0': tr(s.name) })}
                 onClick={() => gameStore.dispatch({ type: 'skill', id: s.id })}
               >
                 {level >= s.maxLevel ? (
                   <>
                     <Check size={16} />
-                    Learned
+                    {tr('Learned')}
                   </>
                 ) : (
                   <>
-                    Learn · {formatNumber(skillCost(state, s), 0)} point
+                    {tr('Learn ·')} {formatNumber(skillCost(state, s), 0)}{' '}
+                    {tr('point')}
                     <ArrowRight size={16} />
                   </>
                 )}
               </button>
               {reason && level < s.maxLevel && (
-                <small className="block-reason">{reason}</small>
+                <small className="block-reason">{tr(reason ?? '')}</small>
               )}
             </div>
           );

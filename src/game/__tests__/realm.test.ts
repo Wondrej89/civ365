@@ -487,10 +487,13 @@ describe('era gates, discoveries and migration', () => {
       delete raw[key];
     const original = JSON.stringify(raw),
       loaded = deserializeSave(raw);
-    expect(loaded.saveVersion).toBe(4);
+    expect(loaded.saveVersion).toBe(5);
     expect(loaded.population.eq(500)).toBe(true);
     expect(loaded.productionUnits.gatherer.eq(100)).toBe(true);
-    expect(loaded.researchedTechnologies).toEqual(raw.researchedTechnologies);
+    expect(loaded.researchedTechnologies).toEqual(
+      expect.arrayContaining(raw.researchedTechnologies),
+    );
+    expect(loaded.researchedTechnologies).toContain('organizedWarfare');
     expect(loaded.statisticsHistory).toEqual(raw.statisticsHistory);
     expect(loaded.purchasedSkills).toEqual(state.purchasedSkills);
     expect(loaded.achievements).toEqual(state.achievements);

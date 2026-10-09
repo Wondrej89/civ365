@@ -300,7 +300,7 @@ describe('technology, effects, achievements, and eras', () => {
   });
   it('keeps at most 100 events and internal stats', () => {
     let s = developed(100);
-    s.populationCapacityBonus=D(1000);
+    s.populationCapacityBonus = D(1000);
     for (let i = 0; i < 150; i++) {
       s.resources.food = D('1e100');
       s = applyAction(s, { type: 'grow' });
@@ -410,9 +410,9 @@ describe('saves and offline production', () => {
     delete raw.settings;
     delete raw.reachedEras;
     delete raw.announcedEras;
-    expect(migrateSave(raw).saveVersion).toBe(4);
+    expect(migrateSave(raw).saveVersion).toBe(5);
     expect(deserializeSave(raw).settings.notifications).toBe(true);
-    expect(() => migrateSave({ saveVersion: 5 })).toThrow('Unsupported');
+    expect(() => migrateSave({ saveVersion: 6 })).toThrow('Unsupported');
   });
   it('uses the same simulation offline, including achievements and their changing bonuses', () => {
     const s = applyAction(developed(), {

@@ -7,6 +7,7 @@ import type {
   ProductionUnitDefinition,
 } from '../types';
 import { D } from '../utils/numbers';
+import { translate } from '../../i18n/core';
 import { evaluateCondition } from './conditions';
 import { activeEffects } from './effects';
 
@@ -103,7 +104,12 @@ export function creationBlockReason(
       n.mul(unit.upgradeFrom.amount),
     )
   )
-    return `Not enough ${unitById(unit.upgradeFrom.unitId)?.name} units`;
+    return translate(state.settings.language, 'Not enough {unit} units', {
+      unit: translate(
+        state.settings.language,
+        unitById(unit.upgradeFrom.unitId)?.name ?? unit.upgradeFrom.unitId,
+      ),
+    });
   if (
     !unit.upgradeFrom &&
     idlePopulation(state).lt(n.mul(getPopulationFootprint(unit.id)))
@@ -113,7 +119,16 @@ export function creationBlockReason(
     (state.resources[c.resource] ?? D()).lt(c.amount.mul(n)),
   );
   if (missing.length)
-    return `Not enough ${missing.map((c) => resources.find((r) => r.id === c.resource)?.name ?? c.resource).join(' / ')}`;
+    return translate(state.settings.language, 'Not enough {resources}', {
+      resources: missing
+        .map((c) =>
+          translate(
+            state.settings.language,
+            resources.find((r) => r.id === c.resource)?.name ?? c.resource,
+          ),
+        )
+        .join(' / '),
+    });
   return null;
 }
 type UnitAction = Extract<GameAction, { unitId: string }>;

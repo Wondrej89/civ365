@@ -1,4 +1,5 @@
 import type Decimal from 'break_infinity.js';
+import type { Language, Message } from '../i18n/types';
 
 export type Amount = Decimal | number | string;
 export type Condition =
@@ -187,11 +188,13 @@ export interface GameEvent {
   id: number;
   time: number;
   message: string;
+  translation?: Message;
   kind: 'milestone' | 'research' | 'achievement' | 'era' | 'system';
   notify: boolean;
 }
 export interface Settings {
   notifications: boolean;
+  language: Language;
 }
 export interface GameState {
   saveVersion: number;
