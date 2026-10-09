@@ -3025,3 +3025,82 @@ select {
   color: #294d3c;
   font: inherit;
 }
+
+.army-upkeep-panel,
+.territory-bonuses {
+  margin-bottom: 20px;
+  padding: 24px;
+}
+.army-upkeep-panel table {
+  width: 100%;
+  margin-top: 14px;
+}
+.army-upkeep-panel th,
+.army-upkeep-panel td {
+  padding: 10px 8px;
+  text-align: right;
+}
+.army-upkeep-panel th:first-child,
+.army-upkeep-panel td:first-child {
+  text-align: left;
+}
+.military-upgrade {
+  padding: 14px;
+  margin: 18px 0;
+  background: var(--surface-muted, #f4f7f6);
+  border-radius: 8px;
+}
+.military-upgrade .button {
+  margin-top: 12px;
+  width: 100%;
+  white-space: normal;
+}
+.territory-bonus-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+}
+.territory-bonus-list strong {
+  color: #247158;
+  margin-left: 8px;
+}
+.enemy-composition {
+  margin: 18px 0;
+}
+.enemy-composition > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+.frontier-reward {
+  color: #247158;
+  font-weight: 600;
+}
+.supply-warning {
+  color: #946023;
+  background: #fff6e5;
+  padding: 12px;
+  border-radius: 6px;
+}
+.frontier-choices .growth-details > div {
+  align-items: flex-start;
+}
+.frontier-choices .growth-details dd {
+  white-space: normal;
+  max-width: 55%;
+}
+@media (max-width: 600px) {
+  .army-upkeep-panel,
+  .territory-bonuses {
+    padding: 20px;
+  }
+  .army-upkeep-panel th,
+  .army-upkeep-panel td {
+    font-size: 12px;
+    padding: 8px 4px;
+  }
+}
+.negative-rate,
+.army-upkeep-panel .insufficient {
+  color: #ac4d43;
+}

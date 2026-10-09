@@ -20,7 +20,12 @@ import { sampleStatistics } from '../systems/statistics';
 import { units } from '../content/units';
 import { mutateUnitAction } from './units';
 import { mutateSettlementAction } from './settlements';
-import { mutateMilitaryAction } from './military';
+import {
+  armyUpkeep,
+  mutateMilitaryAction,
+  payArmyUpkeep,
+  upgradeMilitary,
+} from './military';
 import { launchCampaign, finishCampaign } from './conquest';
 import {
   canAdvance,
@@ -56,9 +61,18 @@ export function simulate(
   while (remaining > 0) {
     const automatic = autoGrowthActive(next);
     const recording = isFeatureUnlocked(next, 'statistics');
+    const rates = productionPerSecond(next),
+      upkeep = armyUpkeep(next);
+    const depletion = Object.entries(upkeep).map(([id, cost]) => {
+      const deficit = cost.sub(rates[id]);
+      return deficit.gt(0) && next.resources[id].gt(1e-8)
+        ? next.resources[id].div(deficit).toNumber()
+        : Infinity;
+    });
     const step = Math.min(
       remaining,
       balance.offlineStepSeconds,
+      ...depletion,
       next.activeCampaign
         ? Math.max(
             0,
@@ -75,8 +89,8 @@ export function simulate(
           )
         : Infinity,
     );
-    const rates = productionPerSecond(next);
     for (const r of resources) addProduction(next, r.id, rates[r.id].mul(step));
+    payArmyUpkeep(next, step);
     next.statistics.totalPlayTime = next.statistics.totalPlayTime.add(step);
     next.lastSimulationTime += step * 1000;
     if (next.activeCampaign) {
@@ -124,8 +138,11 @@ export function applyAction(state: GameState, action: GameAction): GameState {
     case 'demobilize':
       if (!mutateMilitaryAction(next, action)) return state;
       break;
+    case 'upgradeMilitary':
+      if (!upgradeMilitary(next, action.id)) return state;
+      break;
     case 'launchCampaign':
-      if (!launchCampaign(next)) return state;
+      if (!launchCampaign(next, action.targetId)) return state;
       break;
     case 'gather': {
       const gather = balance.manualGathering[action.resource];

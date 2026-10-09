@@ -45,7 +45,7 @@ export function HelpSheet() {
             <h2>{tr('Grow together')}</h2>
             <p>
               {tr(
-                'Spend Food to welcome new people. The cost grows with your population. Open Workforce to recruit from Idle Population. Upgrades combine lower-tier units; dismantling restores them. Growth stops at Population Capacity, even with Auto Growth.',
+                'Spend Food to welcome new people. Urban Communities, Public Health and Sanitation increase people per growth step; Civil Administration adds a person per City or Metropolis. Food is charged for each person and partial groups are allowed. Growth stops at Population Capacity.',
               )}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function HelpSheet() {
             <h2>{tr('Make room to grow')}</h2>
             <p>
               {tr(
-                'Settlements provide Population Capacity. Upgrade your Founding Camp, then research Village Organization for Towns. New settlements use one territory slot; upgrades keep the same slot. Materials and Food pay for both. Overview lists every requirement for your next era.',
+                'Settlements provide Population Capacity. New settlements use one territory slot; upgrades keep it. Further Town, City and Metropolis upgrades become progressively more expensive in Materials. Building more cities also increases growth after Civil Administration.',
               )}
             </p>
           </div>
@@ -89,7 +89,7 @@ export function HelpSheet() {
             <h2>{tr('Prepare an army')}</h2>
             <p>
               {tr(
-                'Recruit soldiers from Idle Population using Food and Materials. Soldiers remain part of your population and produce no resources. Demobilizing returns them to Idle Population. Compare Military Power with the next frontier before committing your army.',
+                'Recruit Infantry, Cavalry and Ranged troops from Idle Population. Equipment upgrades improve an entire category without using more people. Every soldier consumes Food and Materials each second. Keep production above upkeep or readiness and combat power fall. Demobilization returns soldiers to Idle Population.',
               )}
             </p>
           </div>
@@ -100,7 +100,7 @@ export function HelpSheet() {
             <h2>{tr('Expand your realm')}</h2>
             <p>
               {tr(
-                'Launch one campaign in Territory. Your army stays committed until it finishes, including while you’re away. Victory adds a territory slot for another settlement. Casualties also reduce Population; a stronger army reduces losses and finishes sooner.',
+                'Choose one of three regions in Territory: Food, Materials or Research. Harder defenders offer larger permanent production bonuses. Infantry counters Cavalry, Cavalry counters Ranged, and Ranged counters Infantry; balanced armies reduce uncertainty. Espionage reveals defenders. Campaigns consume supplies and continue offline; casualties reduce Population.',
               )}
             </p>
           </div>

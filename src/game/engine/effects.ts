@@ -11,6 +11,13 @@ import { D } from '../utils/numbers';
 
 export function activeEffects(state: GameState): GameEffect[] {
   return [
+    ...Object.entries(state.territoryProductionBonuses).map(
+      ([resource, bonus]): GameEffect => ({
+        type: 'productionMultiplier',
+        resource,
+        value: bonus.add(1),
+      }),
+    ),
     ...[
       ...units.map((unit) => ({
         unit,

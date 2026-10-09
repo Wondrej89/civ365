@@ -22,7 +22,10 @@ import { D, sum } from '../utils/numbers';
 function automatic() {
   const state = createInitialState(1000);
   state.population = D(20);
-  state.settlements.camp=D(0);state.settlements.town=D(1);
+  state.settlements.camp = D(0);
+  state.settlements.town = D(1);
+  state.settlementInvestments.settlement = D(1);
+  state.settlementInvestments.town = D(1);
   state.resources.food = D('1e7');
   state.resources.materials = D('1e7');
   state.resources.research = D('1e7');
@@ -222,7 +225,8 @@ describe('connected discoveries and eras', () => {
   it('enters Bronze and Classical without a reset and grants one point per first entry', () => {
     let state = allContent('agricultural');
     state.population = D(50);
-    state.ownedTerritories.frontier=D(1);state.settlements.settlement=D(1);
+    state.ownedTerritories.frontier = D(1);
+    state.settlements.settlement = D(1);
     state.productionUnits.farmer = D(2);
     const bank = state.resources.food;
     state = applyAction(state, { type: 'advance', id: 'bronze' });
@@ -233,7 +237,8 @@ describe('connected discoveries and eras', () => {
       .filter((t) => t.era !== 'classical')
       .map((t) => t.id);
     state.population = D(200);
-    state.ownedTerritories.frontier=D(3);state.settlements.city=D(1);
+    state.ownedTerritories.frontier = D(3);
+    state.settlements.city = D(1);
     settleProgression(state);
     state = applyAction(state, { type: 'advance', id: 'classical' });
     expect(state.currentEra).toBe('classical');
@@ -360,7 +365,7 @@ describe('bounded generic statistics and save migration', () => {
       delete raw[key];
     const original = JSON.stringify(raw),
       migrated = deserializeSave(raw);
-    expect(migrated.saveVersion).toBe(5);
+    expect(migrated.saveVersion).toBe(6);
     expect(migrated.productionUnits.miner.eq(1)).toBe(true);
     expect(migrated.productionUnits.scholar.eq(1)).toBe(true);
     expect(migrated.productionUnits.academy.eq(0)).toBe(true);

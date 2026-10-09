@@ -158,6 +158,8 @@ export const gameStore = {
       availableSlots(current).gte(1)
     ) {
       current.settlements.settlement = current.settlements.settlement.add(1);
+      current.settlementInvestments.settlement =
+        current.settlementInvestments.settlement.add(1);
       current.statistics.totalSettlementsBuilt =
         current.statistics.totalSettlementsBuilt.add(1);
     }
@@ -169,7 +171,7 @@ export const gameStore = {
       !current.activeCampaign &&
       current.unlockedFeatures.includes('military')
     )
-      current.militaryUnits.levy = current.militaryUnits.levy.add(
+      current.militaryUnits.infantry = current.militaryUnits.infantry.add(
         idlePopulation(current).min(10).floor(),
       );
     if (action === 'campaign' && current.activeCampaign) {

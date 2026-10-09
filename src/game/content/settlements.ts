@@ -30,7 +30,7 @@ export const settlements: SettlementDefinition[] = [
     tier: 2,
     capacity: 75,
     costs: [
-      { resource: 'materials', amount: 500 },
+      { resource: 'materials', amount: 1000 },
       { resource: 'food', amount: 300 },
     ],
     upgradeFrom: 'settlement',
@@ -46,7 +46,7 @@ export const settlements: SettlementDefinition[] = [
     tier: 3,
     capacity: 250,
     costs: [
-      { resource: 'materials', amount: 2500 },
+      { resource: 'materials', amount: 25000 },
       { resource: 'food', amount: 1000 },
     ],
     upgradeFrom: 'town',
@@ -59,7 +59,7 @@ export const settlements: SettlementDefinition[] = [
     tier: 4,
     capacity: 1000,
     costs: [
-      { resource: 'materials', amount: 25000 },
+      { resource: 'materials', amount: 250000 },
       { resource: 'food', amount: 10000 },
     ],
     upgradeFrom: 'city',

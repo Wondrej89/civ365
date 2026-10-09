@@ -24,10 +24,11 @@ import {
 } from '../game/engine/units';
 import {
   populationCost,
-  productionPerSecond,
   unitProduction,
   upgradePreview,
 } from '../game/engine/production';
+import { netProductionPerSecond as productionPerSecond } from '../game/engine/economy';
+import { growthQuote, populationGrowthAmount } from '../game/engine/population';
 import { D } from '../game/utils/numbers';
 import type {
   GameState,
@@ -46,8 +47,9 @@ export function GrowButton() {
   const { t: tr, formatNumber } = useI18n();
 
   const { state } = useGame(),
-    cost = populationCost(state),
-    affordable = state.resources.food.gte(cost),
+    quote = growthQuote(state),
+    affordable = quote.amount.gt(0),
+    cost = affordable ? quote.foodCost : populationCost(state),
     capped = capacityReached(state);
   return (
     <button
@@ -59,7 +61,9 @@ export function GrowButton() {
               'Population capacity reached. Expand your settlements or acquire more territory.',
             )
           : affordable
-            ? tr('Welcome one more person')
+            ? tr('Welcome {amount} people', {
+                amount: formatNumber(quote.amount, 0),
+              })
             : tr('Need {0} more Food', {
                 '0': formatNumber(cost.sub(state.resources.food)),
               })
@@ -68,7 +72,12 @@ export function GrowButton() {
     >
       <Users size={16} />
       <span>
-        {tr('Grow Population')}
+        {tr('Grow Population +{amount}', {
+          amount: formatNumber(
+            affordable ? quote.amount : populationGrowthAmount(state),
+            0,
+          ),
+        })}
         <small>
           {formatNumber(cost)} {tr('Food')}
           {capped && tr(' · Population capacity reached.')}
@@ -464,7 +473,8 @@ export function WorkforceSheet() {
                 <span>
                   {formatNumber(state.resources[resource.id])} {tr('available')}{' '}
                   <b>
-                    +{formatNumber(rates[resource.id])}
+                    {rates[resource.id].gte(0) ? '+' : ''}
+                    {formatNumber(rates[resource.id])}
                     {tr('/s')}
                   </b>
                 </span>

@@ -78,13 +78,16 @@ export function settlementQuote(
   quantity: Amount = 1,
   building = false,
 ) {
-  const costs = settlementCosts(state, definition),
-    offset = state.statistics.totalSettlementsBuilt.sub(1).max(0);
-  return building
-    ? geometricCosts(costs, balance.settlements.costGrowth, offset, quantity)
-    : geometricCosts(costs, balance.settlements.costGrowth, offset).map(
-        (c) => ({ ...c, amount: D(c.amount).mul(quantity) }),
-      );
+  return geometricCosts(
+    settlementCosts(state, definition),
+    building
+      ? balance.settlements.costGrowth
+      : (balance.settlements.upgradeCostGrowth[definition.id] ?? 1),
+    building
+      ? state.statistics.totalSettlementsBuilt.sub(1).max(0)
+      : (state.settlementInvestments[definition.id] ?? D()),
+    quantity,
+  );
 }
 export function maxSettlementAction(
   state: GameState,
@@ -103,14 +106,15 @@ export function maxSettlementAction(
       ? (state.settlements[definition.upgradeFrom] ?? D())
       : D();
   const costs = settlementCosts(state, definition);
-  const offset = state.statistics.totalSettlementsBuilt.sub(1).max(0);
-  // Upgrades pay the current settlement investment scale without changing the number of slots.
-  const scaled = geometricCosts(costs, balance.settlements.costGrowth, offset);
   return affordableQuantity(
     state,
-    building ? costs : scaled,
-    building ? balance.settlements.costGrowth : 1,
-    building ? offset : 0,
+    costs,
+    building
+      ? balance.settlements.costGrowth
+      : (balance.settlements.upgradeCostGrowth[definition.id] ?? 1),
+    building
+      ? state.statistics.totalSettlementsBuilt.sub(1).max(0)
+      : (state.settlementInvestments[definition.id] ?? D()),
     limit,
   );
 }
@@ -135,6 +139,9 @@ export function mutateSettlementAction(
       state.settlements[definition.upgradeFrom!].sub(n);
   state.settlements[definition.id] = (
     state.settlements[definition.id] ?? D()
+  ).add(n);
+  state.settlementInvestments[definition.id] = (
+    state.settlementInvestments[definition.id] ?? D()
   ).add(n);
   if (building)
     state.statistics.totalSettlementsBuilt =

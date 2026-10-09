@@ -12,12 +12,33 @@ export const balance = {
     baseFoodCost: 10,
     multiplier: 1.12,
     scalingBreakpoint: 20,
-    laterMultiplier: 1.012,
+    laterMultiplier: 1.008,
     lateScalingBreakpoint: 400,
-    lateMultiplier: 1.004,
+    lateMultiplier: 1.001,
   },
-  settlements: { costGrowth: 1.25 },
-  military: { recruitCostGrowth: 1.002 },
+  settlements: {
+    costGrowth: 1.4,
+    upgradeCostGrowth: {
+      settlement: 1,
+      town: 1.6,
+      city: 2,
+      metropolis: 2.2,
+    } as Record<string, number>,
+  },
+  military: {
+    recruitCostGrowth: 1.002,
+    upgradeCostMultiplier: { food: 0.25, materials: 1 } as Record<
+      string,
+      number
+    >,
+    minimumReadiness: 0.5,
+    readinessLossSeconds: 60,
+    readinessRecoverySeconds: 30,
+    counterStrength: 0.6,
+    twoTypeCounterStrength: 0.25,
+    combinedArmsBonus: 1.1,
+    minimumCombinedShare: 0.15,
+  },
   conquest: {
     baseDefense: 40,
     defenseGrowth: 1.8,
@@ -30,6 +51,9 @@ export const balance = {
     defeatRatioPenalty: 0.35,
     maximumCasualtyRate: 0.7,
     rewardTerritory: 'frontier',
+    difficultyFactors: [0.8, 1, 1.25],
+    productionBonuses: [0.03, 0.05, 0.08],
+    compositionShares: [0.7, 0.2, 0.1],
   },
   eraRequirements: {
     agricultural: { population: 20 },
@@ -68,5 +92,5 @@ export const balance = {
   maxOfflineSeconds: 8 * 60 * 60,
   offlineStepSeconds: 10,
   eventLimit: 100,
-  saveVersion: 5,
+  saveVersion: 6,
 };
