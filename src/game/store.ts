@@ -115,7 +115,7 @@ export const gameStore = {
     publish();
   },
   reset() {
-    current = createInitialState();
+    current = { ...createInitialState(), settings: { ...current.settings } };
     report = null;
     speed = 1;
     save();

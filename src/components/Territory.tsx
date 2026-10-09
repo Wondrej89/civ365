@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
 import { campaignForecast } from '../game/engine/conquest';
@@ -8,9 +9,11 @@ import {
   availableSlots,
 } from '../game/engine/settlements';
 import { militaryPower } from '../game/engine/military';
-import { formatDuration, formatNumber } from '../game/utils/numbers';
+
 import { useWorkbookNavigation } from './navigation';
 export function TerritorySheet() {
+  const { t: tr, formatNumber, formatDuration } = useI18n();
+
   const { state } = useGame(),
     { openSheet } = useWorkbookNavigation(),
     forecast = campaignForecast(state),
@@ -22,14 +25,18 @@ export function TerritorySheet() {
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">FRONTIER · EXPANSION · NEW HOMES</div>
-          <h1>Room beyond the homeland.</h1>
+          <div className="eyebrow">
+            {tr('FRONTIER · EXPANSION · NEW HOMES')}
+          </div>
+          <h1>{tr('Room beyond the homeland.')}</h1>
           <p>
-            Acquire territory, then invest in a settlement to expand capacity.
+            {tr(
+              'Acquire territory, then invest in a settlement to expand capacity.',
+            )}
           </p>
         </div>
         <button className="button" onClick={() => openSheet('settlements')}>
-          Open Settlements
+          {tr('Open Settlements')}
         </button>
       </div>
       <div className="realm-kpis">
@@ -40,51 +47,53 @@ export function TerritorySheet() {
           ['Available slots', availableSlots(state)],
         ].map(([name, value]) => (
           <div className="panel" key={String(name)}>
-            <span className="field-label">{String(name)}</span>
+            <span className="field-label">{tr(String(name))}</span>
             <strong>{formatNumber(value, 0)}</strong>
           </div>
         ))}
       </div>
       <section className="panel frontier-panel">
         <div className="eyebrow">
-          {campaign ? 'CAMPAIGN IN PROGRESS' : 'NEXT FRONTIER'}
+          {campaign ? tr('CAMPAIGN IN PROGRESS') : tr('NEXT FRONTIER')}
         </div>
         <h2>
-          Frontier{' '}
+          {tr('Frontier')}{' '}
           {campaign?.frontierIndex ??
             state.statistics.territoriesConquered.add(1).toString()}
         </h2>
         <dl className="growth-details">
           <div>
-            <dt>Defense Power</dt>
+            <dt>{tr('Defense Power')}</dt>
             <dd>{formatNumber(campaign?.defense ?? forecast.defense)}</dd>
           </div>
           <div>
-            <dt>{campaign ? 'Committed Power' : 'Your Military Power'}</dt>
+            <dt>
+              {campaign ? tr('Committed Power') : tr('Your Military Power')}
+            </dt>
             <dd>{formatNumber(campaign?.power ?? militaryPower(state))}</dd>
           </div>
           <div>
-            <dt>Expected outcome</dt>
+            <dt>{tr('Expected outcome')}</dt>
             <dd>
               {campaign
                 ? campaign.victory
-                  ? 'Victory'
-                  : 'Defeat'
-                : forecast.assessment}
+                  ? tr('Victory')
+                  : tr('Defeat')
+                : tr(forecast.assessment)}
             </dd>
           </div>
           <div>
-            <dt>Estimated casualties</dt>
+            <dt>{tr('Estimated casualties')}</dt>
             <dd>
               {formatNumber(
                 (campaign?.casualtyRate ?? forecast.casualtyRate) * 100,
                 1,
               )}
-              % of each unit type, rounded down
+              {tr('% of each unit type, rounded down')}
             </dd>
           </div>
           <div>
-            <dt>Campaign duration</dt>
+            <dt>{tr('Campaign duration')}</dt>
             <dd>
               {formatDuration(
                 campaign?.durationSeconds ?? forecast.durationSeconds,
@@ -92,15 +101,15 @@ export function TerritorySheet() {
             </dd>
           </div>
           <div>
-            <dt>Victory reward</dt>
-            <dd>+1 territory · +1 settlement slot</dd>
+            <dt>{tr('Victory reward')}</dt>
+            <dd>{tr('+1 territory · +1 settlement slot')}</dd>
           </div>
         </dl>
         {campaign ? (
           <>
             <progress
               className="campaign-progress"
-              aria-label="Campaign progress"
+              aria-label={tr('Campaign progress')}
               value={progress}
               max={100}
             />
@@ -109,11 +118,12 @@ export function TerritorySheet() {
               {formatDuration(
                 campaign.durationSeconds - campaign.elapsedSeconds,
               )}{' '}
-              remaining
+              {tr('remaining')}
             </p>
             <p className="sheet-note">
-              The army stays committed. This campaign uses its launch power and
-              forecast, and continues while you are away.
+              {tr(
+                'The army stays committed. This campaign uses its launch power and forecast, and continues while you are away.',
+              )}
             </p>
           </>
         ) : (
@@ -123,24 +133,26 @@ export function TerritorySheet() {
               disabled={forecast.power.lte(0)}
               title={
                 forecast.power.lte(0)
-                  ? 'Recruit an army first.'
+                  ? tr('Recruit an army first.')
                   : forecast.victory
-                    ? 'Launch this campaign.'
-                    : 'Your army is likely to lose; recruit stronger troops first.'
+                    ? tr('Launch this campaign.')
+                    : tr(
+                        'Your army is likely to lose; recruit stronger troops first.',
+                      )
               }
               onClick={() => gameStore.dispatch({ type: 'launchCampaign' })}
             >
-              Launch Campaign
+              {tr('Launch Campaign')}
             </button>
             <p className="sheet-note">
-              Results are deterministic from the power ratio. Casualties remove
-              troops and Population. Each conquest makes the next frontier
-              harder.
+              {tr(
+                'Results are deterministic from the power ratio. Casualties remove troops and Population. Each conquest makes the next frontier harder.',
+              )}
             </p>
           </>
         )}
         <button className="button" onClick={() => openSheet('military')}>
-          Prepare your army
+          {tr('Prepare your army')}
         </button>
       </section>
     </>

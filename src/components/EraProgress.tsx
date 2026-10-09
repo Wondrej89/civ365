@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import { Check, Circle } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { eras } from '../game/content/eras';
@@ -12,19 +13,28 @@ import {
 import { militaryPower } from '../game/engine/military';
 import { canAdvance } from '../game/systems/progression';
 import { gameStore } from '../game/store';
-import { formatNumber } from '../game/utils/numbers';
+import { formatNumber as number } from '../game/utils/numbers';
+import { translate } from '../i18n/core';
 import type { Condition, GameState } from '../game/types';
 function requirementText(condition: Condition, state: GameState): string {
+  const tr = (key: string) => translate(state.settings.language, key);
+  const formatNumber = (value: Parameters<typeof number>[0], digits = 2) =>
+    number(value, digits, state.settings.language);
   const progress = (
     name: string,
     current: Parameters<typeof formatNumber>[0],
     target: Parameters<typeof formatNumber>[0],
-  ) => `${name} ${formatNumber(current, 0)} / ${formatNumber(target, 0)}`;
+  ) =>
+    translate(state.settings.language, '{requirement} {current} / {target}', {
+      requirement: tr(name),
+      current: formatNumber(current, 0),
+      target: formatNumber(target, 0),
+    });
   switch (condition.type) {
     case 'technologyOwned':
-      return (
+      return tr(
         technologies.find((t) => t.id === condition.technologyId)?.name ??
-        condition.technologyId
+          condition.technologyId,
       );
     case 'populationAtLeast':
       return progress('Population', state.population, condition.value);
@@ -60,13 +70,13 @@ function requirementText(condition: Condition, state: GameState): string {
         condition.value,
       );
     case 'eraReached':
-      return (
-        eras.find((e) => e.id === condition.eraId)?.name ?? condition.eraId
+      return tr(
+        eras.find((e) => e.id === condition.eraId)?.name ?? condition.eraId,
       );
     case 'featureUnlocked':
-      return condition.featureId;
+      return tr(condition.featureId);
     case 'achievementOwned':
-      return condition.achievementId;
+      return tr(condition.achievementId);
     case 'all':
       return condition.conditions
         .map((c) => requirementText(c, state))
@@ -74,28 +84,35 @@ function requirementText(condition: Condition, state: GameState): string {
     case 'any':
       return condition.conditions
         .map((c) => requirementText(c, state))
-        .join(' or ');
+        .join(tr(' or '));
     case 'not':
-      return `Without ${requirementText(condition.condition, state)}`;
+      return translate(state.settings.language, 'Without {requirement}', {
+        requirement: requirementText(condition.condition, state),
+      });
     case 'always':
-      return 'Ready';
+      return tr('Ready');
     case 'never':
-      return 'Future content';
+      return tr('Future content');
   }
 }
 export function EraProgress() {
+  const { t: tr } = useI18n();
+
   const { state } = useGame(),
     next = eras.find((e) => e.previous === state.currentEra);
   if (!next || !state.unlockedFeatures.includes('research')) return null;
   return (
-    <section className="panel era-progress" aria-label="Next era requirements">
+    <section
+      className="panel era-progress"
+      aria-label={tr('Next era requirements')}
+    >
       <div className="panel-heading">
         <div>
-          <div className="eyebrow">YOUR NEXT CHAPTER</div>
-          <h2>Advance to {next.name}</h2>
+          <div className="eyebrow">{tr('YOUR NEXT CHAPTER')}</div>
+          <h2>{tr('Advance to {era}', { era: tr(next.name) })}</h2>
         </div>
         <span className="tag">
-          {canAdvance(state, next) ? 'Ready' : 'In progress'}
+          {canAdvance(state, next) ? tr('Ready') : tr('In progress')}
         </span>
       </div>
       <ul>
@@ -109,7 +126,7 @@ export function EraProgress() {
               {complete ? <Check size={15} /> : <Circle size={15} />}
               <span>{requirementText(condition, state)}</span>
               <span className="requirement-status">
-                {complete ? 'Met' : 'Needed'}
+                {complete ? tr('Met') : tr('Needed')}
               </span>
             </li>
           );
@@ -120,11 +137,12 @@ export function EraProgress() {
         disabled={!canAdvance(state, next)}
         onClick={() => gameStore.dispatch({ type: 'advance', id: next.id })}
       >
-        Advance to {next.name}
+        {tr('Advance to {era}', { era: tr(next.name) })}
       </button>
       <p className="sheet-note">
-        Advance without resetting. First entry earns one Civilization point.
-        Grow your settlements and army alongside your discoveries.
+        {tr(
+          'Advance without resetting. First entry earns one Civilization point. Grow your settlements and army alongside your discoveries.',
+        )}
       </p>
     </section>
   );

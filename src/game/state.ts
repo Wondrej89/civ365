@@ -71,12 +71,13 @@ export function createInitialState(now = Date.now()): GameState {
         ),
       ]),
     ),
-    settings: { notifications: true },
+    settings: { notifications: true, language: 'en' },
     eventLog: [
       {
         id: 1,
         time: now,
         message: 'A new beginning. Your civilization starts here.',
+        translation: { key: 'A new beginning. Your civilization starts here.' },
         kind: 'system',
         notify: false,
       },

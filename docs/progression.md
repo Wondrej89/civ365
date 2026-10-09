@@ -88,9 +88,9 @@ Engine automaticky začne sérii vzorkovat po splnění podmínky, save ji ulož
 
 ## Save a ověření
 
-`saveVersion` je 4, migrace běží 0 → 1 → 2 → 3 → 4. Migrace zachovávají zdroje, populaci, jednotky, technologie, skilly a achievementy. Verze 2 převádí `scientist` na `academy`, zachovává staré unlocky Miner/Scholar a založí nové údaje automatizace a historie. Verze 3 přidává bezpečné defaults území, Camp a armády; populace nad kapacitou zůstává. Historii nelze zpětně rekonstruovat. Import ověřuje fáze, rezervu, limity historie, timestampy, footprint workers + military i snapshot kampaně.
+`saveVersion` je 5, migrace běží 0 → 1 → 2 → 3 → 4 → 5. Jazyk a změny prerequisites popisuje [localization.md](localization.md). Migrace zachovávají zdroje, populaci, jednotky, technologie, skilly a achievementy. Verze 2 převádí `scientist` na `academy`, zachovává staré unlocky Miner/Scholar a založí nové údaje automatizace a historie. Verze 3 přidává bezpečné defaults území, Camp a armády; populace nad kapacitou zůstává. Historii nelze zpětně rekonstruovat. Import ověřuje fáze, rezervu, limity historie, timestampy, footprint workers + military i snapshot kampaně.
 
-Testy pokrývají automatizaci, statistiky, novou investiční smyčku, migrace a dosažitelnost Renaissance. Engine průchod dosáhl Classical za 2 h 19 min a Medieval za 4 h 41 min; skutečné UI dosáhlo Medieval za 5 simulovaných hodin bez grantů. Podrobné výsledky a balance parametry jsou v [realm.md](realm.md).
+Testy pokrývají automatizaci, statistiky, novou investiční smyčku, migrace a dosažitelnost Renaissance. Aktuální engine průchod dosáhl Classical za 2 h 2 min 30 s a Medieval za 4 h 34 min; předchozí territory iterace ve skutečném UI dosáhla Medieval za 5 simulovaných hodin bez grantů. Podrobné výsledky a balance parametry jsou v [realm.md](realm.md).
 
 ## Co ladit dále
 

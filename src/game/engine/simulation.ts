@@ -1,3 +1,4 @@
+import { message } from '../../i18n/core';
 import { cloneState } from '../state';
 import { balance } from '../content/config';
 import { skills } from '../content/skills';
@@ -5,6 +6,7 @@ import { eras } from '../content/eras';
 import { resources } from '../content/resources';
 import { D } from '../utils/numbers';
 import type { GameAction, GameState } from '../types';
+import { isLanguage } from '../../i18n/types';
 import { isFeatureUnlocked } from './conditions';
 import { activeEffects, resourceMultiplier } from './effects';
 import { productionPerSecond } from './production';
@@ -178,7 +180,9 @@ export function applyAction(state: GameState, action: GameAction): GameState {
         next.constructedProductionUnits.push(action.unitId);
         logEvent(
           next,
-          `First ${units.find((u) => u.id === action.unitId)!.name} constructed.`,
+          message('First {0} constructed.', {
+            '0': units.find((u) => u.id === action.unitId)!.name,
+          }),
           'milestone',
         );
       }
@@ -201,7 +205,11 @@ export function applyAction(state: GameState, action: GameAction): GameState {
       );
       next.statistics.technologiesResearched =
         next.statistics.technologiesResearched.add(1);
-      logEvent(next, `${tech.name} researched.`, 'research');
+      logEvent(
+        next,
+        message('{0} researched.', { '0': tech.name }),
+        'research',
+      );
       break;
     }
     case 'skill': {
@@ -213,7 +221,7 @@ export function applyAction(state: GameState, action: GameAction): GameState {
       next.purchasedSkills[skill.id] =
         (next.purchasedSkills[skill.id] ?? 0) + 1;
       grantEffects(next, skill.effects);
-      logEvent(next, `${skill.name} learned.`, 'research');
+      logEvent(next, message('{0} learned.', { '0': skill.name }), 'research');
       break;
     }
     case 'advance': {
@@ -223,10 +231,21 @@ export function applyAction(state: GameState, action: GameAction): GameState {
       next.reachedEras.push(era.id);
       grantEffects(next, era.onEnterEffects);
       next.statistics.eraTransitions = next.statistics.eraTransitions.add(1);
-      logEvent(next, `A new era has begun: ${era.name}.`, 'era');
+      logEvent(
+        next,
+        message('A new era has begun: {0}.', { '0': era.name }),
+        'era',
+      );
       break;
     }
     case 'settings':
+      if (
+        (action.settings.language !== undefined &&
+          !isLanguage(action.settings.language)) ||
+        (action.settings.notifications !== undefined &&
+          typeof action.settings.notifications !== 'boolean')
+      )
+        return state;
       next.settings = { ...next.settings, ...action.settings };
       break;
   }

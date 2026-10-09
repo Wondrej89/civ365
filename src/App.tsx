@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { I18nProvider, useI18n } from "./i18n/LocaleContext";
+import { useEffect, useState } from "react";
 import {
   Grid2X2,
   Check,
@@ -15,36 +16,46 @@ import {
   PanelTop,
   Minus,
   Plus,
-} from 'lucide-react';
-import { useGame } from './hooks/useGame';
-import { gameStore } from './game/store';
-import { isFeatureUnlocked } from './game/engine/conditions';
-import { formatNumber, formatDuration } from './game/utils/numbers';
-import { sheets } from './components/sheets';
-import { SettingsSheet } from './components/Settings';
-import { HelpSheet } from './components/Help';
-import { DebugPanel, OfflineModal, Toasts } from './components/Overlays';
-import { eras } from './game/content/eras';
+} from "lucide-react";
+import { useGame } from "./hooks/useGame";
+import { gameStore } from "./game/store";
+import { isFeatureUnlocked } from "./game/engine/conditions";
+
+import { sheets } from "./components/sheets";
+import { SettingsSheet } from "./components/Settings";
+import { HelpSheet } from "./components/Help";
+import { DebugPanel, OfflineModal, Toasts } from "./components/Overlays";
+import { eras } from "./game/content/eras";
 import {
   WorkbookNavigation,
   type WorkforceFocus,
-} from './components/navigation';
+} from "./components/navigation";
 
 export default function App() {
+  const { state } = useGame();
+  return (
+    <I18nProvider language={state.settings.language}>
+      <Workbook />
+    </I18nProvider>
+  );
+}
+function Workbook() {
+  const { t: tr, formatEvent, formatNumber, formatDuration } = useI18n();
+
   const snapshot = useGame(),
     { state, saveError } = snapshot;
-  const [selectedSheet, setSheet] = useState('overview'),
+  const [selectedSheet, setSheet] = useState("overview"),
     [zoom, setZoom] = useState(100);
   const [workforceFocus, setWorkforceFocus] = useState<WorkforceFocus | null>(
     null,
   );
   function openWorkforce(resource: string) {
-    if (!isFeatureUnlocked(state, 'jobs')) return;
+    if (!isFeatureUnlocked(state, "jobs")) return;
     setWorkforceFocus((current) => ({
       resource,
       request: (current?.request ?? 0) + 1,
     }));
-    setSheet('workforce');
+    setSheet("workforce");
   }
   function openSheet(id: string) {
     const target = sheets.find((s) => s.id === id);
@@ -55,18 +66,18 @@ export default function App() {
   const visible = sheets.filter((s) =>
     isFeatureUnlocked(state, s.requiredFeature),
   );
-  const isUtility = selectedSheet === 'settings' || selectedSheet === 'help';
+  const isUtility = selectedSheet === "settings" || selectedSheet === "help";
   const active = visible.find((s) => s.id === selectedSheet) ?? visible[0];
   const Sheet =
-    selectedSheet === 'settings'
+    selectedSheet === "settings"
       ? SettingsSheet
-      : selectedSheet === 'help'
+      : selectedSheet === "help"
         ? HelpSheet
         : active.component;
   const pageName = isUtility
-    ? selectedSheet === 'settings'
-      ? 'Settings'
-      : 'Help'
+    ? selectedSheet === "settings"
+      ? "Settings"
+      : "Help"
     : active.name;
   const era = eras.find((e) => e.id === state.currentEra)!;
   return (
@@ -82,14 +93,14 @@ export default function App() {
           <span className="title-divider" />
           <span className="saved-indicator">
             {saveError ? <AlertTriangle size={13} /> : <Check size={13} />}
-            {saveError ? 'Save needs attention' : 'Saved locally'}
+            {saveError ? tr("Save needs attention") : tr("Saved locally")}
           </span>
         </div>
         <div className="title-right">
-          <span className="title-tag">A living workbook</span>
+          <span className="title-tag">{tr("A living workbook")}</span>
           <button
-            aria-label="Open settings"
-            onClick={() => setSheet('settings')}
+            aria-label={tr("Open settings")}
+            onClick={() => setSheet("settings")}
           >
             <Settings size={17} />
           </button>
@@ -97,29 +108,29 @@ export default function App() {
         </div>
       </header>
       <div className="menu-bar">
-        <nav aria-label="Workbook menu">
+        <nav aria-label={tr("Workbook menu")}>
           <button
-            className={!isUtility ? 'selected' : ''}
-            onClick={() => setSheet('overview')}
+            className={!isUtility ? "selected" : ""}
+            onClick={() => setSheet("overview")}
           >
-            Home
+            {tr("Home")}
           </button>
           <button
-            className={selectedSheet === 'settings' ? 'selected' : ''}
-            onClick={() => setSheet('settings')}
+            className={selectedSheet === "settings" ? "selected" : ""}
+            onClick={() => setSheet("settings")}
           >
-            Settings
+            {tr("Settings")}
           </button>
           <button
-            className={selectedSheet === 'help' ? 'selected' : ''}
-            onClick={() => setSheet('help')}
+            className={selectedSheet === "help" ? "selected" : ""}
+            onClick={() => setSheet("help")}
           >
-            Help
+            {tr("Help")}
           </button>
         </nav>
         <span className="menu-caption">
           <Sprout size={13} />
-          Made to grow
+          {tr("Made to grow")}
         </span>
       </div>
       <div className="ribbon">
@@ -127,49 +138,49 @@ export default function App() {
           <div className="ribbon-tools">
             <button className="ribbon-large" onClick={() => gameStore.save()}>
               <Save size={24} strokeWidth={1.4} />
-              <span>Save</span>
+              <span>{tr("Save")}</span>
             </button>
             <button
               className="ribbon-large"
-              onClick={() => setSheet('settings')}
+              onClick={() => setSheet("settings")}
             >
               <FileSpreadsheet size={24} strokeWidth={1.4} />
-              <span>Workbook</span>
+              <span>{tr("Workbook")}</span>
             </button>
           </div>
-          <span className="ribbon-caption">Your workbook</span>
+          <span className="ribbon-caption">{tr("Your workbook")}</span>
         </div>
         <div className="ribbon-group">
           <div className="ribbon-tools">
             <button
               className="ribbon-large"
               onClick={() => {
-                setSheet('overview');
-                gameStore.dispatch({ type: 'gather', resource: 'food' });
+                setSheet("overview");
+                gameStore.dispatch({ type: "gather", resource: "food" });
               }}
             >
               <Leaf size={25} strokeWidth={1.5} />
-              <span>Gather Food</span>
+              <span>{tr("Gather Food")}</span>
             </button>
             <button
               className="ribbon-large"
-              onClick={() => setSheet('overview')}
+              onClick={() => setSheet("overview")}
             >
               <PanelTop size={25} strokeWidth={1.4} />
-              <span>Overview</span>
+              <span>{tr("Overview")}</span>
             </button>
           </div>
-          <span className="ribbon-caption">Getting started</span>
+          <span className="ribbon-caption">{tr("Getting started")}</span>
         </div>
         <div className="ribbon-group era-ribbon">
           <div>
-            <span className="ribbon-era-label">CURRENT ERA</span>
+            <span className="ribbon-era-label">{tr("CURRENT ERA")}</span>
             <strong>
               <span className="tiny-dot" />
-              {era.name}
+              {tr(era.name)}
               <ChevronDown size={12} />
             </strong>
-            <small>{era.subtitle}</small>
+            <small>{tr(era.subtitle)}</small>
           </div>
           <span className="ribbon-caption">Civilization</span>
         </div>
@@ -177,8 +188,8 @@ export default function App() {
         <div className="ribbon-tip">
           <Clock size={16} />
           <div>
-            <strong>Your progress stays with you</strong>
-            <span>Autosaved every 10 seconds</span>
+            <strong>{tr("Your progress stays with you")}</strong>
+            <span>{tr("Autosaved every 10 seconds")}</span>
           </div>
         </div>
       </div>
@@ -188,13 +199,15 @@ export default function App() {
           <ChevronDown size={12} />
         </span>
         <span className="formula-fx">ƒx</span>
-        <span className="formula-value">{state.eventLog.at(-1)?.message}</span>
+        <span className="formula-value">
+          {formatEvent(state.eventLog.at(-1))}
+        </span>
         <CircleHelp size={14} />
       </div>
       <div className="worksheet">
         <div className="column-headers">
           <span className="corner-cell" />
-          {'ABCDEFGH'.split('').map((letter) => (
+          {"ABCDEFGH".split("").map((letter) => (
             <span key={letter}>{letter}</span>
           ))}
         </div>
@@ -209,10 +222,10 @@ export default function App() {
               {isUtility && (
                 <button
                   className="back-link"
-                  onClick={() => setSheet('overview')}
+                  onClick={() => setSheet("overview")}
                 >
                   <ArrowLeft size={14} />
-                  Back to Overview
+                  {tr("Back to Overview")}
                 </button>
               )}
               <WorkbookNavigation.Provider
@@ -229,40 +242,43 @@ export default function App() {
         <span className="sheet-navigation">
           <Grid2X2 size={15} />
         </span>
-        <nav aria-label="Sheets">
+        <nav aria-label={tr("Sheets")}>
           {visible.map((s) => {
             const Icon = s.icon;
             return (
               <button
                 key={s.id}
-                className={!isUtility && active.id === s.id ? 'active' : ''}
+                className={!isUtility && active.id === s.id ? "active" : ""}
                 aria-current={
-                  !isUtility && active.id === s.id ? 'page' : undefined
+                  !isUtility && active.id === s.id ? "page" : undefined
                 }
                 onClick={() => setSheet(s.id)}
               >
                 <Icon size={14} />
-                {s.name}
+                {tr(s.name)}
               </button>
             );
           })}
         </nav>
-        <span className="sheet-tabs-hint">{pageName} worksheet</span>
+        <span className="sheet-tabs-hint">
+          {tr(pageName)} {tr("worksheet")}
+        </span>
       </div>
       <footer className="status-bar">
         <div>
-          <span className={`tiny-dot ${saveError ? 'warning-dot' : ''}`} />
-          <span>{saveError ? 'Save unavailable' : 'Ready'}</span>
+          <span className={`tiny-dot ${saveError ? "warning-dot" : ""}`} />
+          <span>{saveError ? tr("Save unavailable") : tr("Ready")}</span>
           <span className="status-divider" />
-          <span>{era.name}</span>
+          <span>{tr(era.name)}</span>
         </div>
         <div className="status-middle">
           <Clock size={12} />
-          {formatDuration(state.statistics.totalPlayTime.toNumber())} simulated
+          {formatDuration(state.statistics.totalPlayTime.toNumber())}{" "}
+          {tr("simulated")}
         </div>
         <div className="zoom-control">
           <button
-            aria-label="Zoom out"
+            aria-label={tr("Zoom out")}
             disabled={zoom <= 80}
             onClick={() => setZoom((z) => z - 10)}
           >
@@ -272,7 +288,7 @@ export default function App() {
             <span style={{ left: `${((zoom - 80) / 40) * 100}%` }} />
           </span>
           <button
-            aria-label="Zoom in"
+            aria-label={tr("Zoom in")}
             disabled={zoom >= 120}
             onClick={() => setZoom((z) => z + 10)}
           >

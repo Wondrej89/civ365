@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
 import { militaryUnits } from '../game/content/military';
@@ -12,10 +13,12 @@ import {
   militaryQuote,
   maxMilitaryRecruit,
 } from '../game/engine/military';
-import { D, sum, formatNumber } from '../game/utils/numbers';
+import { D, sum } from '../game/utils/numbers';
 import { Costs, costReason } from './common';
 import { useWorkbookNavigation } from './navigation';
 export function MilitarySheet() {
+  const { t: tr, formatNumber } = useI18n();
+
   const { state } = useGame(),
     { openSheet } = useWorkbookNavigation(),
     power = militaryPower(state);
@@ -26,15 +29,16 @@ export function MilitarySheet() {
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">PEOPLE · EQUIPMENT · COMMITMENT</div>
-          <h1>An army has a cost.</h1>
+          <div className="eyebrow">{tr('PEOPLE · EQUIPMENT · COMMITMENT')}</div>
+          <h1>{tr('An army has a cost.')}</h1>
           <p>
-            Every soldier is a person who could be producing Food, Materials or
-            Research.
+            {tr(
+              'Every soldier is a person who could be producing Food, Materials or Research.',
+            )}
           </p>
         </div>
         <button className="button" onClick={() => openSheet('territory')}>
-          Open Territory
+          {tr('Open Territory')}
         </button>
       </div>
       <div className="realm-kpis">
@@ -45,15 +49,16 @@ export function MilitarySheet() {
           ['Power from bonuses', power.sub(base)],
         ].map(([name, value]) => (
           <div className="panel" key={String(name)}>
-            <span className="field-label">{String(name)}</span>
+            <span className="field-label">{tr(String(name))}</span>
             <strong>{formatNumber(value)}</strong>
           </div>
         ))}
       </div>
       {state.activeCampaign && (
         <div className="panel campaign-notice">
-          Your army is committed to a campaign. Recruitment and demobilization
-          resume when it ends.
+          {tr(
+            'Your army is committed to a campaign. Recruitment and demobilization resume when it ends.',
+          )}
         </div>
       )}
       <div className="realm-cards">
@@ -72,44 +77,47 @@ export function MilitarySheet() {
                 data-military={u.id}
                 key={u.id}
               >
-                <h2>{u.name}</h2>
-                <p>{u.description}</p>
+                <h2>{tr(u.name)}</h2>
+                <p>{tr(u.description)}</p>
                 <dl className="growth-details">
                   <div>
-                    <dt>Count</dt>
+                    <dt>{tr('Count')}</dt>
                     <dd>{formatNumber(count, 0)}</dd>
                   </div>
                   <div>
-                    <dt>Power each</dt>
+                    <dt>{tr('Power each')}</dt>
                     <dd>{formatNumber(powerPerMilitaryUnit(state, u))}</dd>
                   </div>
                   <div>
-                    <dt>Total power</dt>
+                    <dt>{tr('Total power')}</dt>
                     <dd>
                       {formatNumber(count.mul(powerPerMilitaryUnit(state, u)))}
                     </dd>
                   </div>
                   <div>
-                    <dt>People per unit</dt>
+                    <dt>{tr('People per unit')}</dt>
                     <dd>{u.populationCost}</dd>
                   </div>
                 </dl>
-                <h3>Recruitment cost for one</h3>
+                <h3>{tr('Recruitment cost for one')}</h3>
                 <Costs costs={costs} state={state} />
                 <div className="realm-actions">
                   {[1, 10, 'max'].map((n) => (
                     <button
                       className="button primary"
                       key={n}
-                      aria-label={`Recruit ${n === 'max' ? 'Max' : n} ${u.name}`}
+                      aria-label={tr('Recruit {0} {1}', {
+                        '0': n === 'max' ? tr('Max') : n,
+                        '1': tr(u.name),
+                      })}
                       disabled={maximum.lt(n === 'max' ? 1 : n)}
                       title={
                         state.activeCampaign
-                          ? 'Army committed.'
+                          ? tr('Army committed.')
                           : idlePopulation(state).lt(
                                 D(n === 'max' ? 1 : n).mul(u.populationCost),
                               )
-                            ? 'Not enough Idle Population.'
+                            ? tr('Not enough Idle Population.')
                             : costReason(
                                 militaryQuote(
                                   state,
@@ -118,7 +126,9 @@ export function MilitarySheet() {
                                 ),
                                 state,
                               ) ||
-                              'Consumes equipment and assigns Idle Population.'
+                              tr(
+                                'Consumes equipment and assigns Idle Population.',
+                              )
                       }
                       onClick={() =>
                         gameStore.dispatch({
@@ -128,7 +138,8 @@ export function MilitarySheet() {
                         })
                       }
                     >
-                      Recruit {n === 'max' ? 'Max' : `+${n}`}
+                      {tr('Recruit')}{' '}
+                      {n === 'max' ? tr('Max') : tr('+{0}', { '0': n })}
                     </button>
                   ))}
                 </div>
@@ -137,7 +148,10 @@ export function MilitarySheet() {
                     <button
                       className="button"
                       key={n}
-                      aria-label={`Demobilize ${n === 'max' ? 'All' : n} ${u.name}`}
+                      aria-label={tr('Demobilize {0} {1}', {
+                        '0': n === 'max' ? tr('All') : n,
+                        '1': tr(u.name),
+                      })}
                       disabled={
                         !!state.activeCampaign || count.lt(n === 'max' ? 1 : n)
                       }
@@ -149,7 +163,9 @@ export function MilitarySheet() {
                         })
                       }
                     >
-                      {n === 'max' ? 'Demobilize All' : `Demobilize ${n}`}
+                      {n === 'max'
+                        ? tr('Demobilize All')
+                        : tr('Demobilize {0}', { '0': n })}
                     </button>
                   ))}
                 </div>
@@ -158,12 +174,12 @@ export function MilitarySheet() {
           })}
       </div>
       <p className="sheet-note">
-        Demobilization returns people to Idle Population; equipment is not
-        refunded. Recruitment prices rise with army size. Release workers in
-        Workforce to make room for soldiers.
+        {tr(
+          'Demobilization returns people to Idle Population; equipment is not refunded. Recruitment prices rise with army size. Release workers in Workforce to make room for soldiers.',
+        )}
       </p>
       <button className="button" onClick={() => openSheet('workforce')}>
-        Open Workforce
+        {tr('Open Workforce')}
       </button>
     </>
   );

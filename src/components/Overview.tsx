@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import {
   ArrowRight,
   Leaf,
@@ -27,7 +28,7 @@ import {
 } from '../game/engine/settlements';
 import { militaryPower } from '../game/engine/military';
 import { activeEffects, resourceMultiplier } from '../game/engine/effects';
-import { D, formatNumber } from '../game/utils/numbers';
+import { D } from '../game/utils/numbers';
 import {
   PopulationKpi,
   ResourceKpi,
@@ -40,6 +41,8 @@ import { useWorkbookNavigation } from './navigation';
 import { autoGrowthActive, nextGrowthSeconds } from '../game/engine/population';
 
 export function Overview() {
+  const { t: tr, formatNumber, formatEvent, formatTime } = useI18n();
+
   const { openWorkforce, openSheet } = useWorkbookNavigation();
   const { state } = useGame();
   const era = eras.find((e) => e.id === state.currentEra)!;
@@ -60,50 +63,52 @@ export function Overview() {
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">YOUR CIVILIZATION, AT A GLANCE</div>
+          <div className="eyebrow">{tr('YOUR CIVILIZATION, AT A GLANCE')}</div>
           <h1>
             {state.currentEra !== 'tribal'
-              ? 'A place to call home.'
+              ? tr('A place to call home.')
               : isFeatureUnlocked(state, 'jobs')
-                ? 'Small tribe. Big possibilities.'
-                : 'A small beginning.'}
+                ? tr('Small tribe. Big possibilities.')
+                : tr('A small beginning.')}
           </h1>
-          <p>{era.subtitle}</p>
+          <p>{tr(era.subtitle)}</p>
         </div>
         <div className="era-chip">
           <Sprout size={16} />
-          {era.name}
+          {tr(era.name)}
           <span className="era-dot" />
         </div>
       </div>
       {isFeatureUnlocked(state, 'population') && (
         <div className="overview-shortcuts">
           <span>
-            Growth:{' '}
+            {tr('Growth:')}{' '}
             <strong>
               {capacityReached(state)
-                ? 'Population capacity reached.'
+                ? tr('Population capacity reached.')
                 : autoGrowthActive(state)
-                  ? `Auto · next attempt in ${formatNumber(nextGrowthSeconds(state), 1)} s`
-                  : 'Manual'}
+                  ? tr('Auto · next attempt in {0} s', {
+                      '0': formatNumber(nextGrowthSeconds(state), 1),
+                    })
+                  : tr('Manual')}
             </strong>
           </span>
           <button className="button" onClick={() => openSheet('population')}>
-            Open Population
+            {tr('Open Population')}
           </button>
           {isFeatureUnlocked(state, 'jobs') && (
             <button className="button" onClick={() => openSheet('workforce')}>
-              Open Production
+              {tr('Open Production')}
             </button>
           )}
           {isFeatureUnlocked(state, 'research') && (
             <button className="button" onClick={() => openSheet('research')}>
-              Open Research
+              {tr('Open Research')}
             </button>
           )}
           {isFeatureUnlocked(state, 'statistics') && (
             <button className="button" onClick={() => openSheet('statistics')}>
-              Open Statistics
+              {tr('Open Statistics')}
             </button>
           )}
         </div>
@@ -128,13 +133,13 @@ export function Overview() {
               className="panel realm-overview-card"
               onClick={() => openSheet('settlements')}
             >
-              <span>Settlements</span>
+              <span>{tr('Settlements')}</span>
               <strong>
                 {formatNumber(settlementCount(state), 0)} /{' '}
-                {formatNumber(settlementSlots(state), 0)} slots
+                {formatNumber(settlementSlots(state), 0)} {tr('slots')}
               </strong>
               <small>
-                Capacity {formatNumber(populationCapacity(state), 0)}
+                {tr('Capacity')} {formatNumber(populationCapacity(state), 0)}
               </small>
             </button>
             <button
@@ -147,9 +152,9 @@ export function Overview() {
                 )
               }
             >
-              <span>Territory</span>
+              <span>{tr('Territory')}</span>
               <strong>{formatNumber(ownedTerritories(state), 0)}</strong>
-              <small>Room for new settlements</small>
+              <small>{tr('Room for new settlements')}</small>
             </button>
           </>
         )}
@@ -158,12 +163,12 @@ export function Overview() {
             className="panel realm-overview-card"
             onClick={() => openSheet('military')}
           >
-            <span>Military Power</span>
+            <span>{tr('Military Power')}</span>
             <strong>{formatNumber(militaryPower(state))}</strong>
             <small>
               {state.activeCampaign
-                ? 'Campaign in progress'
-                : 'Prepare your next campaign'}
+                ? tr('Campaign in progress')
+                : tr('Prepare your next campaign')}
             </small>
           </button>
         )}
@@ -173,10 +178,10 @@ export function Overview() {
         <div className="main-column">
           <div className="panel gathering">
             <div className="panel-heading">
-              <h2>Start with your own two hands</h2>
-              <span className="tag">Manual actions</span>
+              <h2>{tr('Start with your own two hands')}</h2>
+              <span className="tag">{tr('Manual actions')}</span>
             </div>
-            <p>A little effort today. A whole civilization tomorrow.</p>
+            <p>{tr('A little effort today. A whole civilization tomorrow.')}</p>
             <div className="gather-actions">
               {Object.entries(balance.manualGathering)
                 .filter(([, g]) => isFeatureUnlocked(state, g.feature))
@@ -190,7 +195,8 @@ export function Overview() {
                   >
                     <ResourceIcon id={id} size={22} />
                     <span>
-                      Gather {resources.find((r) => r.id === id)?.name}
+                      {tr('Gather')}{' '}
+                      {tr(resources.find((r) => r.id === id)?.name ?? '')}
                       <small>
                         +
                         {formatNumber(
@@ -198,7 +204,7 @@ export function Overview() {
                             resourceMultiplier(activeEffects(state), id),
                           ),
                         )}{' '}
-                        per click
+                        {tr('per click')}
                       </small>
                     </span>
                     <Plus size={17} />
@@ -208,8 +214,8 @@ export function Overview() {
             {isFeatureUnlocked(state, 'population') && (
               <div className="growth-row">
                 <div>
-                  <strong>There’s room for more.</strong>
-                  <span>Food brings new people to your tribe.</span>
+                  <strong>{tr('There’s room for more.')}</strong>
+                  <span>{tr('Food brings new people to your tribe.')}</span>
                 </div>
                 <GrowButton />
               </div>
@@ -222,7 +228,7 @@ export function Overview() {
             <div className="panel-heading">
               <h2>
                 <TrendingUp size={16} />
-                Your next step
+                {tr('Your next step')}
               </h2>
               <span className="step-number">
                 {formatNumber(
@@ -234,15 +240,17 @@ export function Overview() {
             <div className="goal-icon">
               {goal ? <Leaf size={23} /> : <Check size={23} />}
             </div>
-            <h3>{goal?.title ?? 'Look how far you’ve come.'}</h3>
+            <h3>{tr(goal?.title ?? '') || tr('Look how far you’ve come.')}</h3>
             <p>
-              {goal?.text ??
-                'You have completed the first chapter. Keep growing, try your remaining discoveries, and make this civilization your own.'}
+              {tr(goal?.text ?? '') ||
+                tr(
+                  'You have completed the first chapter. Keep growing, try your remaining discoveries, and make this civilization your own.',
+                )}
             </p>
             {goal && progress !== null && (
               <>
                 <div className="goal-progress">
-                  <span>Progress</span>
+                  <span>{tr('Progress')}</span>
                   <strong>
                     {formatNumber(value.min(goal.target!), 0)} /{' '}
                     {formatNumber(goal.target!, 0)}
@@ -255,16 +263,16 @@ export function Overview() {
             )}
             <div className="goal-note">
               <ArrowRight size={13} />
-              One small step at a time.
+              {tr('One small step at a time.')}
             </div>
           </div>
           <div className="panel activity">
             <div className="panel-heading">
               <h2>
                 <History size={16} />
-                Activity
+                {tr('Activity')}
               </h2>
-              <span className="subtle">Latest events</span>
+              <span className="subtle">{tr('Latest events')}</span>
             </div>
             <div className="events">
               {[...state.eventLog]
@@ -277,9 +285,9 @@ export function Overview() {
                   >
                     <span className="event-dot" />
                     <div>
-                      <p>{e.message}</p>
+                      <p>{formatEvent(e)}</p>
                       <time>
-                        {new Date(e.time).toLocaleTimeString('en-GB', {
+                        {formatTime(e.time, {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
@@ -292,9 +300,9 @@ export function Overview() {
           <div className="quiet-note">
             <span className="note-grid">▦</span>
             <p>
-              Every big thing starts
+              {tr('Every big thing starts')}
               <br />
-              with a very small cell.
+              {tr('with a very small cell.')}
             </p>
             <span>CIVILIZATION.XLSX</span>
           </div>

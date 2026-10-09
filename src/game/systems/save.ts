@@ -22,6 +22,7 @@ import { evaluateCondition } from '../engine/conditions';
 import { isUnitUnlocked, representedPopulation } from '../engine/units';
 import { sum } from '../utils/numbers';
 import type { GameEvent, GameState } from '../types';
+import { isLanguage } from '../../i18n/types';
 
 export const SAVE_KEY = 'civilization.xlsx.save';
 const MAX_SAVE_LENGTH = 2_000_000;
@@ -62,6 +63,32 @@ function ids(value: unknown, allowed: string[]): string[] {
   )
     throw new Error('Unknown or duplicate content in save.');
   return value as string[];
+}
+function validateMessage(
+  value: unknown,
+): NonNullable<GameEvent['translation']> {
+  const source = object(value);
+  if (typeof source.key !== 'string' || source.key.length > 1000)
+    throw new Error('Invalid event translation.');
+  const values = source.values === undefined ? {} : object(source.values);
+  if (
+    Object.keys(values).length > 20 ||
+    Object.entries(values).some(
+      ([key, parameter]) =>
+        !/^\w+$/.test(key) ||
+        (typeof parameter !== 'string' && typeof parameter !== 'number') ||
+        (typeof parameter === 'string'
+          ? parameter.length > 1000
+          : !Number.isFinite(parameter)),
+    )
+  )
+    throw new Error('Invalid event translation.');
+  return {
+    key: source.key,
+    ...(source.values !== undefined
+      ? { values: values as Record<string, string | number> }
+      : {}),
+  };
 }
 /** Chain legacy versions before validating the current format. Never invent population. */
 export function migrateSave(value: unknown): Obj {
@@ -184,6 +211,23 @@ export function migrateSave(value: unknown): Obj {
       campaignsCompleted: '0',
     };
     save.saveVersion = 4;
+  }
+  if (save.saveVersion === 4) {
+    save.settings = { ...object(save.settings), language: 'en' };
+    // Preserve discoveries legitimately bought before these new edges existed.
+    // Only the newly added prerequisites are granted; validation still checks old edges.
+    const known = ids(
+      save.researchedTechnologies,
+      technologies.map((t) => t.id),
+    );
+    const additions: Record<string, string[]> = {
+      organizedSettlements: ['organizedWarfare'],
+      classicalArmy: ['archery', 'engineering', 'organizedWarfare'],
+    };
+    save.researchedTechnologies = [
+      ...new Set([...known, ...known.flatMap((id) => additions[id] ?? [])]),
+    ];
+    save.saveVersion = 5;
   }
   if (save.saveVersion !== balance.saveVersion)
     throw new Error(
@@ -319,9 +363,15 @@ export function deserializeSave(value: unknown): GameState {
   )
     throw new Error('Invalid era history.');
   const settings = object(raw.settings);
-  if (typeof settings.notifications !== 'boolean')
+  if (
+    typeof settings.notifications !== 'boolean' ||
+    !isLanguage(settings.language)
+  )
     throw new Error('Invalid settings.');
-  state.settings = { notifications: settings.notifications };
+  state.settings = {
+    notifications: settings.notifications,
+    language: settings.language,
+  };
   const automatic = object(raw.autoPopulationGrowth);
   if (
     typeof automatic.enabled !== 'boolean' ||
@@ -448,6 +498,9 @@ export function deserializeSave(value: unknown): GameState {
       id: timestamp(e.id),
       time: timestamp(e.time),
       message: e.message,
+      ...(e.translation !== undefined
+        ? { translation: validateMessage(e.translation) }
+        : {}),
       kind: e.kind as GameEvent['kind'],
       notify: e.notify,
     };

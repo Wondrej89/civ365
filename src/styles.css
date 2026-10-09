@@ -3001,3 +3001,27 @@ select {
     flex-wrap: wrap;
   }
 }
+
+.technology-node.focused-technology,
+.technology-node:focus-visible {
+  outline: 3px solid #217346;
+  outline-offset: 3px;
+}
+.tree-toolbar {
+  flex-wrap: wrap;
+}
+.language-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 20px 0 8px;
+}
+.language-control select {
+  padding: 9px 12px;
+  border: 1px solid #dbe6de;
+  border-radius: 4px;
+  background: #fff;
+  color: #294d3c;
+  font: inherit;
+}

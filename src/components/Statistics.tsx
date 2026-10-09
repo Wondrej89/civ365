@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import { memo, useEffect, useRef, useState } from 'react';
 import { useGame } from '../hooks/useGame';
 import {
@@ -6,7 +7,7 @@ import {
 } from '../game/content/statistics';
 import { evaluateCondition } from '../game/engine/conditions';
 import { idlePopulation, representedPopulation } from '../game/engine/units';
-import { D, formatNumber, formatDuration } from '../game/utils/numbers';
+import { D } from '../game/utils/numbers';
 import type { StatisticSample, StatisticSeriesDefinition } from '../game/types';
 const HistoryChart = memo(function HistoryChart({
   series,
@@ -15,6 +16,8 @@ const HistoryChart = memo(function HistoryChart({
   series: StatisticSeriesDefinition;
   samples: StatisticSample[];
 }) {
+  const { t: tr, formatNumber, formatDuration } = useI18n();
+
   const chart = useRef<SVGSVGElement>(null);
   const [width, setWidth] = useState(760);
   const hasSamples = samples.length > 0;
@@ -47,10 +50,12 @@ const HistoryChart = memo(function HistoryChart({
     )
     .join(' ');
   return (
-    <section className="panel statistic-chart" aria-label={series.name}>
+    <section className="panel statistic-chart" aria-label={tr(series.name)}>
       <div className="panel-heading">
-        <h2>{series.name}</h2>
-        <span className="subtle">{samples.length} samples</span>
+        <h2>{tr(series.name)}</h2>
+        <span className="subtle">
+          {samples.length} {tr('samples')}
+        </span>
       </div>
       {samples.length ? (
         <>
@@ -59,7 +64,11 @@ const HistoryChart = memo(function HistoryChart({
             className="history-chart"
             viewBox={`0 0 ${width} ${height}`}
             role="img"
-            aria-label={`${series.name}: ${formatNumber(samples[0].value)} to ${formatNumber(samples.at(-1)!.value)}`}
+            aria-label={tr('{0}: {1} to {2}', {
+              '0': tr(series.name),
+              '1': formatNumber(samples[0].value),
+              '2': formatNumber(samples.at(-1)!.value),
+            })}
           >
             {[0, 0.25, 0.5, 0.75, 1].map((fraction) => (
               <g key={fraction}>
@@ -100,16 +109,16 @@ const HistoryChart = memo(function HistoryChart({
               {formatDuration(end)}
             </text>
             <text x={left + plotWidth / 2} y={height - 4} textAnchor="middle">
-              Simulated time
+              {tr('Simulated time')}
             </text>
           </svg>
           <details className="chart-data">
-            <summary>Recent sample values</summary>
+            <summary>{tr('Recent sample values')}</summary>
             <table>
               <thead>
                 <tr>
-                  <th>Simulated time</th>
-                  <th className="numeric">Value</th>
+                  <th>{tr('Simulated time')}</th>
+                  <th className="numeric">{tr('Value')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -125,17 +134,20 @@ const HistoryChart = memo(function HistoryChart({
         </>
       ) : (
         <p className="empty-chart">
-          Your history will appear as your civilization grows.
+          {tr('Your history will appear as your civilization grows.')}
         </p>
       )}
       <p className="sheet-note">
-        History begins when this statistic is discovered. It records simulated
-        play, including offline progress.
+        {tr(
+          'History begins when this statistic is discovered. It records simulated play, including offline progress.',
+        )}
       </p>
     </section>
   );
 });
 export function StatisticsSheet() {
+  const { t: tr, formatNumber } = useI18n();
+
   const { state } = useGame();
   const kpis = [
     { name: 'Current population', value: state.population },
@@ -151,15 +163,15 @@ export function StatisticsSheet() {
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">A RECORD OF YOUR CIVILIZATION</div>
-          <h1>The story in the numbers.</h1>
-          <p>Your records grow alongside your people.</p>
+          <div className="eyebrow">{tr('A RECORD OF YOUR CIVILIZATION')}</div>
+          <h1>{tr('The story in the numbers.')}</h1>
+          <p>{tr('Your records grow alongside your people.')}</p>
         </div>
       </div>
       <div className="statistics-kpis">
         {kpis.map((kpi) => (
           <div className="panel" key={kpi.name}>
-            <span className="field-label">{kpi.name}</span>
+            <span className="field-label">{tr(kpi.name)}</span>
             <strong>{formatNumber(kpi.value, 0)}</strong>
           </div>
         ))}
@@ -179,13 +191,13 @@ export function StatisticsSheet() {
           <section
             className="panel statistic-chart"
             key={chart.id}
-            aria-label={chart.name}
+            aria-label={tr(chart.name)}
           >
-            <h2>{chart.name}</h2>
+            <h2>{tr(chart.name)}</h2>
             <div className="distribution-chart">
               {chart.values(state).map((group) => (
                 <div className="distribution-row" key={group.id}>
-                  <span>{group.name}</span>
+                  <span>{tr(group.name)}</span>
                   <div className="distribution-track">
                     <div
                       style={{
@@ -199,7 +211,9 @@ export function StatisticsSheet() {
               ))}
             </div>
             <p className="sheet-note">
-              People represented by units, rather than the number of units.
+              {tr(
+                'People represented by units, rather than the number of units.',
+              )}
             </p>
           </section>
         ))}

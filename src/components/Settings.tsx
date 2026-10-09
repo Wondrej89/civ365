@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import { useState } from 'react';
 import {
   Download,
@@ -11,9 +12,18 @@ import {
 } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
-import { formatDuration, formatNumber } from '../game/utils/numbers';
+
+import { isLanguage } from '../i18n/types';
 
 export function SettingsSheet() {
+  const {
+    t: tr,
+    formatError,
+    formatDuration,
+    formatNumber,
+    formatTime,
+  } = useI18n();
+
   const { state, savedAt, saveError } = useGame();
   const [text, setText] = useState(''),
     [message, setMessage] = useState(''),
@@ -57,10 +67,12 @@ export function SettingsSheet() {
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">YOUR WORKBOOK</div>
-          <h1>Keep your story safe.</h1>
+          <div className="eyebrow">{tr('YOUR WORKBOOK')}</div>
+          <h1>{tr('Keep your story safe.')}</h1>
           <p>
-            Progress lives in this browser. Export a backup to take it with you.
+            {tr(
+              'Progress lives in this browser. Export a backup to take it with you.',
+            )}
           </p>
         </div>
         <button
@@ -71,37 +83,40 @@ export function SettingsSheet() {
           }}
         >
           <Save size={16} />
-          Save now
+          {tr('Save now')}
         </button>
       </div>
       <div className="settings-grid">
         <div className="panel settings-panel">
-          <h2>Save & restore</h2>
-          <p>Autosaved every 10 seconds and when you leave the page.</p>
+          <h2>{tr('Save & restore')}</h2>
+          <p>{tr('Autosaved every 10 seconds and when you leave the page.')}</p>
           <div className={`save-info ${saveError ? 'save-warning' : ''}`}>
             <span className="tiny-dot" />
-            {saveError ??
-              `Last saved at ${new Date(savedAt).toLocaleTimeString('en-GB')}`}
+            {saveError
+              ? formatError(saveError)
+              : tr('Last saved at {time}', { time: formatTime(savedAt) })}
           </div>
           <div className="settings-actions">
             <button className="button" onClick={exportGame}>
               <Download size={16} />
-              Export Save
+              {tr('Export Save')}
             </button>
             <button className="button" onClick={download}>
               <Download size={16} />
-              Download backup
+              {tr('Download backup')}
             </button>
           </div>
           <label className="field-label" htmlFor="save-text">
-            Save text
+            {tr('Save text')}
           </label>
           <textarea
             id="save-text"
             spellCheck={false}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Export your save, or paste one here to restore it…"
+            placeholder={tr(
+              'Export your save, or paste one here to restore it…',
+            )}
           />
           <div className="settings-actions">
             <button
@@ -110,38 +125,60 @@ export function SettingsSheet() {
               disabled={!text.trim()}
               title={
                 !text.trim()
-                  ? 'Paste a save first'
-                  : 'Replace your current game with this save'
+                  ? tr('Paste a save first')
+                  : tr('Replace your current game with this save')
               }
             >
               <Upload size={16} />
-              Import Save
+              {tr('Import Save')}
             </button>
             <button className="button" onClick={copy} disabled={!text.trim()}>
               <Copy size={16} />
-              Copy text
+              {tr('Copy text')}
             </button>
           </div>
           {message && (
             <p className="message success" role="status">
               <Check size={16} />
-              {message}
+              {tr(message)}
             </p>
           )}
           {error && (
             <p className="message error" role="alert">
               <AlertTriangle size={16} />
-              {error}
+              {formatError(error)}
             </p>
           )}
         </div>
         <div className="settings-side">
           <div className="panel settings-panel">
-            <h2>Preferences</h2>
+            <h2>{tr('Preferences')}</h2>
+            <label className="language-control">
+              <strong>{tr('Language')}</strong>
+              <select
+                aria-label={tr('Language')}
+                value={state.settings.language}
+                onChange={(event) => {
+                  if (isLanguage(event.target.value))
+                    gameStore.dispatch({
+                      type: 'settings',
+                      settings: { language: event.target.value },
+                    });
+                }}
+              >
+                <option value="en">{tr('English')}</option>
+                <option value="cs">{tr('Czech')}</option>
+              </select>
+            </label>
+            <p className="sheet-note">
+              {tr(
+                'Czech translation is being prepared. Untranslated text uses English.',
+              )}
+            </p>
             <label className="toggle-row">
               <span>
-                <strong>Milestone notifications</strong>
-                <small>A little celebration for a big step.</small>
+                <strong>{tr('Milestone notifications')}</strong>
+                <small>{tr('A little celebration for a big step.')}</small>
               </span>
               <input
                 type="checkbox"
@@ -156,38 +193,39 @@ export function SettingsSheet() {
               <span className="toggle" />
             </label>
             <div className="settings-detail">
-              <span>Offline production limit</span>
-              <strong>8 hours</strong>
+              <span>{tr('Offline production limit')}</span>
+              <strong>{tr('8 hours')}</strong>
             </div>
             <div className="settings-detail">
-              <span>Time simulated</span>
+              <span>{tr('Time simulated')}</span>
               <strong>
                 {formatDuration(state.statistics.totalPlayTime.toNumber())}
               </strong>
             </div>
             <div className="settings-detail">
-              <span>Manual actions</span>
+              <span>{tr('Manual actions')}</span>
               <strong>
                 {formatNumber(state.statistics.totalManualClicks, 0)}
               </strong>
             </div>
             <div className="settings-detail">
-              <span>Save version</span>
+              <span>{tr('Save version')}</span>
               <strong>{formatNumber(state.saveVersion, 0)}</strong>
             </div>
           </div>
           <div className="panel settings-panel reset-panel">
-            <h2>A fresh beginning</h2>
+            <h2>{tr('A fresh beginning')}</h2>
             <p>
-              Reset your civilization and start with one person. Export a backup
-              first if you want to keep this story.
+              {tr(
+                'Reset your civilization and start with one person. Export a backup first if you want to keep this story.',
+              )}
             </p>
             <button
               className="button danger"
               onClick={() => setConfirmReset(true)}
             >
               <RotateCcw size={15} />
-              Reset Game
+              {tr('Reset Game')}
             </button>
           </div>
         </div>
@@ -202,7 +240,7 @@ export function SettingsSheet() {
           >
             <button
               className="modal-close"
-              aria-label="Cancel reset"
+              aria-label={tr('Cancel reset')}
               onClick={() => setConfirmReset(false)}
             >
               <X size={19} />
@@ -210,10 +248,11 @@ export function SettingsSheet() {
             <div className="modal-symbol danger-symbol">
               <RotateCcw size={26} />
             </div>
-            <h2 id="reset-title">Start a new civilization?</h2>
+            <h2 id="reset-title">{tr('Start a new civilization?')}</h2>
             <p>
-              This resets your resources, discoveries, skills, and achievements.
-              Your current save will be replaced.
+              {tr(
+                'This resets your resources, discoveries, skills, and achievements. Your current save will be replaced.',
+              )}
             </p>
             <div className="settings-actions">
               <button
@@ -221,7 +260,7 @@ export function SettingsSheet() {
                 autoFocus
                 onClick={() => setConfirmReset(false)}
               >
-                Keep playing
+                {tr('Keep playing')}
               </button>
               <button
                 className="button danger"
@@ -233,7 +272,7 @@ export function SettingsSheet() {
                   setConfirmReset(false);
                 }}
               >
-                Yes, reset everything
+                {tr('Yes, reset everything')}
               </button>
             </div>
           </section>

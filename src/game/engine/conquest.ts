@@ -1,3 +1,4 @@
+import { message } from '../../i18n/core';
 import { balance } from '../content/config';
 import { militaryUnits } from '../content/military';
 import { D, sum } from '../utils/numbers';
@@ -74,7 +75,9 @@ export function launchCampaign(state: GameState) {
   };
   logEvent(
     state,
-    `Campaign launched for Frontier ${state.activeCampaign.frontierIndex}.`,
+    message('Campaign launched for Frontier {0}.', {
+      '0': state.activeCampaign.frontierIndex,
+    }),
     'milestone',
     false,
   );
@@ -113,7 +116,10 @@ export function finishCampaign(state: GameState) {
   }
   logEvent(
     state,
-    `Campaign ${campaign.victory ? 'won' : 'lost'}. ${deaths.toString()} people lost.`,
+    message('Campaign {0}. {1} people lost.', {
+      '0': campaign.victory ? 'won' : 'lost',
+      '1': deaths.toString(),
+    }),
     'milestone',
     !campaign.victory,
   );

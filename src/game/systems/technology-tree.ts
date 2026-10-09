@@ -1,7 +1,7 @@
-import { technologies } from '../content/technologies';
-import { eras } from '../content/eras';
-import { technologyStatus } from './progression';
-import type { GameState } from '../types';
+import { technologies } from "../content/technologies";
+import { eras } from "../content/eras";
+import { technologyStatus } from "./progression";
+import type { GameState } from "../types";
 export const treeDimensions = {
   nodeWidth: 230,
   nodeHeight: 238,
@@ -12,7 +12,7 @@ export const treeDimensions = {
 };
 export function technologyTree(state: GameState) {
   const visible = technologies.filter(
-    (t) => technologyStatus(state, t) !== 'hidden',
+    (t) => technologyStatus(state, t) !== "hidden",
   );
   const width =
     Math.max(1, ...visible.map((t) => (t.treePosition?.x ?? 0) + 1)) *
@@ -55,4 +55,19 @@ export function technologyTree(state: GameState) {
     }),
   );
   return { nodes, edges, groups, width, height: Math.max(250, offset) };
+}
+
+/** Cycle accessible discoveries first, then revealed future nodes; never target hidden content. */
+export function nextUnresearchedTechnology(state: GameState, afterId?: string) {
+  const candidates = technologyTree(state)
+    .nodes.filter((node) => node.status !== "researched")
+    .sort(
+      (a, b) =>
+        Number(b.status === "available") - Number(a.status === "available") ||
+        a.y - b.y ||
+        a.x - b.x,
+    );
+  if (!candidates.length) return null;
+  const index = candidates.findIndex((node) => node.technology.id === afterId);
+  return candidates[(index + 1) % candidates.length];
 }

@@ -68,5 +68,5 @@ export const balance = {
   maxOfflineSeconds: 8 * 60 * 60,
   offlineStepSeconds: 10,
   eventLimit: 100,
-  saveVersion: 4,
+  saveVersion: 5,
 };

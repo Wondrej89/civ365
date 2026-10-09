@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/LocaleContext';
 import { useEffect, useRef } from 'react';
 import {
   Plus,
@@ -27,7 +28,7 @@ import {
   unitProduction,
   upgradePreview,
 } from '../game/engine/production';
-import { D, formatNumber } from '../game/utils/numbers';
+import { D } from '../game/utils/numbers';
 import type {
   GameState,
   ProductionUnitDefinition,
@@ -42,6 +43,8 @@ import {
 } from '../game/engine/population-accounting';
 
 export function GrowButton() {
+  const { t: tr, formatNumber } = useI18n();
+
   const { state } = useGame(),
     cost = populationCost(state),
     affordable = state.resources.food.gte(cost),
@@ -52,21 +55,27 @@ export function GrowButton() {
       disabled={!affordable || capped}
       title={
         capped
-          ? 'Population capacity reached. Expand your settlements or acquire more territory.'
+          ? tr(
+              'Population capacity reached. Expand your settlements or acquire more territory.',
+            )
           : affordable
-            ? 'Welcome one more person'
-            : `Need ${formatNumber(cost.sub(state.resources.food))} more Food`
+            ? tr('Welcome one more person')
+            : tr('Need {0} more Food', {
+                '0': formatNumber(cost.sub(state.resources.food)),
+              })
       }
       onClick={() => gameStore.dispatch({ type: 'grow' })}
     >
       <Users size={16} />
       <span>
-        Grow Population
+        {tr('Grow Population')}
         <small>
-          {formatNumber(cost)} Food
-          {capped && ' · Population capacity reached.'}
+          {formatNumber(cost)} {tr('Food')}
+          {capped && tr(' · Population capacity reached.')}
           {!affordable &&
-            ` · need ${formatNumber(cost.sub(state.resources.food))} more`}
+            tr(' · need {0} more', {
+              '0': formatNumber(cost.sub(state.resources.food)),
+            })}
         </small>
       </span>
       <Plus size={16} />
@@ -80,13 +89,18 @@ function ProductionValues({
   values: Record<string, ReturnType<typeof D>>;
   signed?: boolean;
 }) {
+  const { formatNumber, t: tr } = useI18n();
+
   return (
     <>
       {Object.entries(values).map(([id, amount]) => (
         <span className="chain-production-value" key={id}>
           {signed && amount.gte(0) ? '+' : ''}
           {formatNumber(amount)}{' '}
-          <small>{resources.find((r) => r.id === id)?.name ?? id}/s</small>
+          <small>
+            {tr(resources.find((r) => r.id === id)?.name ?? '') || id}
+            {tr('/s')}
+          </small>
         </span>
       ))}
     </>
@@ -99,6 +113,8 @@ function UnitCard({
   unit: ProductionUnitDefinition;
   state: GameState;
 }) {
+  const { t: tr, formatNumber } = useI18n();
+
   const status = unitStatus(state, unit),
     count = ownedUnits(state, unit.id),
     maximum = maxCreatable(state, unit);
@@ -117,16 +133,18 @@ function UnitCard({
     return (
       <article
         className="unit-card locked-unit"
-        aria-label={`Locked tier ${unit.tier}`}
+        aria-label={tr('Locked tier {0}', { '0': unit.tier })}
       >
         <div className="unit-card-heading">
-          <span className="tag">Tier {formatNumber(unit.tier, 0)}</span>
+          <span className="tag">
+            {tr('Tier')} {formatNumber(unit.tier, 0)}
+          </span>
           <LockKeyhole size={16} />
         </div>
         <h3>???</h3>
-        <p>Requires new technology</p>
+        <p>{tr('Requires new technology')}</p>
         <span className="locked-tier-note">
-          A new way to put your people to work.
+          {tr('A new way to put your people to work.')}
         </span>
       </article>
     );
@@ -134,44 +152,49 @@ function UnitCard({
     <article
       className={`unit-card ${count.gt(0) ? 'unit-owned' : ''}`}
       data-unit={unit.id}
-      aria-label={unit.name}
+      aria-label={tr(unit.name)}
     >
       <div className="unit-card-heading">
-        <span className="tag">Tier {formatNumber(unit.tier, 0)}</span>
+        <span className="tag">
+          {tr('Tier')} {formatNumber(unit.tier, 0)}
+        </span>
         <span className="unit-state">
-          {status === 'owned' ? 'Owned' : 'Available'}
+          {status === 'owned' ? tr('Owned') : tr('Available')}
         </span>
       </div>
-      <h3>{unit.name}</h3>
-      <p className="unit-description">{unit.description}</p>
+      <h3>{tr(unit.name)}</h3>
+      <p className="unit-description">{tr(unit.description)}</p>
       <div className="unit-owned-row">
         <strong>{formatNumber(count, 0)}</strong>
         <span>
-          units
+          {tr('units')}
           <small>
-            {formatNumber(count.mul(getPopulationFootprint(unit.id)), 0)} people
-            represented
+            {formatNumber(count.mul(getPopulationFootprint(unit.id)), 0)}{' '}
+            {tr('people represented')}
           </small>
         </span>
       </div>
       <div className="unit-production">
         <ProductionValues values={production} signed />
         <span className="per-unit-rate">
-          <ProductionValues values={perUnit} /> per unit
+          <ProductionValues values={perUnit} /> {tr('per unit')}
         </span>
       </div>
       <div className="unit-footprint">
         <Users size={12} />
         {formatNumber(getPopulationFootprint(unit.id), 0)}{' '}
-        {getPopulationFootprint(unit.id).eq(1) ? 'person' : 'people'} per unit
+        {getPopulationFootprint(unit.id).eq(1) ? tr('person') : tr('people')}{' '}
+        {tr('per unit')}
       </div>
       <div className="unit-requirements">
         <span className="field-label">
-          {source ? 'Requires per upgrade' : 'Recruitment cost'}
+          {source ? tr('Requires per upgrade') : tr('Recruitment cost')}
         </span>
         {source && unit.upgradeFrom ? (
           <div>
-            <span>{source.name} units</span>
+            <span>
+              {tr(source.name)} {tr('units')}
+            </span>
             <strong
               className={
                 ownedUnits(state, source.id).lt(unit.upgradeFrom.amount)
@@ -184,14 +207,15 @@ function UnitCard({
           </div>
         ) : (
           <div>
-            <span>Idle Population</span>
+            <span>{tr('Idle Population')}</span>
             <strong>{formatNumber(getPopulationFootprint(unit.id), 0)}</strong>
           </div>
         )}
         {unitCosts(unit).map((c) => (
           <div key={c.resource}>
             <span>
-              {resources.find((r) => r.id === c.resource)?.name ?? c.resource}
+              {tr(resources.find((r) => r.id === c.resource)?.name ?? '') ||
+                c.resource}
             </span>
             <strong
               className={
@@ -207,21 +231,21 @@ function UnitCard({
         <>
           <details className="upgrade-details">
             <summary>
-              Production comparison
+              {tr('Production comparison')}
               <ArrowUpRight size={12} />
             </summary>
             {preview && (
               <>
                 <div>
-                  <span>Replaces</span>
+                  <span>{tr('Replaces')}</span>
                   <ProductionValues values={preview.replaced} />
                 </div>
                 <div>
-                  <span>New unit</span>
+                  <span>{tr('New unit')}</span>
                   <ProductionValues values={preview.produced} />
                 </div>
                 <div className="upgrade-gain">
-                  <span>Net gain</span>
+                  <span>{tr('Net gain')}</span>
                   <ProductionValues
                     values={Object.fromEntries(
                       Object.entries(preview.gain).filter(
@@ -237,47 +261,59 @@ function UnitCard({
           <div className="unit-buttons upgrade-buttons">
             <button
               className="button primary"
-              aria-label={`Upgrade 1 ${unit.name}`}
+              aria-label={tr('Upgrade 1 {0}', { '0': tr(unit.name) })}
               disabled={maximum.lt(1)}
               title={
-                reason ??
-                `Create 1 ${unit.name} from ${unit.upgradeFrom!.amount} ${source.name} units`
+                tr(reason ?? '') ||
+                tr('Create 1 {0} from {1} {2} units', {
+                  '0': tr(unit.name),
+                  '1': unit.upgradeFrom!.amount,
+                  '2': tr(source.name),
+                })
               }
               onClick={() => act('upgrade', 1)}
             >
-              Upgrade 1
+              {tr('Upgrade 1')}
             </button>
             <button
               className="button"
-              aria-label={`Upgrade Max ${unit.name}`}
+              aria-label={tr('Upgrade Max {0}', { '0': tr(unit.name) })}
               disabled={maximum.lt(1)}
-              title={reason ?? `Upgrade ${formatNumber(maximum, 0)} units`}
+              title={
+                tr(reason ?? '') ||
+                tr('Upgrade {0} units', { '0': formatNumber(maximum, 0) })
+              }
               onClick={() => act('upgrade', 'max')}
             >
-              Upgrade Max
+              {tr('Upgrade Max')}
             </button>
           </div>
           <div className="unit-buttons dismantle-buttons">
             <button
-              aria-label={`Dismantle 1 ${unit.name}`}
+              aria-label={tr('Dismantle 1 {0}', { '0': tr(unit.name) })}
               disabled={count.lt(1)}
               title={
                 count.lt(1)
-                  ? 'No units to dismantle'
-                  : `Returns ${unit.upgradeFrom!.amount} ${source.name} units; resources are not refunded`
+                  ? tr('No units to dismantle')
+                  : tr('Returns {0} {1} units; resources are not refunded', {
+                      '0': unit.upgradeFrom!.amount,
+                      '1': tr(source.name),
+                    })
               }
               onClick={() => act('dismantle', 1)}
             >
               <RotateCcw size={11} />
-              Dismantle 1
+              {tr('Dismantle 1')}
             </button>
             <button
-              aria-label={`Dismantle All ${unit.name}`}
+              aria-label={tr('Dismantle All {0}', { '0': tr(unit.name) })}
               disabled={count.lt(1)}
-              title="Return all units to their previous tier; resources are not refunded"
+              title={tr(
+                'Return all units to their previous tier; resources are not refunded',
+              )}
               onClick={() => act('dismantle', 'max')}
             >
-              All
+              {tr('All')}
             </button>
           </div>
         </>
@@ -292,7 +328,10 @@ function UnitCard({
                 <button
                   className="button"
                   key={quantity}
-                  aria-label={`Recruit ${quantity === 'max' ? 'Max' : quantity} ${unit.name}`}
+                  aria-label={tr('Recruit {0} {1}', {
+                    '0': quantity === 'max' ? tr('Max') : quantity,
+                    '1': tr(unit.name),
+                  })}
                   disabled={blocked}
                   title={
                     blocked
@@ -300,8 +339,8 @@ function UnitCard({
                           state,
                           unit,
                           quantity === 'max' ? 1 : quantity,
-                        ) ?? 'No units available')
-                      : `Recruit ${formatNumber(n, 0)} units`
+                        ) ?? tr('No units available'))
+                      : tr('Recruit {0} units', { '0': formatNumber(n, 0) })
                   }
                   onClick={() =>
                     act(
@@ -310,7 +349,9 @@ function UnitCard({
                     )
                   }
                 >
-                  {quantity === 'max' ? 'Max' : `+${quantity}`}
+                  {quantity === 'max'
+                    ? tr('Max')
+                    : tr('+{0}', { '0': quantity })}
                 </button>
               );
             })}
@@ -319,24 +360,29 @@ function UnitCard({
             {[1, 10, 'max'].map((quantity) => (
               <button
                 key={quantity}
-                aria-label={`Release ${quantity === 'max' ? 'All' : quantity} ${unit.name}`}
+                aria-label={tr('Release {0} {1}', {
+                  '0': quantity === 'max' ? tr('All') : quantity,
+                  '1': tr(unit.name),
+                })}
                 disabled={count.lt(quantity === 'max' ? 1 : quantity)}
-                title="Return these people to Idle Population"
+                title={tr('Return these people to Idle Population')}
                 onClick={() =>
                   act('release', quantity === 'max' ? 'max' : Number(quantity))
                 }
               >
-                {quantity === 'max' ? 'All' : `−${quantity}`}
+                {quantity === 'max' ? tr('All') : tr('−{0}', { '0': quantity })}
               </button>
             ))}
           </div>
         </>
       )}
-      {reason && <p className="unit-block-reason">{reason}</p>}
+      {reason && <p className="unit-block-reason">{tr(reason ?? '')}</p>}
     </article>
   );
 }
 export function WorkforceSheet() {
+  const { t: tr, formatNumber } = useI18n();
+
   const { state } = useGame(),
     { workforceFocus } = useWorkbookNavigation();
   const columns = useRef<Record<string, HTMLElement | null>>({});
@@ -356,37 +402,38 @@ export function WorkforceSheet() {
     <>
       <div className="sheet-heading">
         <div>
-          <div className="eyebrow">PEOPLE · PRODUCTION · PROGRESS</div>
-          <h1>A workforce that grows together.</h1>
+          <div className="eyebrow">{tr('PEOPLE · PRODUCTION · PROGRESS')}</div>
+          <h1>{tr('A workforce that grows together.')}</h1>
           <p>
-            Recruit your first units. Build the next tier from the people
-            already working.
+            {tr(
+              'Recruit your first units. Build the next tier from the people already working.',
+            )}
           </p>
         </div>
         <GrowButton />
       </div>
       <div className="population-accounting">
         <div>
-          <span>Total Population</span>
+          <span>{tr('Total Population')}</span>
           <strong>{formatNumber(state.population, 0)}</strong>
         </div>
         <span className="accounting-symbol">=</span>
         <div>
-          <span>In production units</span>
+          <span>{tr('In production units')}</span>
           <strong>{formatNumber(productionPopulation(state), 0)}</strong>
         </div>
         {state.unlockedFeatures.includes('military') && (
           <>
             <span className="accounting-symbol">+</span>
             <div>
-              <span>Military</span>
+              <span>{tr('Military')}</span>
               <strong>{formatNumber(militaryPopulation(state), 0)}</strong>
             </div>
           </>
         )}
         <span className="accounting-symbol">+</span>
         <div className="idle-account">
-          <span>Idle Population</span>
+          <span>{tr('Idle Population')}</span>
           <strong>{formatNumber(idlePopulation(state), 0)}</strong>
         </div>
       </div>
@@ -398,7 +445,8 @@ export function WorkforceSheet() {
             data-category={resource.id}
             tabIndex={-1}
             aria-label={
-              resource.productionLabel ?? `${resource.name} Production`
+              tr(resource.productionLabel ?? '') ||
+              tr('{0} Production', { '0': tr(resource.name) })
             }
             ref={(element) => {
               columns.current[resource.id] = element;
@@ -410,11 +458,15 @@ export function WorkforceSheet() {
               </span>
               <div>
                 <h2>
-                  {resource.productionLabel ?? `${resource.name} Production`}
+                  {tr(resource.productionLabel ?? '') ||
+                    tr('{0} Production', { '0': tr(resource.name) })}
                 </h2>
                 <span>
-                  {formatNumber(state.resources[resource.id])} available{' '}
-                  <b>+{formatNumber(rates[resource.id])}/s</b>
+                  {formatNumber(state.resources[resource.id])} {tr('available')}{' '}
+                  <b>
+                    +{formatNumber(rates[resource.id])}
+                    {tr('/s')}
+                  </b>
                 </span>
               </div>
             </header>
@@ -437,8 +489,9 @@ export function WorkforceSheet() {
         ))}
       </div>
       <p className="sheet-note">
-        Upgrades keep the same population. Dismantling returns the previous
-        units; upgrade resource costs are not refunded.
+        {tr(
+          'Upgrades keep the same population. Dismantling returns the previous units; upgrade resource costs are not refunded.',
+        )}
       </p>
     </>
   );

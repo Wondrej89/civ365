@@ -13,5 +13,5 @@ export default tseslint.config(
     plugins: { 'react-hooks': hooks },
     rules: { ...hooks.configs.recommended.rules },
   },
-  { files: ['**/*.js'], languageOptions: { globals: globals.node } },
+  { files: ['**/*.{js,mjs}'], languageOptions: { globals: globals.node } },
 );

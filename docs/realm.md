@@ -59,14 +59,14 @@ Ztráty odečtou vojáky i jejich footprint z Population; neovlivní kumulativn�
 
 ## Epochy a nové technologie
 
-| Další éra    | Technologie                                                                | Další požadavky                                                                                  |
-| ------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Agricultural | Agriculture                                                                | Population 20                                                                                    |
-| Bronze       | Mining, Writing, Organized Warfare                                         | Population 50, Territories 2, alespoň 2 Settlement nebo vyšší                                    |
-| Classical    | Mathematics, Construction, Formal Education                                | Population 150, Territories 4, Capacity 200                                                      |
-| Medieval     | Engineering, Institutional Learning, Classical Army                        | Population 400, Territories 7, alespoň 2 City nebo vyšší, Military Power 700                     |
-| Renaissance  | Universities, Civil Administration, Professional Army, Long Distance Trade | Population 1000, Territories 10, alespoň 5 City nebo vyšší, Capacity 1500, Military Power 6000   |
-| Industrial   | Steam Power, Mechanization, Early Industry                                 | Population 2000, Territories 16, alespoň 10 City nebo vyšší, Capacity 2500, Military Power 40000 |
+| Další éra    | Technologie                                | Další požadavky                                                                                  |
+| ------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Agricultural | Agriculture                                | Population 20                                                                                    |
+| Bronze       | 57 min                                     |
+| Classical    | 2 h 2 min 30 s                             |
+| Medieval     | 4 h 34 min                                 |
+| Renaissance  | 8 h 21 min                                 |
+| Industrial   | Steam Power, Mechanization, Early Industry | Population 2000, Territories 16, alespoň 10 City nebo vyšší, Capacity 2500, Military Power 40000 |
 
 Overview ukazuje pouze další epochu s každým požadavkem, aktuální hodnotou a stavem Met / Needed. Nové podmínky jsou součástí obecného `Condition` evaluatoru. Éry se dále přecházejí ručně, bez resetu, s jedním Civilization point při prvním vstupu.
 
@@ -89,15 +89,15 @@ Cena růstu používá 1.12 do populace 20, 1.012 od 20 do 400 a 1.004 nad 400. 
 
 Automatický hráč z nového save s deseti počátečními kliknutími a bez grantů dosáhl:
 
-| Milník       |  Simulovaný čas |
-| ------------ | --------------: |
-| Agricultural |           5 min |
-| Bronze       |       1 h 9 min |
-| Classical    |      2 h 19 min |
-| Medieval     | 4 h 40 min 30 s |
-| Renaissance  |      8 h 28 min |
+| Milník       | Simulovaný čas |
+| ------------ | -------------: |
+| Agricultural |          5 min |
+| Bronze       |         57 min |
+| Classical    | 2 h 2 min 30 s |
+| Medieval     |     4 h 34 min |
+| Renaissance  |     8 h 21 min |
 
-Průchod skutečným prohlížečem s běžnými UI akcemi a pouze vývojovým speed multiplierem dosáhl Agricultural za 16 min 40 s, Bronze za 1 h 23 min 20 s, Classical za 2 h 38 min 20 s a Medieval za 5 h. Nepoužíval přidávání zdrojů, populace, území ani technologií. Méně časté rozhodování v tomto UI průchodu přirozeně prodloužilo čas oproti engine průchodu.
+V předchozí territory iteraci průchod skutečným prohlížečem s běžnými UI akcemi a pouze vývojovým speed multiplierem dosáhl Agricultural za 16 min 40 s, Bronze za 1 h 23 min 20 s, Classical za 2 h 38 min 20 s a Medieval za 5 h. Nepoužíval přidávání zdrojů, populace, území ani technologií. Méně časté rozhodování v tomto UI průchodu přirozeně prodloužilo čas oproti engine průchodu.
 
 Hráč průběžně investuje, přerozděluje pracovníky, staví sídla, rekrutuje armádu a dobývá území. Žádná éra nemá podmínku uplynulého času. Při ladění jsou nejúčinnější `technologyCosts`, `eraRequirements`, `populationGrowth`, `settlements.costGrowth`, `military.recruitCostGrowth` a `conquest` v `content/config.ts`; ceny, kapacity, produkce a jednotkové power zůstávají v content registries.
 
@@ -105,7 +105,7 @@ Hráč průběžně investuje, přerozděluje pracovníky, staví sídla, rekrut
 
 Statistics přidává Population Capacity, Owned Territories a Military Power over time po odemčení příslušných features. Census distribuce obsahuje Military podle skutečných footprintů. Sampling zůstává každých 30 simulovaných sekund, nejvýše 2000 bodů na sérii, včetně offline průběhu.
 
-Save v4 migruje všechny předchozí verze. Verze 3 dostane jeden Homeland, jeden Camp, prázdnou armádu a žádnou kampaň; stávající lidé, pracovníci, zdroje, technologie, skilly, achievementy a historie se zachovají. Population nad novou kapacitou zůstává, pouze další růst čeká na zvýšení kapacity. Capacity se odvozuje ze sídel a efektů, neukládá se jako druhá nezávislá pravda. Uložený `populationCapacityBonus` je vyhrazen pro explicitní vývojový grant. Import kontroluje počty, sloty, armádní footprinty a konzistenci rozpracované kampaně. Časy logu jsou celé milisekundy, i když kampaň končí mezi dvěma běžnými tick hranicemi.
+Aktuální save je v5; níže popsaný územní převod vznikl ve v4. Migrace dále zachovává všechny předchozí verze, doplňuje jazyk a opravuje nové tech edges podle [localization.md](localization.md). Verze 3 dostane jeden Homeland, jeden Camp, prázdnou armádu a žádnou kampaň; stávající lidé, pracovníci, zdroje, technologie, skilly, achievementy a historie se zachovají. Population nad novou kapacitou zůstává, pouze další růst čeká na zvýšení kapacity. Capacity se odvozuje ze sídel a efektů, neukládá se jako druhá nezávislá pravda. Uložený `populationCapacityBonus` je vyhrazen pro explicitní vývojový grant. Import kontroluje počty, sloty, armádní footprinty a konzistenci rozpracované kampaně. Časy logu jsou celé milisekundy, i když kampaň končí mezi dvěma běžnými tick hranicemi.
 
 Nový typ území přidejte do `content/territories.ts` s `settlementSlots`, případnými `effects` a strategickými resource metadata. Nové sídlo přidejte do `content/settlements.ts`, vojenskou jednotku do `content/military.ts`. Systémy a UI načítají registry; konkrétní tech ID patří do obsahových podmínek, nikoli obecných výpočtů. Grafy dál přidává `content/statistics.ts`; jejich nové `sampleValue` callbacks se vyhodnocují až při samplování, což zachovává bezpečné načítání navzájem odkazovaných engine modulů.
 
@@ -113,4 +113,4 @@ Development panel nabízí + Territory, + Settlement, +100 Capacity, + Military 
 
 ## Ověření iterace
 
-TypeScript, lint, všech 122 unit/integration testů a production build prošly. Chromium ověřil nový run až do Medieval bez grantů, desktop a mobilní sheets, nové grafy, v3 import s populací nad capem, závazek armády, rozpracovanou kampaň přes reload a její offline dokončení bez dvojí odměny. Production build byl ověřen také ze statického hostingu pod `/civ365/` bez asset 404 a chyb JavaScriptu; deploy dál obstarává stávající GitHub Pages workflow po merge do main.
+Aktuální research/localization iterace prošla všemi 131 unit/integration testy, TypeScript, lintem včetně katalogů a production buildem. Předchozí territory iterace navíc ověřila níže popsaný nový UI run. Chromium ověřil nový run až do Medieval bez grantů, desktop a mobilní sheets, nové grafy, v3 import s populací nad capem, závazek armády, rozpracovanou kampaň přes reload a její offline dokončení bez dvojí odměny. Production build byl ověřen také ze statického hostingu pod `/civ365/` bez asset 404 a chyb JavaScriptu; deploy dál obstarává stávající GitHub Pages workflow po merge do main.
