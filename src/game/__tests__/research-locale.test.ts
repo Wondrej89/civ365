@@ -25,6 +25,7 @@ import {
 } from '../../i18n/core';
 import { formatNumber } from '../utils/numbers';
 import cs from '../../i18n/locales/cs.json';
+import { growthInterval, populationGrowthAmount } from '../engine/population';
 function researched(era = 'classical') {
   const s = createInitialState(1000),
     index = eras.findIndex((e) => e.id === era);
@@ -41,6 +42,48 @@ function researched(era = 'classical') {
   return s;
 }
 describe('research dependencies and navigation', () => {
+  it('gives consecutive cards in each era branch distinct benefits, rather than repeating the same multiplier', () => {
+    const groups = new Map<string, typeof technologies>();
+    for (const tech of technologies) {
+      const key = `${tech.era}:${tech.treePosition!.x}`;
+      groups.set(key, [...(groups.get(key) ?? []), tech]);
+    }
+    const benefits = (tech: (typeof technologies)[number]) =>
+      tech.effects
+        .map((effect) => JSON.stringify({ ...effect, value: undefined }))
+        .sort();
+    for (const group of groups.values()) {
+      group.sort((a, b) => a.treePosition!.y - b.treePosition!.y);
+      for (let i = 1; i < group.length; i++) {
+        // Empty effect lists can unlock content through generic conditions.
+        if (!group[i].effects.length || !group[i - 1].effects.length) continue;
+        expect(
+          benefits(group[i]),
+          `${group[i - 1].id} → ${group[i].id}`,
+        ).not.toEqual(benefits(group[i - 1]));
+      }
+    }
+  });
+  it('separates Classical growth amount from growth interval while retaining the completed-era throughput', () => {
+    const state = researched();
+    state.researchedTechnologies = state.researchedTechnologies.filter(
+      (id) => !['urbanCommunities', 'publicHealth', 'aqueducts'].includes(id),
+    );
+    expect(populationGrowthAmount(state).eq(1)).toBe(true);
+    expect(growthInterval(state)).toBeCloseTo(7);
+    const communities = applyAction(state, {
+      type: 'research',
+      id: 'urbanCommunities',
+    });
+    expect(populationGrowthAmount(communities).eq(4)).toBe(true);
+    expect(growthInterval(communities)).toBeCloseTo(7);
+    const baths = applyAction(communities, {
+      type: 'research',
+      id: 'publicHealth',
+    });
+    expect(populationGrowthAmount(baths).eq(4)).toBe(true);
+    expect(growthInterval(baths)).toBeCloseTo(2);
+  });
   it('has valid, acyclic prerequisites, unique positions and no dependencies from future eras', () => {
     const visited = new Set<string>(),
       active = new Set<string>(),
@@ -237,6 +280,37 @@ describe('research dependencies and navigation', () => {
   });
 });
 describe('saved locale and legacy discoveries', () => {
+  it('loads genuine v8 growth acknowledgement IDs after effect and name changes without losing progress', () => {
+    const state = researched('medieval');
+    state.autoPopulationGrowth.accumulator = 1.75;
+    const raw = JSON.parse(serializeSave(state));
+    const retired = [
+      'population:growth:urbanCommunities:populationGrowthIntervalMultiplier',
+      'population:growth:publicHealth:populationGrowthAmountMultiplier',
+    ];
+    raw.discoveryProgress = {
+      openedSheets: ['population', 'research'],
+      noticedItems: retired,
+      acknowledgedItems: retired,
+    };
+    const loaded = deserializeSave(raw);
+    expect(loaded.researchedTechnologies).toEqual(state.researchedTechnologies);
+    expect(loaded.resources).toEqual(state.resources);
+    expect(loaded.population).toEqual(state.population);
+    expect(loaded.autoPopulationGrowth).toEqual(state.autoPopulationGrowth);
+    expect(loaded.discoveryProgress.acknowledgedItems).toEqual(retired);
+    expect(importSave(exportSave(loaded)).discoveryProgress).toEqual(
+      loaded.discoveryProgress,
+    );
+    // The old 4-second Urban Communities phase is also valid under the new 7-second interval.
+    raw.researchedTechnologies = raw.researchedTechnologies.filter(
+      (id: string) =>
+        !['publicHealth', 'aqueducts'].includes(id) &&
+        technologies.find((t) => t.id === id)!.era !== 'medieval',
+    );
+    raw.autoPopulationGrowth.accumulator = 3.5;
+    expect(deserializeSave(raw).autoPopulationGrowth.accumulator).toBe(3.5);
+  });
   it('migrates v6 Aqueducts with the full new path while preserving resources, people, army, campaign and language', () => {
     const s = researched();
     s.settings.language = 'cs';

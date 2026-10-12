@@ -114,13 +114,13 @@ describe('shared automatic population growth', () => {
     ).toBe(true);
     expect(populationCost(twice).gt(populationCost(once))).toBe(true);
   });
-  it('gets 10 → 7 → 4 → 2 second intervals from effects, with no ID switch', () => {
+  it('gets 10 → 7 → 2 second intervals from effects while batch research leaves timing unchanged', () => {
     const state = automatic();
     expect(growthInterval(state)).toBeCloseTo(10);
     state.researchedTechnologies.push('organizedSettlements');
     expect(growthInterval(state)).toBeCloseTo(7);
     state.researchedTechnologies.push('urbanCommunities');
-    expect(growthInterval(state)).toBeCloseTo(4);
+    expect(growthInterval(state)).toBeCloseTo(7);
     state.researchedTechnologies.push('publicHealth');
     expect(growthInterval(state)).toBeCloseTo(2);
   });

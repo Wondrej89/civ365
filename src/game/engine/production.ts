@@ -17,12 +17,25 @@ export function unitProduction(
   count: Amount = ownedUnits(state, unit.id),
 ) {
   const effects = activeEffects(state);
+  // Upgrades keep the know-how of every input tier. A bonus to Farmers also
+  // benefits Farms and Industrial Farms, without applying it more than once.
+  const lineage = new Set<string>();
+  let current: ProductionUnitDefinition | undefined = unit;
+  while (current) {
+    if (lineage.has(current.id))
+      throw new Error('Cyclic production unit chain.');
+    lineage.add(current.id);
+    const parent: string | undefined = current.upgradeFrom?.unitId;
+    current = parent ? unitById(parent) : undefined;
+    if (parent && !current)
+      throw new Error(`Unknown production unit: ${parent}`);
+  }
   const result: Record<string, ReturnType<typeof D>> = {};
   for (const p of unit.baseProduction) {
     const modifier = effects.reduce(
       (n, e) =>
-        ((e.type === 'unitProductionMultiplier' && e.unit === unit.id) ||
-          (e.type === 'jobProductionMultiplier' && e.job === unit.id)) &&
+        ((e.type === 'unitProductionMultiplier' && lineage.has(e.unit)) ||
+          (e.type === 'jobProductionMultiplier' && lineage.has(e.job))) &&
         (!e.resource || e.resource === p.resource)
           ? n.mul(e.value)
           : n,
