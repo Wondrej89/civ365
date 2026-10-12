@@ -1,3 +1,5 @@
+import { allocationDiscoveryId } from '../game/systems/discoveries';
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import { memo, useEffect, useRef, useState } from 'react';
 import { useGame } from '../hooks/useGame';
@@ -50,7 +52,12 @@ const HistoryChart = memo(function HistoryChart({
     )
     .join(' ');
   return (
-    <section className="panel statistic-chart" aria-label={tr(series.name)}>
+    <Discovery
+      as="section"
+      discoveryId={`statistics:series:${series.id}`}
+      className="panel statistic-chart"
+      aria-label={tr(series.name)}
+    >
       <div className="panel-heading">
         <h2>{tr(series.name)}</h2>
         <span className="subtle">
@@ -142,7 +149,7 @@ const HistoryChart = memo(function HistoryChart({
           'History begins when this statistic is discovered. It records simulated play, including offline progress.',
         )}
       </p>
-    </section>
+    </Discovery>
   );
 });
 export function StatisticsSheet() {
@@ -188,7 +195,9 @@ export function StatisticsSheet() {
       {statisticDistributions
         .filter((chart) => evaluateCondition(chart.unlockCondition, state))
         .map((chart) => (
-          <section
+          <Discovery
+            as="section"
+            discoveryId={allocationDiscoveryId(state, 'statistics')}
             className="panel statistic-chart"
             key={chart.id}
             aria-label={tr(chart.name)}
@@ -215,7 +224,7 @@ export function StatisticsSheet() {
                 'People represented by units, rather than the number of units.',
               )}
             </p>
-          </section>
+          </Discovery>
         ))}
     </>
   );

@@ -1,5 +1,5 @@
 import { useI18n } from '../i18n/LocaleContext';
-import { Sprout, X, ArrowRight, Clock, Wrench } from 'lucide-react';
+import { Sprout, Award, X, ArrowRight, Clock, Wrench } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
 import { resources } from '../game/content/resources';
@@ -118,7 +118,11 @@ export function Toasts() {
       {events.map((e) => (
         <div className="toast" key={e.id}>
           <span className="toast-icon">
-            <Sprout size={17} />
+            {e.kind === 'achievement' ? (
+              <Award size={17} />
+            ) : (
+              <Sprout size={17} />
+            )}
           </span>
           <span>{formatEvent(e)}</span>
         </div>

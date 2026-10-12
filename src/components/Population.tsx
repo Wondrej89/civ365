@@ -1,3 +1,5 @@
+import { allocationDiscoveryId } from '../game/systems/discoveries';
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
@@ -49,7 +51,11 @@ export function PopulationSheet() {
         ))}
       </div>
       {capacityReached(state) && (
-        <section className="panel capacity-notice">
+        <Discovery
+          as="section"
+          discoveryId={'population:capacity'}
+          className="panel capacity-notice"
+        >
           <strong>{tr('Population capacity reached.')}</strong>
           <p>{tr('Expand your settlements or acquire more territory.')}</p>
           <button
@@ -66,10 +72,14 @@ export function PopulationSheet() {
               ? tr('Open Settlements')
               : tr('Research Agriculture and Settled Life')}
           </button>
-        </section>
+        </Discovery>
       )}
       <div className="population-panels">
-        <section className="panel population-panel">
+        <Discovery
+          as="section"
+          discoveryId={'population:manual'}
+          className="panel population-panel"
+        >
           <h2>{tr('Manual growth')}</h2>
           <p>{tr('Food for a full growth step')}</p>
           <strong className="growth-cost">
@@ -81,9 +91,11 @@ export function PopulationSheet() {
               'New people join Idle Population. Recruitment stays in Workforce.',
             )}
           </p>
-        </section>
+        </Discovery>
         {automation && (
-          <section
+          <Discovery
+            as="section"
+            discoveryId={'population:automation'}
             className="panel population-panel"
             aria-label={tr('Automatic growth')}
           >
@@ -165,7 +177,10 @@ export function PopulationSheet() {
               <div className="growth-modifiers">
                 <h3>{tr('Growth modifiers')}</h3>
                 {growthModifiers(state).map((m) => (
-                  <div key={m.name + m.type}>
+                  <Discovery
+                    discoveryId={`population:growth:${m.id}:${m.type}`}
+                    key={m.id + m.type}
+                  >
                     <span>{tr(m.name)}</span>
                     <strong>
                       {m.type === 'populationGrowthIntervalMultiplier'
@@ -183,31 +198,39 @@ export function PopulationSheet() {
                               amount: formatNumber(m.value, 1),
                             })}
                     </strong>
-                  </div>
+                  </Discovery>
                 ))}
               </div>
             )}
-          </section>
+          </Discovery>
         )}
       </div>
-      <section className="panel population-panel">
+      <Discovery
+        as="section"
+        discoveryId={allocationDiscoveryId(state)}
+        className="panel population-panel"
+      >
         <h2>{tr('Population allocation')}</h2>
         <div className="allocation-list">
           {populationDistribution(state)
             .filter(
               (group) =>
                 group.id === 'idle' ||
-                group.id === 'military' ||
+                (group.id === 'military' &&
+                  isFeatureUnlocked(state, 'military')) ||
                 visibleResources(state).some((r) => r.id === group.id),
             )
             .map((group) => (
-              <div key={group.id}>
+              <Discovery
+                discoveryId={`population:allocation-group:${group.id}`}
+                key={group.id}
+              >
                 <span>
                   <i style={{ background: group.color }} />
                   {tr(group.name)}
                 </span>
                 <strong>{formatNumber(group.value, 0)}</strong>
-              </div>
+              </Discovery>
             ))}
         </div>
         <p className="sheet-note">
@@ -215,7 +238,7 @@ export function PopulationSheet() {
             'Counts include everyone represented by higher-tier production units.',
           )}
         </p>
-      </section>
+      </Discovery>
     </>
   );
 }

@@ -42,6 +42,7 @@ export function growthModifiers(state: GameState) {
           ].includes(e.type),
         )
         .map((e) => ({
+          id: t.id,
           name: t.name,
           type: e.type,
           value: 'value' in e ? D(e.value) : D(),

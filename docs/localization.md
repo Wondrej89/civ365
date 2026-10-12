@@ -50,11 +50,11 @@ Extraktor sbírá UI message IDs, content texty, chybové zprávy a event templa
 
 ## Save v5
 
-Aktuální formát je v7. Níže popsaný převod v4 → v5 dál probíhá před převodem armády, měst a kampaní ve v6 podle [growth-warfare.md](growth-warfare.md) a doplněním nových výzkumných cest ve v7 podle [research-order.md](research-order.md).
+Aktuální formát je v8; značky nového obsahu popisuje [discoveries.md](discoveries.md). Níže popsaný převod v4 → v5 dál probíhá před převodem armády, měst a kampaní ve v6 podle [growth-warfare.md](growth-warfare.md) a doplněním nových výzkumných cest ve v7 podle [research-order.md](research-order.md).
 
 Migrace v4 → v5 přidá `settings.language: 'en'`. U již zakoupených Organized Settlements doplní Organized Warfare; u Classical Army nově požadované Organized Warfare, Archery a Engineering. Zachová všechny ostatní objevy, zdroje, pracovníky, populaci, armádu, kampaně a historii. Doplní pouze nové hrany těchto dvou definic; poškozené původní prerequisites dál odmítá validace. Běžné nové nákupy už musí splnit všechny podmínky a zaplatit cenu.
 
-JSON import ověřuje podporovaný jazyk a strukturu event descriptorů. Migrace v0/v1/v2/v3 pokračují přes v4, v5 a v6 až do v7; populace nad kapacitou se stále nesnižuje.
+JSON import ověřuje podporovaný jazyk a strukturu event descriptorů. Migrace v0/v1/v2/v3 pokračují přes v4, v5, v6 a v7 až do v8; populace nad kapacitou se stále nesnižuje.
 
 ## Ověření tempa
 

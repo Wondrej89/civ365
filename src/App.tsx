@@ -1,3 +1,4 @@
+import { DiscoveryProvider, useDiscoveryStatus } from "./components/Discovery";
 import { I18nProvider, useI18n } from "./i18n/LocaleContext";
 import { useEffect, useState } from "react";
 import {
@@ -35,7 +36,9 @@ export default function App() {
   const { state } = useGame();
   return (
     <I18nProvider language={state.settings.language}>
-      <Workbook />
+      <DiscoveryProvider>
+        <Workbook />
+      </DiscoveryProvider>
     </I18nProvider>
   );
 }
@@ -49,18 +52,23 @@ function Workbook() {
   const [workforceFocus, setWorkforceFocus] = useState<WorkforceFocus | null>(
     null,
   );
+  const { newSheets } = useDiscoveryStatus();
+  function selectSheet(id: string) {
+    setSheet(id);
+    gameStore.visitSheet(id);
+  }
   function openWorkforce(resource: string) {
     if (!isFeatureUnlocked(state, "jobs")) return;
     setWorkforceFocus((current) => ({
       resource,
       request: (current?.request ?? 0) + 1,
     }));
-    setSheet("workforce");
+    selectSheet("workforce");
   }
   function openSheet(id: string) {
     const target = sheets.find((s) => s.id === id);
     if (target && isFeatureUnlocked(state, target.requiredFeature))
-      setSheet(id);
+      selectSheet(id);
   }
   useEffect(() => gameStore.start(), []);
   const visible = sheets.filter((s) =>
@@ -100,7 +108,7 @@ function Workbook() {
           <span className="title-tag">{tr("A living workbook")}</span>
           <button
             aria-label={tr("Open settings")}
-            onClick={() => setSheet("settings")}
+            onClick={() => selectSheet("settings")}
           >
             <Settings size={17} />
           </button>
@@ -111,19 +119,19 @@ function Workbook() {
         <nav aria-label={tr("Workbook menu")}>
           <button
             className={!isUtility ? "selected" : ""}
-            onClick={() => setSheet("overview")}
+            onClick={() => selectSheet("overview")}
           >
             {tr("Home")}
           </button>
           <button
             className={selectedSheet === "settings" ? "selected" : ""}
-            onClick={() => setSheet("settings")}
+            onClick={() => selectSheet("settings")}
           >
             {tr("Settings")}
           </button>
           <button
             className={selectedSheet === "help" ? "selected" : ""}
-            onClick={() => setSheet("help")}
+            onClick={() => selectSheet("help")}
           >
             {tr("Help")}
           </button>
@@ -142,7 +150,7 @@ function Workbook() {
             </button>
             <button
               className="ribbon-large"
-              onClick={() => setSheet("settings")}
+              onClick={() => selectSheet("settings")}
             >
               <FileSpreadsheet size={24} strokeWidth={1.4} />
               <span>{tr("Workbook")}</span>
@@ -155,7 +163,7 @@ function Workbook() {
             <button
               className="ribbon-large"
               onClick={() => {
-                setSheet("overview");
+                selectSheet("overview");
                 gameStore.dispatch({ type: "gather", resource: "food" });
               }}
             >
@@ -164,7 +172,7 @@ function Workbook() {
             </button>
             <button
               className="ribbon-large"
-              onClick={() => setSheet("overview")}
+              onClick={() => selectSheet("overview")}
             >
               <PanelTop size={25} strokeWidth={1.4} />
               <span>{tr("Overview")}</span>
@@ -222,7 +230,7 @@ function Workbook() {
               {isUtility && (
                 <button
                   className="back-link"
-                  onClick={() => setSheet("overview")}
+                  onClick={() => selectSheet("overview")}
                 >
                   <ArrowLeft size={14} />
                   {tr("Back to Overview")}
@@ -248,14 +256,24 @@ function Workbook() {
             return (
               <button
                 key={s.id}
-                className={!isUtility && active.id === s.id ? "active" : ""}
+                className={`${!isUtility && active.id === s.id ? "active" : ""}${newSheets.has(s.id) ? " has-new-content" : ""}`}
+                data-sheet={s.id}
+                data-new-content={newSheets.has(s.id) ? "true" : undefined}
+                title={
+                  newSheets.has(s.id)
+                    ? tr("New discoveries in {sheet}", { sheet: tr(s.name) })
+                    : undefined
+                }
                 aria-current={
                   !isUtility && active.id === s.id ? "page" : undefined
                 }
-                onClick={() => setSheet(s.id)}
+                onClick={() => selectSheet(s.id)}
               >
                 <Icon size={14} />
                 {tr(s.name)}
+                {newSheets.has(s.id) && (
+                  <span className="new-sheet-dot" aria-hidden="true" />
+                )}
               </button>
             );
           })}

@@ -1,3 +1,5 @@
+import { eraDiscoveryId } from '../game/systems/discoveries';
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import { Check, Circle } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
@@ -102,7 +104,9 @@ export function EraProgress() {
     next = eras.find((e) => e.previous === state.currentEra);
   if (!next || !state.unlockedFeatures.includes('research')) return null;
   return (
-    <section
+    <Discovery
+      as="section"
+      discoveryId={eraDiscoveryId(next.id, canAdvance(state, next))}
       className="panel era-progress"
       aria-label={tr('Next era requirements')}
     >
@@ -144,6 +148,6 @@ export function EraProgress() {
           'Advance without resetting. First entry earns one Civilization point. Grow your settlements and army alongside your discoveries.',
         )}
       </p>
-    </section>
+    </Discovery>
   );
 }

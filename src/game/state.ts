@@ -6,6 +6,7 @@ import { militaryUnits } from './content/military';
 import { balance } from './content/config';
 import { D } from './utils/numbers';
 import type { GameState } from './types';
+import { seedDiscoveries } from './systems/discoveries';
 
 export const statisticIds = [
   'totalFoodProduced',
@@ -28,7 +29,7 @@ export const statisticIds = [
   'materialsSpentOnMilitary',
 ];
 export function createInitialState(now = Date.now()): GameState {
-  return {
+  const state: GameState = {
     saveVersion: balance.saveVersion,
     createdAt: now,
     savedAt: now,
@@ -93,7 +94,14 @@ export function createInitialState(now = Date.now()): GameState {
       },
     ],
     nextEventId: 2,
+    discoveryProgress: {
+      openedSheets: [],
+      noticedItems: [],
+      acknowledgedItems: [],
+    },
   };
+  state.discoveryProgress = seedDiscoveries(state);
+  return state;
 }
 export function cloneState(state: GameState): GameState {
   return {
@@ -124,6 +132,11 @@ export function cloneState(state: GameState): GameState {
     unlockedFeatures: [...state.unlockedFeatures],
     statistics: { ...state.statistics },
     settings: { ...state.settings },
+    discoveryProgress: {
+      openedSheets: [...state.discoveryProgress.openedSheets],
+      noticedItems: [...state.discoveryProgress.noticedItems],
+      acknowledgedItems: [...state.discoveryProgress.acknowledgedItems],
+    },
     eventLog: [...state.eventLog],
   };
 }
