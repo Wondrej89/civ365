@@ -1,3 +1,5 @@
+import { equipmentDiscoveryId } from '../game/systems/discoveries';
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
@@ -65,7 +67,11 @@ export function MilitarySheet() {
           </div>
         ))}
       </div>
-      <section className="panel army-upkeep-panel">
+      <Discovery
+        as="section"
+        discoveryId={'military:upkeep'}
+        className="panel army-upkeep-panel"
+      >
         <h2>{tr('Standing army upkeep')}</h2>
         <p>
           {tr(
@@ -101,13 +107,17 @@ export function MilitarySheet() {
             { percent: balance.military.minimumReadiness * 100 },
           )}
         </p>
-      </section>
+      </Discovery>
       {state.activeCampaign && (
-        <div className="panel campaign-notice">
+        <Discovery
+          as="div"
+          discoveryId={'military:committed'}
+          className="panel campaign-notice"
+        >
           {tr(
             'Your army is committed to a campaign. Recruitment, equipment upgrades and demobilization resume when it ends.',
           )}
-        </div>
+        </Discovery>
       )}
       <div className="realm-cards">
         {militaryUnits
@@ -131,7 +141,9 @@ export function MilitarySheet() {
                     ?.name ?? '')
                 : 'Future technology';
             return (
-              <article
+              <Discovery
+                as="article"
+                discoveryId={`military:unit:${u.id}`}
                 className="panel military-card"
                 data-military={u.id}
                 key={u.id}
@@ -166,7 +178,15 @@ export function MilitarySheet() {
                 <h3>{tr('Upkeep per soldier /s')}</h3>
                 <Costs costs={upkeepPerMilitaryUnit(state, u)} state={state} />
                 {next && (
-                  <section className="military-upgrade">
+                  <Discovery
+                    as="section"
+                    discoveryId={equipmentDiscoveryId(
+                      state,
+                      u.id,
+                      !!upgradeUnlocked,
+                    )}
+                    className="military-upgrade"
+                  >
                     <h3>
                       {tr('Next equipment: {unit}', { unit: tr(next.name) })}
                     </h3>
@@ -209,7 +229,7 @@ export function MilitarySheet() {
                         'This bill equips all current soldiers. Future recruits use the new tier. With no soldiers, pay for one training kit.',
                       )}
                     </p>
-                  </section>
+                  </Discovery>
                 )}
                 <h3>{tr('Recruitment cost for one')}</h3>
                 <Costs costs={costs} state={state} />
@@ -281,7 +301,7 @@ export function MilitarySheet() {
                     </button>
                   ))}
                 </div>
-              </article>
+              </Discovery>
             );
           })}
       </div>

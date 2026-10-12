@@ -21,7 +21,7 @@ Různé větve mohou postupovat paralelně. Každý další výzkum ve stejném 
 
 ## Save v7
 
-Všechny starší převody pokračují do v7. Nejprve se u v6 ověří původní prerequisites, bez nově přidaných hran. Původně poškozený výzkum se tím neopravuje potichu. Pak se již zakoupeným objevům doplní nově potřebná cesta, včetně předků nově doplněných uzlů. Zachová se populace, zdroje, pracovníci, sídla, vojenské vybavení, rozpracovaná kampaň, historie a jazyk. Nesouvisející výzkum se nedoplňuje.
+Aktuální v8 ukládá také značky nového obsahu podle [discoveries.md](discoveries.md). Výše popsaný v7 převod zůstává součástí všech starších migrací. Nejprve se u v6 ověří původní prerequisites, bez nově přidaných hran. Původně poškozený výzkum se tím neopravuje potichu. Pak se již zakoupeným objevům doplní nově potřebná cesta, včetně předků nově doplněných uzlů. Zachová se populace, zdroje, pracovníci, sídla, vojenské vybavení, rozpracovaná kampaň, historie a jazyk. Nesouvisející výzkum se nedoplňuje.
 
 Pokud doplněná cesta zkrátí automatický růstový interval, jeho rozpracovaný odpočet začne od nuly. Tím stará fáze delší než nový interval nezneplatní save; přepínač, Food rezerva a populace zůstávají. Nový v7 save se už ověřuje podle všech podmínek a opakovaný import neprovádí další grandfathering.
 

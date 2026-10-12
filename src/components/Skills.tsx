@@ -1,3 +1,4 @@
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import {
   ArrowRight,
@@ -54,7 +55,9 @@ export function SkillsSheet() {
             reason = skillBlockReason(state, s),
             Icon = branchIcons[i % branchIcons.length];
           return (
-            <div
+            <Discovery
+              as="div"
+              discoveryId={`skills:skill:${s.id}`}
               className={`panel skill-card ${level ? 'purchased' : ''}`}
               key={s.id}
             >
@@ -90,7 +93,7 @@ export function SkillsSheet() {
               {reason && level < s.maxLevel && (
                 <small className="block-reason">{tr(reason ?? '')}</small>
               )}
-            </div>
+            </Discovery>
           );
         })}
       </div>

@@ -75,4 +75,4 @@ Chromium prošel také nový save přes běžná UI tlačítka, s deseti počát
 
 Samostatný browser test importoval skutečný v4 Medieval save se 700 lidmi a 88 Heavy Infantry bez ztráty populace. Ověřil dávkový růst, placené upgrady zachovávající počty, průběžnou údržbu, skryté a špionáží odhalené obránce a vybranou kampaň přes reload a offline dokončení s jednou odměnou a skutečnými casualties. Produkční build ze statického hostingu pod `/civ365/` ověřil i násobně dražší City, bonus růstu dalšího města, ukládání CS preference a mobilní sheets při šířce 390 px, bez asset 404, chyb JavaScriptu a vývojového panelu.
 
-Aktuální formát je v7; výše popsaný v6 převod zůstává součástí migrace. Opravené research návaznosti a aktuální průchod popisuje [research-order.md](research-order.md).
+Aktuální formát je v8; značky nového obsahu popisuje [discoveries.md](discoveries.md); výše popsaný v6 převod zůstává součástí migrace. Opravené research návaznosti a aktuální průchod popisuje [research-order.md](research-order.md).

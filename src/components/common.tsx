@@ -1,3 +1,5 @@
+import { resourceDiscoveryId } from '../game/systems/discoveries';
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import {
   Leaf,
@@ -51,7 +53,11 @@ export function ResourceLedger({ state }: { state: GameState }) {
         </thead>
         <tbody>
           {visibleResources(state).map((r) => (
-            <tr key={r.id}>
+            <Discovery
+              as="tr"
+              discoveryId={`overview:ledger:${r.id}`}
+              key={r.id}
+            >
               <td>
                 <span className="resource-name">
                   <span className="resource-icon" style={{ color: r.color }}>
@@ -70,7 +76,7 @@ export function ResourceLedger({ state }: { state: GameState }) {
                 {formatNumber(rates[r.id])}
                 <span className="unit"> {tr('/s')}</span>
               </td>
-            </tr>
+            </Discovery>
           ))}
         </tbody>
       </table>
@@ -87,7 +93,7 @@ export function PopulationKpi({ state }: { state: GameState }) {
   const { t: tr, formatNumber } = useI18n();
 
   return (
-    <div className="kpi">
+    <Discovery as="div" discoveryId={'overview:population'} className="kpi">
       <div className="kpi-label">
         <Users size={16} /> {tr('Population')}
       </div>
@@ -102,7 +108,7 @@ export function PopulationKpi({ state }: { state: GameState }) {
         </span>
       </div>
       <p>{tr('People / Population Capacity')}</p>
-    </div>
+    </Discovery>
   );
 }
 export function ResourceKpi({
@@ -118,7 +124,11 @@ export function ResourceKpi({
 
   const r = resources.find((r) => r.id === id)!;
   return (
-    <div className="kpi">
+    <Discovery
+      as="div"
+      discoveryId={resourceDiscoveryId(state, id)}
+      className="kpi"
+    >
       <div className="kpi-label">
         <ResourceIcon id={id} size={16} />
         {tr(r.name)}
@@ -143,7 +153,7 @@ export function ResourceKpi({
           <ArrowUpRight size={13} />
         </button>
       )}
-    </div>
+    </Discovery>
   );
 }
 export function Costs({

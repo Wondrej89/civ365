@@ -1,3 +1,5 @@
+import { unitDiscoveryId } from '../game/systems/discoveries';
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import { useEffect, useRef } from 'react';
 import {
@@ -140,7 +142,9 @@ function UnitCard({
   }
   if (status === 'revealed')
     return (
-      <article
+      <Discovery
+        as="article"
+        discoveryId={unitDiscoveryId(unit.id, status)}
         className="unit-card locked-unit"
         aria-label={tr('Locked tier {0}', { '0': unit.tier })}
       >
@@ -155,10 +159,12 @@ function UnitCard({
         <span className="locked-tier-note">
           {tr('A new way to put your people to work.')}
         </span>
-      </article>
+      </Discovery>
     );
   return (
-    <article
+    <Discovery
+      as="article"
+      discoveryId={unitDiscoveryId(unit.id, status)}
       className={`unit-card ${count.gt(0) ? 'unit-owned' : ''}`}
       data-unit={unit.id}
       aria-label={tr(unit.name)}
@@ -386,7 +392,7 @@ function UnitCard({
         </>
       )}
       {reason && <p className="unit-block-reason">{tr(reason ?? '')}</p>}
-    </article>
+    </Discovery>
   );
 }
 export function WorkforceSheet() {

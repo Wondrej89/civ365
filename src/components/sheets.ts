@@ -21,75 +21,20 @@ import { SettlementsSheet } from './Settlements';
 import { MilitarySheet } from './Military';
 import { TerritorySheet } from './Territory';
 
-export const sheets = [
-  {
-    id: 'overview',
-    name: 'Overview',
-    requiredFeature: 'manualGathering',
-    icon: LayoutDashboard,
-    component: Overview,
-  },
-  {
-    id: 'workforce',
-    name: 'Workforce',
-    requiredFeature: 'jobs',
-    icon: Factory,
-    component: WorkforceSheet,
-  },
-  {
-    id: 'population',
-    name: 'Population',
-    requiredFeature: 'population',
-    icon: Users,
-    component: PopulationSheet,
-  },
-  {
-    id: 'statistics',
-    name: 'Statistics',
-    requiredFeature: 'statistics',
-    icon: ChartNoAxesCombined,
-    component: StatisticsSheet,
-  },
-  {
-    id: 'settlements',
-    name: 'Settlements',
-    requiredFeature: 'settlements',
-    icon: Building2,
-    component: SettlementsSheet,
-  },
-  {
-    id: 'military',
-    name: 'Military',
-    requiredFeature: 'military',
-    icon: Swords,
-    component: MilitarySheet,
-  },
-  {
-    id: 'territory',
-    name: 'Territory',
-    requiredFeature: 'territory',
-    icon: Map,
-    component: TerritorySheet,
-  },
-  {
-    id: 'research',
-    name: 'Research',
-    requiredFeature: 'research',
-    icon: FlaskConical,
-    component: ResearchSheet,
-  },
-  {
-    id: 'skills',
-    name: 'Skills',
-    requiredFeature: 'skillTree',
-    icon: GitBranch,
-    component: SkillsSheet,
-  },
-  {
-    id: 'achievements',
-    name: 'Achievements',
-    requiredFeature: 'achievements',
-    icon: Award,
-    component: AchievementsSheet,
-  },
-];
+import { sheetDefinitions } from '../game/content/sheets';
+const views = {
+  overview: { icon: LayoutDashboard, component: Overview },
+  workforce: { icon: Factory, component: WorkforceSheet },
+  population: { icon: Users, component: PopulationSheet },
+  statistics: { icon: ChartNoAxesCombined, component: StatisticsSheet },
+  settlements: { icon: Building2, component: SettlementsSheet },
+  military: { icon: Swords, component: MilitarySheet },
+  territory: { icon: Map, component: TerritorySheet },
+  research: { icon: FlaskConical, component: ResearchSheet },
+  skills: { icon: GitBranch, component: SkillsSheet },
+  achievements: { icon: Award, component: AchievementsSheet },
+};
+export const sheets = sheetDefinitions.map((sheet) => ({
+  ...sheet,
+  ...views[sheet.id],
+}));

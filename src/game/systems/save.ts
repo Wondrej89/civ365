@@ -13,6 +13,8 @@ import {
   settlementSlots,
 } from '../engine/settlements';
 import { technologies, prerequisitesAddedInV7 } from '../content/technologies';
+import { seedDiscoveries, discoveryIds } from './discoveries';
+import { sheetDefinitions } from '../content/sheets';
 import { skills } from '../content/skills';
 import { achievements } from '../content/achievements';
 import { eras } from '../content/eras';
@@ -361,6 +363,10 @@ export function migrateSave(value: unknown): Obj {
       };
     save.researchedTechnologies = [...discoveries];
     save.saveVersion = 7;
+  }
+  if (save.saveVersion === 7) {
+    save.discoveryProgress = null;
+    save.saveVersion = 8;
   }
   if (save.saveVersion !== balance.saveVersion)
     throw new Error(
@@ -763,6 +769,26 @@ export function deserializeSave(value: unknown): GameState {
   )
     throw new Error('Save contains an undiscovered settlement.');
   state.statistics.assignedWorkers = representedPopulation(state);
+  if (raw.discoveryProgress === null && object(value).saveVersion !== 8)
+    state.discoveryProgress = seedDiscoveries(state);
+  else {
+    const progress = object(raw.discoveryProgress);
+    const allowed = [...discoveryIds()];
+    state.discoveryProgress = {
+      openedSheets: ids(
+        progress.openedSheets,
+        sheetDefinitions.map((s) => s.id),
+      ),
+      noticedItems: ids(progress.noticedItems, allowed),
+      acknowledgedItems: ids(progress.acknowledgedItems, allowed),
+    };
+    if (
+      state.discoveryProgress.acknowledgedItems.some(
+        (id) => !state.discoveryProgress.noticedItems.includes(id),
+      )
+    )
+      throw new Error('Invalid discovery acknowledgements.');
+  }
   return state;
 }
 export function serializeSave(state: GameState, now = Date.now()): string {

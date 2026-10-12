@@ -1,3 +1,4 @@
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import { Award, Check, Circle } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
@@ -40,7 +41,12 @@ export function AchievementsSheet() {
             {visible.map((a) => {
               const owned = state.achievements.includes(a.id);
               return (
-                <tr className={owned ? 'achievement-owned' : ''} key={a.id}>
+                <Discovery
+                  as="tr"
+                  discoveryId={`achievements:achievement:${a.id}:${owned ? 'earned' : 'progress'}`}
+                  className={owned ? 'achievement-owned' : ''}
+                  key={a.id}
+                >
                   <td>
                     <span className="resource-name">
                       <span className="award-icon">
@@ -61,7 +67,7 @@ export function AchievementsSheet() {
                       {owned ? tr('Earned') : tr('In progress')}
                     </span>
                   </td>
-                </tr>
+                </Discovery>
               );
             })}
           </tbody>

@@ -1,3 +1,5 @@
+import { researchDiscoveryId } from "../game/systems/discoveries";
+import { Discovery } from "./Discovery";
 import { useI18n } from "../i18n/LocaleContext";
 import { useRef, useState } from "react";
 import { Check, FlaskConical, LockKeyhole, ScanSearch } from "lucide-react";
@@ -197,13 +199,15 @@ export function ResearchSheet() {
                       technologies: prerequisites || tr("a new discovery"),
                     });
               return (
-                <article
+                <Discovery
+                  as="article"
+                  discoveryId={researchDiscoveryId(t.id, status)}
                   key={t.id}
                   data-tech={t.id}
                   data-status={status}
                   className={`technology-node ${status}${focused === t.id ? " focused-technology" : ""}`}
                   tabIndex={-1}
-                  ref={(element) => {
+                  elementRef={(element) => {
                     nodes.current[t.id] = element;
                   }}
                   style={{
@@ -260,7 +264,7 @@ export function ResearchSheet() {
                           "0": unknown ? "???" : tr(t.name),
                         })}
                   </button>
-                </article>
+                </Discovery>
               );
             })}
           </div>

@@ -1,3 +1,4 @@
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
@@ -77,7 +78,9 @@ export function SettlementsSheet() {
               (other) => other.id === s.upgradeFrom,
             );
             return (
-              <article
+              <Discovery
+                as="article"
+                discoveryId={`settlements:tier:${s.id}`}
                 className="panel settlement-card"
                 data-settlement={s.id}
                 key={s.id}
@@ -189,7 +192,7 @@ export function SettlementsSheet() {
                     </div>
                   </>
                 )}
-              </article>
+              </Discovery>
             );
           })}
       </div>

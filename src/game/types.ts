@@ -254,6 +254,11 @@ export interface GameState {
   settings: Settings;
   eventLog: GameEvent[];
   nextEventId: number;
+  discoveryProgress: {
+    openedSheets: string[];
+    noticedItems: string[];
+    acknowledgedItems: string[];
+  };
 }
 export type GameAction =
   | { type: 'gather'; resource: string }

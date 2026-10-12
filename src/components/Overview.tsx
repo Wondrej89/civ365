@@ -1,3 +1,4 @@
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import {
   ArrowRight,
@@ -84,7 +85,11 @@ export function Overview() {
         </div>
       </div>
       {isFeatureUnlocked(state, 'population') && (
-        <div className="overview-shortcuts">
+        <Discovery
+          as="div"
+          discoveryId={`overview:growth:${isFeatureUnlocked(state, 'autoPopulationGrowth') ? 'auto' : 'manual'}`}
+          className="overview-shortcuts"
+        >
           <span>
             {tr('Growth:')}{' '}
             <strong>
@@ -116,7 +121,7 @@ export function Overview() {
               {tr('Open Statistics')}
             </button>
           )}
-        </div>
+        </Discovery>
       )}
       <div className="kpi-grid">
         <PopulationKpi state={state} />
@@ -134,7 +139,9 @@ export function Overview() {
       <div className="realm-overview">
         {isFeatureUnlocked(state, 'settlements') && (
           <>
-            <button
+            <Discovery
+              as="button"
+              discoveryId={'overview:settlements'}
               className="panel realm-overview-card"
               onClick={() => openSheet('settlements')}
             >
@@ -146,8 +153,10 @@ export function Overview() {
               <small>
                 {tr('Capacity')} {formatNumber(populationCapacity(state), 0)}
               </small>
-            </button>
-            <button
+            </Discovery>
+            <Discovery
+              as="button"
+              discoveryId={'overview:territory'}
               className="panel realm-overview-card"
               onClick={() =>
                 openSheet(
@@ -160,11 +169,13 @@ export function Overview() {
               <span>{tr('Territory')}</span>
               <strong>{formatNumber(ownedTerritories(state), 0)}</strong>
               <small>{tr('Room for new settlements')}</small>
-            </button>
+            </Discovery>
           </>
         )}
         {isFeatureUnlocked(state, 'military') && (
-          <button
+          <Discovery
+            as="button"
+            discoveryId={'overview:military'}
             className="panel realm-overview-card"
             onClick={() => openSheet('military')}
           >
@@ -175,7 +186,7 @@ export function Overview() {
                 ? tr('Campaign in progress')
                 : tr('Prepare your next campaign')}
             </small>
-          </button>
+          </Discovery>
         )}
       </div>
       <EraProgress />
@@ -191,7 +202,9 @@ export function Overview() {
               {Object.entries(balance.manualGathering)
                 .filter(([, g]) => isFeatureUnlocked(state, g.feature))
                 .map(([id, g]) => (
-                  <button
+                  <Discovery
+                    as="button"
+                    discoveryId={`overview:gather:${id}`}
                     key={id}
                     className={`gather-button ${id === 'food' ? 'food-gather' : ''}`}
                     onClick={() =>
@@ -213,23 +226,30 @@ export function Overview() {
                       </small>
                     </span>
                     <Plus size={17} />
-                  </button>
+                  </Discovery>
                 ))}
             </div>
             {isFeatureUnlocked(state, 'population') && (
-              <div className="growth-row">
+              <Discovery
+                discoveryId="overview:manual-growth"
+                className="growth-row"
+              >
                 <div>
                   <strong>{tr('There’s room for more.')}</strong>
                   <span>{tr('Food brings new people to your tribe.')}</span>
                 </div>
                 <GrowButton />
-              </div>
+              </Discovery>
             )}
           </div>
           <ResourceLedger state={state} />
         </div>
         <aside className="side-column">
-          <div className="panel next-step">
+          <Discovery
+            as="div"
+            discoveryId={`overview:guidance:${goal?.id ?? 'complete'}`}
+            className="panel next-step"
+          >
             <div className="panel-heading">
               <h2>
                 <TrendingUp size={16} />
@@ -270,7 +290,7 @@ export function Overview() {
               <ArrowRight size={13} />
               {tr('One small step at a time.')}
             </div>
-          </div>
+          </Discovery>
           <div className="panel activity">
             <div className="panel-heading">
               <h2>

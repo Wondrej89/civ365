@@ -1,3 +1,5 @@
+import { territoryBonusDiscoveryId } from '../game/systems/discoveries';
+import { Discovery } from './Discovery';
 import { useI18n } from '../i18n/LocaleContext';
 import { useGame } from '../hooks/useGame';
 import { gameStore } from '../game/store';
@@ -63,7 +65,11 @@ export function TerritorySheet() {
           {resources
             .filter((r) => r.id in state.territoryProductionBonuses)
             .map((r) => (
-              <span key={r.id}>
+              <Discovery
+                as="span"
+                discoveryId={territoryBonusDiscoveryId(state, r.id)}
+                key={r.id}
+              >
                 {tr(r.name)}{' '}
                 <strong>
                   +
@@ -73,12 +79,14 @@ export function TerritorySheet() {
                   )}
                   %
                 </strong>
-              </span>
+              </Discovery>
             ))}
         </div>
       </section>
       {campaign && (
-        <section
+        <Discovery
+          as="section"
+          discoveryId={'territory:campaign'}
           className="panel frontier-panel"
           aria-label={tr('Active campaign')}
         >
@@ -110,7 +118,7 @@ export function TerritorySheet() {
               'The army stays committed and consumes supplies. A supply shortage can weaken the campaign. Progress continues while you are away.',
             )}
           </p>
-        </section>
+        </Discovery>
       )}
       <div className="sheet-heading">
         <div>
@@ -133,7 +141,9 @@ export function TerritorySheet() {
             (r) => r.id === choice.resource,
           )!.name;
           return (
-            <section
+            <Discovery
+              as="section"
+              discoveryId={`territory:frontier:${choice.id}`}
               className="panel frontier-panel"
               key={choice.id}
               data-frontier={choice.id}
@@ -193,7 +203,11 @@ export function TerritorySheet() {
                 })}
               </p>
               {choice.composition ? (
-                <div className="enemy-composition">
+                <Discovery
+                  as="div"
+                  discoveryId={`territory:composition:${choice.id}`}
+                  className="enemy-composition"
+                >
                   <h3>{tr('Enemy composition')}</h3>
                   {militaryUnits.map((u) => (
                     <div key={u.id}>
@@ -203,7 +217,7 @@ export function TerritorySheet() {
                       </strong>
                     </div>
                   ))}
-                </div>
+                </Discovery>
               ) : (
                 <p className="sheet-note">
                   {tr(
@@ -240,7 +254,7 @@ export function TerritorySheet() {
               >
                 {tr('Launch Campaign')}
               </button>
-            </section>
+            </Discovery>
           );
         })}
       </div>

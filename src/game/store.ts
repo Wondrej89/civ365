@@ -12,6 +12,7 @@ import { applyOfflineProgress, type OfflineReport } from './systems/offline';
 import { importSave, loadGame, saveGame, exportSave } from './systems/save';
 import { D } from './utils/numbers';
 import type { GameAction } from './types';
+import { acknowledgeSheet, acknowledgeDiscovery } from './systems/discoveries';
 
 const loaded = loadGame();
 const offline = applyOfflineProgress(loaded.state);
@@ -62,6 +63,20 @@ export const gameStore = {
     };
   },
   getSnapshot: () => snapshot,
+  visitSheet(id: string) {
+    const next = acknowledgeSheet(current, id);
+    if (next !== current) {
+      current = next;
+      publish();
+    }
+  },
+  acknowledgeDiscovery(id: string) {
+    const next = acknowledgeDiscovery(current, id);
+    if (next !== current) {
+      current = next;
+      publish();
+    }
+  },
   start() {
     if (timer) return () => {};
     const flush = () => {
