@@ -110,8 +110,10 @@ const entries: Entry[] = [
     research: 35,
     materials: 30,
     prerequisites: ['toolMaking'],
-    effects: [production('materials', 1.5)],
-    effectText: '+50% Materials production',
+    effects: [
+      { type: 'settlementCostMultiplier', resource: 'materials', value: 0.9 },
+    ],
+    effectText: '−10% settlement Materials cost',
   },
   {
     id: 'language',
@@ -121,8 +123,8 @@ const entries: Entry[] = [
     x: 2,
     research: 8,
     prerequisites: [],
-    effects: [production('research', 1.1)],
-    effectText: '+10% Research · Knowledge path',
+    effects: [{ type: 'populationCostMultiplier', value: 0.9 }],
+    effectText: '−10% population Food cost · Knowledge path',
   },
   {
     id: 'knowledgeSharing',
@@ -132,8 +134,8 @@ const entries: Entry[] = [
     x: 2,
     research: 22,
     prerequisites: ['language'],
-    effects: [production('research', 1.25)],
-    effectText: '+25% Research production',
+    effects: [production('research', 1.4)],
+    effectText: '+40% Research production',
   },
   {
     id: 'agriculture',
@@ -181,7 +183,7 @@ const entries: Entry[] = [
     materials: 100,
     prerequisites: ['agriculture', 'settledLife'],
     effects: [unitBonus('farmer', 1.25)],
-    effectText: '+25% Farmer production',
+    effectText: '+25% Farmer production, including all upgrades',
   },
   {
     id: 'animalHusbandry',
@@ -192,8 +194,8 @@ const entries: Entry[] = [
     research: 130,
     materials: 100,
     prerequisites: ['agriculture', 'settledLife'],
-    effects: [production('food', 1.25)],
-    effectText: '+25% Food production',
+    effects: [{ type: 'populationCostMultiplier', value: 0.8 }],
+    effectText: '−20% population Food cost',
   },
   {
     id: 'stoneworking',
@@ -231,7 +233,7 @@ const entries: Entry[] = [
     effects: ['gatherer', 'woodcutter', 'thinker'].map((id) =>
       unitBonus(id, 1.1),
     ),
-    effectText: '+10% production for all tier 1 units',
+    effectText: '+10% production for all workers, including upgrades',
   },
   {
     id: 'recordKeeping',
@@ -315,7 +317,8 @@ const entries: Entry[] = [
     materials: 350,
     prerequisites: ['irrigation', 'animalHusbandry'],
     effects: [unlock('farm')],
-    effectText: 'Unlock Farm · +10% Farmer production per Farm',
+    effectText:
+      'Unlock Farm · retain Farmer bonuses with higher output per worker',
   },
   {
     id: 'census',
@@ -359,7 +362,7 @@ const entries: Entry[] = [
   },
   {
     id: 'formalEducation',
-    name: 'Formal Education',
+    name: 'Scribal Schools',
     era: 'bronze',
     branch: 'knowledge',
     x: 2,
@@ -371,7 +374,7 @@ const entries: Entry[] = [
   },
   {
     id: 'engineering',
-    name: 'Engineering',
+    name: 'Civil Engineering',
     era: 'classical',
     branch: 'materials',
     x: 1,
@@ -410,7 +413,7 @@ const entries: Entry[] = [
   },
   {
     id: 'institutionalLearning',
-    name: 'Institutional Learning',
+    name: 'Philosophical Schools',
     era: 'classical',
     branch: 'knowledge',
     x: 2,
@@ -430,7 +433,7 @@ const entries: Entry[] = [
     materials: 600,
     prerequisites: ['bronzeWorking', 'divisionOfLabor'],
     effects: [unitBonus('workshop', 1.3)],
-    effectText: '+30% Workshop production',
+    effectText: '+30% Workshop production, including all upgrades',
   },
   {
     id: 'urbanCommunities',
@@ -441,26 +444,20 @@ const entries: Entry[] = [
     research: 750,
     materials: 650,
     prerequisites: ['urbanPlanning', 'organizedSettlements'],
-    effects: [
-      interval(4 / 7),
-      { type: 'populationGrowthAmountMultiplier', value: 2 },
-    ],
-    effectText: 'Auto Growth interval 7 → 4s · ×2 people per growth step',
+    effects: [{ type: 'populationGrowthAmountMultiplier', value: 4 }],
+    effectText: '×4 people per growth step',
   },
   {
     id: 'publicHealth',
-    name: 'Public Health',
+    name: 'Public Baths',
     era: 'classical',
     branch: 'society',
     x: 3,
     research: 1000,
     materials: 900,
     prerequisites: ['urbanCommunities', 'philosophy'],
-    effects: [
-      interval(0.5),
-      { type: 'populationGrowthAmountMultiplier', value: 2 },
-    ],
-    effectText: 'Auto Growth interval 4 → 2s · ×2 people per growth step',
+    effects: [interval(2 / 7)],
+    effectText: 'Auto Growth interval 7 → 2s',
   },
   {
     id: 'villageOrganization',
@@ -547,7 +544,7 @@ const entries: Entry[] = [
   },
   {
     id: 'fortifications',
-    name: 'Fortifications',
+    name: 'Castles',
     era: 'medieval',
     branch: 'military',
     x: 4,
@@ -595,7 +592,7 @@ const entries: Entry[] = [
   },
   {
     id: 'civilAdministration',
-    name: 'Civil Administration',
+    name: 'Municipal Charters',
     era: 'medieval',
     branch: 'society',
     x: 3,
@@ -627,7 +624,7 @@ const entries: Entry[] = [
   },
   {
     id: 'masonry',
-    name: 'Masonry',
+    name: 'Gothic Masonry',
     era: 'medieval',
     branch: 'materials',
     x: 1,
@@ -653,7 +650,7 @@ const entries: Entry[] = [
   },
   {
     id: 'sanitation',
-    name: 'Sanitation',
+    name: 'Town Waterworks',
     era: 'medieval',
     branch: 'society',
     x: 3,
@@ -689,16 +686,14 @@ const entries: Entry[] = [
     materials: 200,
     prerequisites: ['printingPress', 'philosophy'],
     effects: [
-      production('research', 1.35),
       { type: 'populationCostMultiplier', value: 0.85 },
       { type: 'populationGrowthAmountMultiplier', value: 1.5 },
     ],
-    effectText:
-      '+35% Research · −15% growth cost · ×1.5 people per growth step',
+    effectText: '−15% growth cost · ×1.5 people per growth step',
   },
   {
     id: 'navigation',
-    name: 'Navigation',
+    name: 'Oceanic Navigation',
     era: 'renaissance',
     branch: 'military',
     x: 4,
@@ -710,7 +705,7 @@ const entries: Entry[] = [
   },
   {
     id: 'gunpowder',
-    name: 'Gunpowder',
+    name: 'Matchlock Firearms',
     era: 'renaissance',
     branch: 'military',
     x: 4,
@@ -760,7 +755,7 @@ const entries: Entry[] = [
   },
   {
     id: 'earlyIndustry',
-    name: 'Early Industry',
+    name: 'Proto-Industry',
     era: 'renaissance',
     branch: 'materials',
     x: 1,
@@ -772,19 +767,21 @@ const entries: Entry[] = [
   },
   {
     id: 'steamPower',
-    name: 'Steam Power',
+    name: 'Steam Experiments',
     era: 'renaissance',
     branch: 'materials',
     x: 1,
     research: 380,
     materials: 600,
     prerequisites: ['earlyIndustry', 'scientificMethod'],
-    effects: [production('materials', 1.5)],
-    effectText: '+50% Materials \u00b7 Industrial prerequisite',
+    effects: [
+      { type: 'settlementCostMultiplier', resource: 'materials', value: 0.9 },
+    ],
+    effectText: '−10% settlement Materials cost · Industrial prerequisite',
   },
   {
     id: 'mechanization',
-    name: 'Mechanization',
+    name: 'Mechanical Engineering',
     era: 'renaissance',
     branch: 'food',
     x: 0,

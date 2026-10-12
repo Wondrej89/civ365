@@ -22,7 +22,7 @@ Settlements se objeví až po Settled Life, Military a Territory po Organized Wa
 
 Každé sídlo používá jeden slot. Build přidá nové sídlo a slot spotřebuje; upgrade nahradí jeden kus předchozího tieru a počet slotů nezmění. Camp → Settlement je také upgrade. Žádný downgrade není v této iteraci implementovaný.
 
-Kapacita je součet upravených kapacit všech sídel, zaokrouhlený dolů na celé lidi. `settlementCapacityMultiplier` může cílit na konkrétní tier nebo všechna sídla a pocházet z technologií, éry nebo dalších obecných efektů. Urban Planning přidává 25 % všem sídlům, Aqueducts 50 % Townům a City, Civil Administration 30 %, Sanitation 20 % a Advanced Urban Planning 40 %. Construction, Masonry a Banking snižují Materials cenu sídel přes `settlementCostMultiplier`.
+Kapacita je součet upravených kapacit všech sídel, zaokrouhlený dolů na celé lidi. `settlementCapacityMultiplier` může cílit na konkrétní tier nebo všechna sídla a pocházet z technologií, éry nebo dalších obecných efektů. Urban Planning přidává 25 % všem sídlům, Aqueducts 50 % Townům a City, Municipal Charters 30 %, Town Waterworks 20 % a Advanced Urban Planning 40 %. Construction, Gothic Masonry a Banking snižují Materials cenu sídel přes `settlementCostMultiplier`.
 
 Další postavené sídlo násobí ceny faktorem `balance.settlements.costGrowth` (výchozí 1.4). Každý upgrade má vlastní lifetime počítadlo investic a geometrickou cenu: Town ×1.6, City ×2, Metropolis ×2.2. Max platí přesně součet jednotlivých cen; převod City na Metropolis nesmaže dřívější City investice. UI ukazuje skutečnou cenu po efektech a škálování.
 Ruční i automatický růst zastaví stejná `growPopulation`, když je Population >= Capacity. Population zobrazuje důvod a odkaz na Settlements nebo research potřebný k jejich odemčení. Auto Growth dál pravidelně zkouší stejnou akci, takže po zvýšení kapacity automaticky pokračuje. Dřívější rezervy Food i osmihodinový offline limit zůstávají.
@@ -43,20 +43,20 @@ Infantry counteruje Cavalry, Cavalry Ranged a Ranged Infantry. Složení obránc
 
 Délka je `baseDuration × Defense / effectivePower`, výchozí 180 s, minimum 15 s, maximum 600 s. Launch uloží nasazené jednotky, počáteční efektivní Power, Defense, délku a konkrétní odměnu. Nábor, demobilizace a equipment upgrades jsou do konce blokované. Armáda dál spotřebovává zásoby; zhoršené zásobování může změnit výsledek. Jiný nově koupený bonus zpětně nemění launch snapshot.
 
-Vítězství při effective Power >= Defense ztrácí `max(2 %, 16 % / ratio²)` každého typu, zaokrouhlené dolů; porážka 35 % + 35 % × (1 − ratio), nejvýše 70 %. Fortifications ztráty násobí 0.65. Neexistuje RNG. Casualties odečtou vojáky i jejich footprint z Population, nikoli celkem vytvořené lidi.
+Vítězství při effective Power >= Defense ztrácí `max(2 %, 16 % / ratio²)` každého typu, zaokrouhlené dolů; porážka 35 % + 35 % × (1 − ratio), nejvýše 70 %. Castles ztráty násobí 0.65. Neexistuje RNG. Casualties odečtou vojáky i jejich footprint z Population, nikoli celkem vytvořené lidi.
 
 Živý i offline průběh používá `simulate` s hranicemi růstu, vyčerpání zásob, statistik a dokončení kampaně. Uloženou odměnu nelze získat dvakrát. Offline report uvádí také Food a Materials skutečně zaplacené za armádu.
 
 ## Epochy a nové technologie
 
-| Další éra    | Technologie                                                                | Další požadavky                                                                          |
-| ------------ | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Agricultural | Agriculture                                                                | Population 20                                                                            |
-| Bronze       | Mining, Writing, Organized Warfare                                         | Population 50, Territories 2, Settlements 2                                              |
-| Classical    | Mathematics, Construction, Formal Education                                | Population 150, Territories 4, Capacity 200                                              |
-| Medieval     | Engineering, Institutional Learning, Classical Army                        | Population 400, Territories 7, City nebo vyšší 2, Military Power 700                     |
-| Renaissance  | Universities, Civil Administration, Professional Army, Long Distance Trade | Population 1000, Territories 10, City nebo vyšší 5, Capacity 1500, Military Power 6000   |
-| Industrial   | Steam Power, Mechanization, Early Industry                                 | Population 2000, Territories 16, City nebo vyšší 10, Capacity 2500, Military Power 40000 |
+| Další éra    | Technologie                                                              | Další požadavky                                                                          |
+| ------------ | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Agricultural | Agriculture                                                              | Population 20                                                                            |
+| Bronze       | Mining, Writing, Organized Warfare                                       | Population 50, Territories 2, Settlements 2                                              |
+| Classical    | Mathematics, Construction, Scribal Schools                               | Population 150, Territories 4, Capacity 200                                              |
+| Medieval     | Civil Engineering, Philosophical Schools, Classical Army                 | Population 400, Territories 7, City nebo vyšší 2, Military Power 700                     |
+| Renaissance  | Universities, Municipal Charters, Professional Army, Long Distance Trade | Population 1000, Territories 10, City nebo vyšší 5, Capacity 1500, Military Power 6000   |
+| Industrial   | Steam Experiments, Mechanical Engineering, Proto-Industry                | Population 2000, Territories 16, City nebo vyšší 10, Capacity 2500, Military Power 40000 |
 
 Overview ukazuje pouze další epochu s každým požadavkem, aktuální hodnotou a stavem Met / Needed. Nové podmínky jsou součástí obecného `Condition` evaluatoru. Éry se dále přecházejí ručně, bez resetu, s jedním Civilization point při prvním vstupu.
 
@@ -65,11 +65,11 @@ Celkem je 62 technologií:
 - Agricultural: Village Organization, Organized Warfare.
 - Bronze: Archery, Horsemanship.
 - Classical: Aqueducts, Classical Army, Supply Lines.
-- Medieval: Feudal Organization, Fortifications, Heavy Plow, Guilds, Universities, Civil Administration, Professional Army, Masonry, Long Distance Trade, Sanitation, Espionage.
-- Renaissance: Printing Press, Humanism, Navigation, Gunpowder, Banking, Scientific Method, Advanced Urban Planning, Early Industry, Steam Power, Mechanization, Military Logistics.
+- Medieval: Feudal Organization, Castles, Heavy Plow, Guilds, Universities, Municipal Charters, Professional Army, Gothic Masonry, Long Distance Trade, Town Waterworks, Espionage.
+- Renaissance: Printing Press, Humanism, Oceanic Navigation, Matchlock Firearms, Banking, Scientific Method, Advanced Urban Planning, Proto-Industry, Steam Experiments, Mechanical Engineering, Military Logistics.
 - Industrial: Factories, Rifling.
 
-Steam Power a Mechanization jsou pozdní Renaissance technologie umožňující vstup do Industrial Age. Factories jsou počáteční industrial obsah s unlockem existujících tierů Industrial Farm, Factory a Laboratory. Plný Industrial/Energy obsah zde ještě není. Metropolis je dostupná po Advanced Urban Planning. Navigation zrychluje kampaně a připravuje znalost pro budoucí exploration; Banking a Long Distance Trade zatím neodemykají Wealth.
+Steam Experiments a Mechanical Engineering jsou pozdní Renaissance technologie umožňující vstup do Industrial Age. Factories jsou počáteční industrial obsah s unlockem existujících tierů Industrial Farm, Factory a Laboratory. Plný Industrial/Energy obsah zde ještě není. Metropolis je dostupná po Advanced Urban Planning. Oceanic Navigation zrychluje kampaně a připravuje znalost pro budoucí exploration; Banking a Long Distance Trade zatím neodemykají Wealth.
 
 ## Pacing a centrální nastavení
 
@@ -106,3 +106,5 @@ Development panel nabízí + Territory, + Settlement, +100 Capacity, + Military 
 Předchozí growth/army/frontiers iterace prošla všemi 152 unit/integration testy, TypeScript, lintem včetně katalogů a production buildem. Chromium ověřil nový run až do Renaissance bez grantů, desktop a mobilní sheets, import skutečného v4 Medieval save, dávkový růst, placené equipment upgrady, průběžnou údržbu, špionáž, rozpracovanou kampaň přes reload a její offline dokončení bez dvojí odměny. Production build byl ověřen také ze statického hostingu pod `/civ365/` bez asset 404 a chyb JavaScriptu, včetně násobných City cen, bonusu růstu dalšího města a ukládání jazyka; deploy dál obstarává stávající GitHub Pages workflow po merge do main. Podrobnosti jsou v [growth-warfare.md](growth-warfare.md).
 
 Předchozí research-order iterace prošla 158 testy včetně úplného engine průchodu až do Renaissance. Nové podmínky, browser ověření a v7 migrace jsou v [research-order.md](research-order.md).
+
+Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.

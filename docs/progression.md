@@ -1,38 +1,38 @@
 # Progression, automatizace a statistiky
 
-Tento dokument popisuje technologický strom, automatizaci a registry grafů. Aktuální obsah má 57 technologií; nová smyčka Territory → Settlements → Population → Army → Conquest a úplné požadavky epoch jsou v [realm.md](realm.md). Economy a Wealth zůstávají skryté.
+Tento dokument popisuje technologický strom, automatizaci a registry grafů. Aktuální obsah má 62 technologií; nová smyčka Territory → Settlements → Population → Army → Conquest a úplné požadavky epoch jsou v [realm.md](realm.md). Economy a Wealth zůstávají skryté.
 
 ## Základní technologie automatizace a produkce
 
-| Éra          | Technologie            | Výsledek                                              |
-| ------------ | ---------------------- | ----------------------------------------------------- |
-| Agricultural | Settled Life           | Odemkne Settlements a cestu k automatizaci.           |
-| Agricultural | Natural Growth         | Odemkne Automatic Population Growth.                  |
-| Agricultural | Irrigation             | +25 % produkce Farmerů.                               |
-| Agricultural | Animal Husbandry       | +25 % Food produkce.                                  |
-| Agricultural | Stoneworking           | +30 % Materials produkce.                             |
-| Agricultural | Mining                 | Odemkne Miner.                                        |
-| Agricultural | Division of Labor      | +10 % produkce Gathererů, Woodcutterů a Thinkerů.     |
-| Agricultural | Record Keeping         | Odemkne Statistics a zaznamenávání historie.          |
-| Agricultural | Writing                | +35 % Research produkce.                              |
-| Agricultural | Organized Settlements  | Zkrátí interval automatického růstu z 10 na 7 sekund. |
-| Bronze       | Metallurgy             | +35 % Materials produkce.                             |
-| Bronze       | Bronze Working         | Odemkne Workshop a Spearman.                          |
-| Bronze       | Wheel                  | +20 % Materials produkce.                             |
-| Bronze       | Advanced Agriculture   | Odemkne Farm.                                         |
-| Bronze       | Census                 | Odemkne graf rozložení populace.                      |
-| Bronze       | Mathematics            | +30 % Research produkce.                              |
-| Bronze       | Construction           | +20 % Materials; levnější růst a stavby, City.        |
-| Bronze       | Formal Education       | Odemkne Scholar.                                      |
-| Classical    | Engineering            | +40 % Materials produkce.                             |
-| Classical    | Philosophy             | +40 % Research produkce.                              |
-| Classical    | Urban Planning         | −10 % ceny růstu a +25 % settlement capacity.         |
-| Classical    | Institutional Learning | Odemkne Academy.                                      |
-| Classical    | Craftsmanship          | +30 % produkce Workshopů.                             |
-| Classical    | Urban Communities      | Interval 7 → 4 s a ×2 lidé za krok.                   |
-| Classical    | Public Health          | Interval 4 → 2 s a ×2 lidé za krok.                   |
+| Éra          | Technologie           | Výsledek                                              |
+| ------------ | --------------------- | ----------------------------------------------------- |
+| Agricultural | Settled Life          | Odemkne Settlements a cestu k automatizaci.           |
+| Agricultural | Natural Growth        | Odemkne Automatic Population Growth.                  |
+| Agricultural | Irrigation            | +25 % produkce Farmerů a všech vyšších tierů.         |
+| Agricultural | Animal Husbandry      | −20 % Food ceny populace.                             |
+| Agricultural | Stoneworking          | +30 % Materials produkce.                             |
+| Agricultural | Mining                | Odemkne Miner.                                        |
+| Agricultural | Division of Labor     | +10 % produkce všech pracovníků včetně vyšších tierů. |
+| Agricultural | Record Keeping        | Odemkne Statistics a zaznamenávání historie.          |
+| Agricultural | Writing               | +35 % Research produkce.                              |
+| Agricultural | Organized Settlements | Zkrátí interval automatického růstu z 10 na 7 sekund. |
+| Bronze       | Metallurgy            | +35 % Materials produkce.                             |
+| Bronze       | Bronze Working        | Odemkne Workshop a Spearman.                          |
+| Bronze       | Wheel                 | +20 % Materials produkce.                             |
+| Bronze       | Advanced Agriculture  | Odemkne Farm.                                         |
+| Bronze       | Census                | Odemkne graf rozložení populace.                      |
+| Bronze       | Mathematics           | +30 % Research produkce.                              |
+| Bronze       | Construction          | +20 % Materials; levnější růst a stavby, City.        |
+| Bronze       | Scribal Schools       | Odemkne Scholar.                                      |
+| Classical    | Civil Engineering     | +40 % Materials produkce.                             |
+| Classical    | Philosophy            | +40 % Research produkce.                              |
+| Classical    | Urban Planning        | −10 % ceny růstu a +25 % settlement capacity.         |
+| Classical    | Philosophical Schools | Odemkne Academy.                                      |
+| Classical    | Craftsmanship         | +30 % produkce Workshopů.                             |
+| Classical    | Urban Communities     | ×4 lidé za krok; interval zůstává 7 s.                |
+| Classical    | Public Baths          | Interval 7 → 2 s; velikost dávky se nemění.           |
 
-Původní Foraging, Tool Making, Woodworking, Language, Knowledge Sharing a Agriculture zůstávají. Nové hry získají Miner přes Mining a Scholar přes Formal Education. Migrace zachová tyto unlocky hráčům, kteří už měli staré Woodworking / Knowledge Sharing.
+Původní Foraging, Tool Making, Woodworking, Language, Knowledge Sharing a Agriculture zůstávají. Nové hry získají Miner přes Mining a Scholar přes Scribal Schools. Migrace zachová tyto unlocky hráčům, kteří už měli staré Woodworking / Knowledge Sharing.
 
 ## Éry a produkční řetězce
 
@@ -48,11 +48,11 @@ Převody 5 → 1 a poté 4 → 1 zachovávají původní footprint 1 / 5 / 20 / 
 
 Po Settled Life → Natural Growth se v Population objeví přepínač, interval, odpočet, Food Reserve a přehled technologických modifikátorů. Výchozí stav je OFF, rezerva 10 %. Přepnutí OFF/ON zahájí nový interval. Ruční Grow Population zůstává dostupný.
 
-Jediná funkce `growPopulation` ověřuje kapacitu i Food a přidá dostupnou dávku lidí do Idle Population. Urban Communities / Public Health / Sanitation násobí počet lidí za krok; Civil Administration přidává bonus za City/Metropolis. Cena je součet marginálních cen jednotlivých lidí v dávce, včetně přechodů přes cenové zlomy. Pokud Food nebo kapacita dovolují jen menší dávku, růst ji provede. Ruční i automatické události používají stejnou funkci; neúspěšný pokus čeká na další interval.
+Jediná funkce `growPopulation` ověřuje kapacitu i Food a přidá dostupnou dávku lidí do Idle Population. Urban Communities / Town Waterworks násobí počet lidí za krok; Municipal Charters přidává bonus za City/Metropolis. Cena je součet marginálních cen jednotlivých lidí v dávce, včetně přechodů přes cenové zlomy. Pokud Food nebo kapacita dovolují jen menší dávku, růst ji provede. Ruční i automatické události používají stejnou funkci; neúspěšný pokus čeká na další interval.
 
 Rezerva chrání 0 / 10 / 25 / 50 % zásoby **před konkrétním pokusem**. Při 100 Food, rezervě 25 % a ceně 80 se růst neprovede; při ceně 70 ano, zůstane 30 Food. Rezerva není pevná dlouhodobá hranice: při příštím pokusu se přepočítá z nové zásoby. Ruční tlačítko ji může utratit. Ruční i automatický růst se zastaví při dosažení kapacity; Population odkazuje na Settlements. Pokud chcete Food hromadit na upgrade, automatiku lze dočasně vypnout.
 
-Interval se násobí obecnými efekty `populationGrowthIntervalMultiplier`, nikoli přepínáním podle ID technologií. Kombinace 0.7 × (4/7) × 0.5 dává 10 → 7 → 4 → 2 sekund. Základní interval, minimální interval a volby rezervy jsou v `content/config.ts`.
+Interval se násobí obecnými efekty `populationGrowthIntervalMultiplier`, nikoli přepínáním podle ID technologií. Kombinace 0.7 × (2/7) dává 10 → 7 → 2 sekund. Urban Communities upravuje pouze počet lidí, Public Baths pouze interval. Základní interval, minimální interval a volby rezervy jsou v `content/config.ts`.
 
 Živá i offline simulace používá stejný `simulate`. Kroky končí také na hranicích růstu a statistického samplování, aby produkce, cena, rezerva i nové bonusy platily ve správném pořadí. Offline limit zůstává 8 hodin. Offline report rozlišuje skutečně vyprodukované Food a Food spotřebované růstem a uvádí počet nových lidí. Zvlášť uvádí vojenské ztráty a získaná území.
 
@@ -107,3 +107,5 @@ Samplovací interval a limit historie ladí velikost save a přesnost grafu, nik
 Aktuální návaznosti, odvozování grafu z prerequisites a bezpečný v7 převod jsou v [research-order.md](research-order.md).
 
 Zvýraznění nových objevů a aktuální v8 UI metadata: [discoveries.md](discoveries.md).
+
+Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.

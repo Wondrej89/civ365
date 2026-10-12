@@ -8,7 +8,7 @@ Počet lidí na ruční i automatický krok je:
 
 `floor(product(populationGrowthAmountMultiplier) + City/Metropolis count × sum(populationGrowthPerCity))`.
 
-Urban Communities přidá ×2, Public Health další ×2, Sanitation další ×2 a Humanism ×1.5. Civil Administration přidává +1 za každé City nebo Metropolis. Dvě Cities s kompletním Medieval výzkumem tedy dávají **10 lidí za krok**. Town a Settlement tento městský bonus neposkytují.
+Urban Communities přidá ×4, Public Baths pouze zrychlí interval, Town Waterworks další ×2 a Humanism ×1.5. Municipal Charters přidává +1 za každé City nebo Metropolis. Dvě Cities s kompletním Medieval výzkumem tedy dávají **10 lidí za krok**. Town a Settlement tento městský bonus neposkytují.
 
 Cena dávky je přesný součet cen jednotlivých lidí, včetně přechodů přes populační hranice 20 a 400. Základ 10 Food a počáteční násobič 1.12 zůstávají; další části jsou nyní 1.008 a 1.001. Tím se odstraňuje pozdní extrémní cena, nikoli potřeba Food. `populationCostMultiplier` efekty zůstávají.
 
@@ -35,7 +35,7 @@ Každý upgrade má vlastní `settlementInvestments` lifetime counter. První Ci
 | Cavalry   | Horsemen → Lancers → Knight → Dragoon → Mounted Rifles                          |
 | Ranged    | Archer → Composite Bowman → Crossbowman → Musketeer → Rifleman                  |
 
-Horsemanship odemkne Cavalry v Bronze. Classical Army zpřístupní klasické vybavení, Feudal Organization Knight/Crossbowman, Professional Army Men-at-Arms, Gunpowder renaissance vybavení a Industrial Rifling pušky. Submachine Gunner je připravený budoucí tier s `never` condition; nepřidává neexistující moderní epochu.
+Horsemanship odemkne Cavalry v Bronze. Classical Army zpřístupní klasické vybavení, Feudal Organization Knight/Crossbowman, Professional Army Men-at-Arms, Matchlock Firearms renaissance vybavení a Industrial Rifling pušky. Submachine Gunner je připravený budoucí tier s `never` condition; nepřidává neexistující moderní epochu.
 
 Každý tier definuje Power, náborové ceny a **Food / Materials za sekundu**. Upkeep se platí i během kampaně a offline. Supply Lines ×0.8, Professional Army ×0.8 a Military Logistics ×0.75 používají obecný `militaryUpkeepMultiplier`. Ledger a hlavní resource rates ukazují net produkci; Military navíc rozklad gross / upkeep / net a jednotkové náklady.
 
@@ -76,3 +76,5 @@ Chromium prošel také nový save přes běžná UI tlačítka, s deseti počát
 Samostatný browser test importoval skutečný v4 Medieval save se 700 lidmi a 88 Heavy Infantry bez ztráty populace. Ověřil dávkový růst, placené upgrady zachovávající počty, průběžnou údržbu, skryté a špionáží odhalené obránce a vybranou kampaň přes reload a offline dokončení s jednou odměnou a skutečnými casualties. Produkční build ze statického hostingu pod `/civ365/` ověřil i násobně dražší City, bonus růstu dalšího města, ukládání CS preference a mobilní sheets při šířce 390 px, bez asset 404, chyb JavaScriptu a vývojového panelu.
 
 Aktuální formát je v8; značky nového obsahu popisuje [discoveries.md](discoveries.md); výše popsaný v6 převod zůstává součástí migrace. Opravené research návaznosti a aktuální průchod popisuje [research-order.md](research-order.md).
+
+Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.

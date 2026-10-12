@@ -31,7 +31,8 @@ export const units: ProductionUnitDefinition[] = [
   {
     id: 'farm',
     name: 'Farm',
-    description: 'Organized fields help Farmers work more efficiently.',
+    description:
+      'Organized fields retain Farmer bonuses and produce more per worker.',
     category: 'food',
     tier: 3,
     upgradeFrom: { unitId: 'farmer', amount: 4 },
@@ -40,14 +41,6 @@ export const units: ProductionUnitDefinition[] = [
       { resource: 'food', amount: 250 },
     ],
     baseProduction: [{ resource: 'food', amount: 28 }],
-    effects: [
-      {
-        type: 'unitProductionMultiplier',
-        unit: 'farmer',
-        resource: 'food',
-        value: 1.1,
-      },
-    ],
     unlockCondition: {
       type: 'technologyOwned',
       technologyId: 'advancedAgriculture',
@@ -174,7 +167,8 @@ export const units: ProductionUnitDefinition[] = [
   {
     id: 'laboratory',
     name: 'Laboratory',
-    description: 'Equip Academies for specialized research.',
+    description:
+      'Specialized research retains Academy bonuses and improves output per worker.',
     category: 'research',
     tier: 4,
     upgradeFrom: { unitId: 'academy', amount: 5 },
@@ -183,14 +177,6 @@ export const units: ProductionUnitDefinition[] = [
       { resource: 'materials', amount: 3000 },
     ],
     baseProduction: [{ resource: 'research', amount: 45 }],
-    effects: [
-      {
-        type: 'unitProductionMultiplier',
-        unit: 'academy',
-        resource: 'research',
-        value: 1.1,
-      },
-    ],
     unlockCondition: { type: 'technologyOwned', technologyId: 'factories' },
   },
 ];

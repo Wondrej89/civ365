@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialState } from '../state';
 import { applyAction, simulate } from '../engine/simulation';
-import { productionPerSecond, upgradePreview } from '../engine/production';
+import {
+  productionPerSecond,
+  unitProduction,
+  upgradePreview,
+} from '../engine/production';
 import {
   getPopulationFootprint,
   idlePopulation,
@@ -26,6 +30,9 @@ import { applyOfflineProgress } from '../systems/offline';
 import { units } from '../content/units';
 import { resources } from '../content/resources';
 import { technologies } from '../content/technologies';
+import { eras } from '../content/eras';
+import { skills } from '../content/skills';
+import { achievements } from '../content/achievements';
 import { D } from '../utils/numbers';
 import type { GameAction, GameState } from '../types';
 
@@ -328,34 +335,136 @@ describe('tier production, modifiers and reveal states', () => {
   });
   it('ownership effects use the existing modifier infrastructure and disappear when dismantled', () =>
     withFutureUnits(() => {
-      let state = ready(50);
-      state.researchedTechnologies.push('futureUnits');
-      state = action(state, 'recruit', 'gatherer', 50);
-      state = action(state, 'upgrade', 'farmer', 10);
-      const before = state;
-      const preview = upgradePreview(before, unitById('farm')!)!;
-      state = action(state, 'upgrade', 'farm');
-      expect(preview.gain.food.toNumber()).toBeCloseTo(
-        productionPerSecond(state)
-          .food.sub(productionPerSecond(before).food)
-          .toNumber(),
-      );
-      state = action(state, 'upgrade', 'farm');
-      expect(state.productionUnits.farmer.eq(2)).toBe(true);
-      expect(productionPerSecond(state).food.toNumber()).toBeCloseTo(
-        (2 * 4 * 1.1 ** 2 + 2 * 28) * 1.02 * 1.02 * 1.3,
-      );
-      expect(
-        activeEffects(state).some((e) => e.type === 'unitProductionMultiplier'),
-      ).toBe(true);
-      state = action(state, 'dismantle', 'farm', 'max');
-      expect(
-        activeEffects(state).some((e) => e.type === 'unitProductionMultiplier'),
-      ).toBe(false);
-      expect(productionPerSecond(state).food.toNumber()).toBeCloseTo(
-        10 * 4 * 1.02 * 1.02 * 1.3,
-      );
+      const farm = unitById('farm')!;
+      const original = farm.effects;
+      farm.effects = [
+        { type: 'productionFlatBonus', resource: 'food', value: 1 },
+      ];
+      try {
+        let state = ready(50);
+        state.researchedTechnologies.push('futureUnits');
+        state = action(state, 'recruit', 'gatherer', 50);
+        state = action(state, 'upgrade', 'farmer', 10);
+        const before = state;
+        const preview = upgradePreview(before, unitById('farm')!)!;
+        state = action(state, 'upgrade', 'farm');
+        expect(preview.gain.food.toNumber()).toBeCloseTo(
+          productionPerSecond(state)
+            .food.sub(productionPerSecond(before).food)
+            .toNumber(),
+        );
+        state = action(state, 'upgrade', 'farm');
+        expect(state.productionUnits.farmer.eq(2)).toBe(true);
+        expect(productionPerSecond(state).food.toNumber()).toBeCloseTo(
+          (2 * 4 + 2 * 28 + 2) * 1.02 * 1.02 * 1.3,
+        );
+        expect(
+          activeEffects(state).some((e) => e.type === 'productionFlatBonus'),
+        ).toBe(true);
+        state = action(state, 'dismantle', 'farm', 'max');
+        expect(
+          activeEffects(state).some((e) => e.type === 'productionFlatBonus'),
+        ).toBe(false);
+        expect(productionPerSecond(state).food.toNumber()).toBeCloseTo(
+          10 * 4 * 1.02 * 1.02 * 1.3,
+        );
+      } finally {
+        farm.effects = original;
+      }
     }));
+  it.each(units.filter((u) => u.upgradeFrom))(
+    '$name improves total output for equal workforce in every era, including large mixed fleets',
+    (unit) => {
+      const source = unitById(unit.upgradeFrom!.unitId)!;
+      for (const era of eras)
+        for (const owned of [0, 10, 100, 1_000_000]) {
+          const state = ready();
+          state.currentEra = era.id;
+          const eraIndex = eras.indexOf(era);
+          state.reachedEras = eras.slice(0, eraIndex + 1).map((e) => e.id);
+          state.researchedTechnologies = technologies
+            .filter((t) => state.reachedEras.includes(t.era))
+            .map((t) => t.id);
+          state.unlockedProductionUnits = units.map((u) => u.id);
+          state.purchasedSkills = Object.fromEntries(
+            skills.map((s) => [s.id, s.maxLevel]),
+          );
+          state.achievements = achievements.map((a) => a.id);
+          for (const id of ['food', 'materials', 'research'])
+            state.resources[id] = D('1e30');
+          state.productionUnits[unit.id] = D(owned);
+          state.productionUnits[source.id] = D(
+            unit.upgradeFrom!.amount * 3 + 1,
+          );
+          // Keep lower tiers present too: their output must not be damaged by the conversion.
+          const base = units.find(
+            (u) => u.category === unit.category && !u.upgradeFrom,
+          )!;
+          if (base.id !== source.id) state.productionUnits[base.id] = D(17);
+          state.population = representedPopulation(state).add(5);
+          const before = productionPerSecond(state)[unit.category];
+          const preview = upgradePreview(state, unit)!;
+          const upgraded = action(state, 'upgrade', unit.id);
+          expect(
+            preview.gain[unit.category].gt(0),
+            `${unit.id}, ${era.id}, ${owned}`,
+          ).toBe(true);
+          const gain = productionPerSecond(upgraded)[unit.category].sub(before);
+          expect(gain.toNumber()).toBeCloseTo(
+            preview.gain[unit.category].toNumber(),
+            5,
+          );
+          expect(gain.gt(0)).toBe(true);
+          expect(idlePopulation(upgraded).eq(5)).toBe(true);
+          const max = action(state, 'upgrade', unit.id, 'max');
+          expect(productionPerSecond(max)[unit.category].gt(before)).toBe(true);
+          expect(max.population.eq(state.population)).toBe(true);
+        }
+    },
+  );
+  it('inherits both unit and legacy job modifiers once, respects resource filters, and keeps higher-tier bonuses out of ancestors', () => {
+    const tech = technologies.find((t) => t.id === 'agriculture')!;
+    const original = tech.effects;
+    tech.effects = [
+      {
+        type: 'unitProductionMultiplier',
+        unit: 'gatherer',
+        resource: 'food',
+        value: 2,
+      },
+      { type: 'jobProductionMultiplier', job: 'farmer', value: 3 },
+      { type: 'unitProductionMultiplier', unit: 'farm', value: 5 },
+      {
+        type: 'unitProductionMultiplier',
+        unit: 'farmer',
+        resource: 'research',
+        value: 100,
+      },
+    ];
+    try {
+      const state = ready();
+      state.researchedTechnologies = ['agriculture'];
+      state.achievements = [];
+      state.reachedEras = ['tribal'];
+      expect(
+        unitProduction(state, unitById('gatherer')!, 1).food.toNumber(),
+      ).toBe(1);
+      expect(
+        unitProduction(state, unitById('farmer')!, 1).food.toNumber(),
+      ).toBe(24);
+      expect(unitProduction(state, unitById('farm')!, 1).food.toNumber()).toBe(
+        840,
+      );
+      expect(
+        unitProduction(state, unitById('industrialFarm')!, 1).food.toNumber(),
+      ).toBe(4500);
+      expect(
+        unitProduction(state, unitById('academy')!, 1).research.toNumber(),
+      ).toBe(8.4);
+    } finally {
+      tech.effects = original;
+    }
+  });
   it('keeps future tiers hidden, reveals unknown tiers, then makes purchased tiers available/owned', () => {
     const state = ready();
     state.researchedTechnologies = [];

@@ -79,7 +79,7 @@ describe('growth groups and meaningful city investment', () => {
   it('progresses from one person to research batches and adds people per City/Metropolis', () => {
     expect(populationGrowthAmount(createInitialState(1000)).eq(1)).toBe(true);
     const state = realm();
-    expect(populationGrowthAmount(state).eq(10)).toBe(true); // 2 × 2 × 2 + two Cities
+    expect(populationGrowthAmount(state).eq(10)).toBe(true); // 4 × 2 + two Cities
     state.settlements.city = D(3);
     state.settlements.metropolis = D(1);
     expect(populationGrowthAmount(state).eq(12)).toBe(true);
@@ -195,7 +195,7 @@ describe('growth groups and meaningful city investment', () => {
     expect(
       D(settlementQuote(state, city)[0].amount).eq(D(first[0].amount).mul(8)),
     ).toBe(true);
-    expect(D(first[0].amount).gte(14000)).toBe(true);
+    expect(D(first[0].amount).toNumber()).toBeCloseTo(25000 * 0.9 * 0.8 * 0.7); // Woodworking, Construction, Gothic Masonry
     const loaded = importSave(exportSave(state));
     expect(loaded.settlementInvestments.city.eq(3)).toBe(true);
     expect(settlementQuote(loaded, city)).toEqual(settlementQuote(state, city));

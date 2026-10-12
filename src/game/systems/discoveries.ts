@@ -320,6 +320,9 @@ export function discoveryIds() {
     ...technologies.flatMap((t) =>
       t.effects.map((e) => `population:growth:${t.id}:${e.type}`),
     ),
+    // v8 saves can have already acknowledged these older growth effects.
+    'population:growth:urbanCommunities:populationGrowthIntervalMultiplier',
+    'population:growth:publicHealth:populationGrowthAmountMultiplier',
     ...statisticSeries.map((s) => `statistics:series:${s.id}`),
     ...settlements.map((s) => `settlements:tier:${s.id}`),
     'military:upkeep',

@@ -178,7 +178,7 @@ describe('persistent new discoveries', () => {
       currentDiscoveries(next).find(
         (i) =>
           i.id ===
-          'population:growth:publicHealth:populationGrowthAmountMultiplier',
+          'population:growth:publicHealth:populationGrowthIntervalMultiplier',
       )?.mode,
     ).toBe('passive');
     const baseline = realm();

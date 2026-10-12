@@ -45,7 +45,7 @@ export function HelpSheet() {
             <h2>{tr('Grow together')}</h2>
             <p>
               {tr(
-                'Spend Food to welcome new people. Urban Communities, Public Health and Sanitation increase people per growth step; Civil Administration adds a person per City or Metropolis. Food is charged for each person and partial groups are allowed. Growth stops at Population Capacity.',
+                'Spend Food to welcome new people. Urban Communities and Town Waterworks increase people per growth step; Public Baths speeds up automatic growth. Municipal Charters adds a person per City or Metropolis. Food is charged for each person and partial groups are allowed. Growth stops at Population Capacity.',
               )}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function HelpSheet() {
             <h2>{tr('Make room to grow')}</h2>
             <p>
               {tr(
-                'Settlements provide Population Capacity. New settlements use one territory slot; upgrades keep it. Further Town, City and Metropolis upgrades become progressively more expensive in Materials. Building more cities also increases growth after Civil Administration.',
+                'Settlements provide Population Capacity. New settlements use one territory slot; upgrades keep it. Further Town, City and Metropolis upgrades become progressively more expensive in Materials. Building more cities also increases growth after Municipal Charters.',
               )}
             </p>
           </div>

@@ -84,6 +84,7 @@ export function GrowButton() {
           {formatNumber(cost)} {tr('Food')}
           {capped && tr(' · Population capacity reached.')}
           {!affordable &&
+            !capped &&
             tr(' · need {0} more', {
               '0': formatNumber(cost.sub(state.resources.food)),
             })}
@@ -506,7 +507,7 @@ export function WorkforceSheet() {
       </div>
       <p className="sheet-note">
         {tr(
-          'Upgrades keep the same population. Dismantling returns the previous units; upgrade resource costs are not refunded.',
+          'Upgrades keep the same population and inherit production bonuses from previous tiers. Dismantling returns the previous units; upgrade resource costs are not refunded.',
         )}
       </p>
     </>

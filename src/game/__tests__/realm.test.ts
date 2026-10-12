@@ -215,7 +215,7 @@ describe('settlement capacity and investment', () => {
           state,
           settlements.find((s) => s.id === 'city')!,
         )[0].amount,
-      ).eq(25000 * 0.8),
+      ).eq(25000 * 0.8 * 0.9),
     ).toBe(true);
   });
 });
