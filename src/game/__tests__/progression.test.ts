@@ -365,7 +365,7 @@ describe('bounded generic statistics and save migration', () => {
       delete raw[key];
     const original = JSON.stringify(raw),
       migrated = deserializeSave(raw);
-    expect(migrated.saveVersion).toBe(6);
+    expect(migrated.saveVersion).toBe(7);
     expect(migrated.productionUnits.miner.eq(1)).toBe(true);
     expect(migrated.productionUnits.scholar.eq(1)).toBe(true);
     expect(migrated.productionUnits.academy.eq(0)).toBe(true);

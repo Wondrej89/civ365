@@ -88,9 +88,9 @@ Engine automaticky začne sérii vzorkovat po splnění podmínky, save ji ulož
 
 ## Save a ověření
 
-`saveVersion` je 6, migrace běží 0 → 1 → 2 → 3 → 4 → 5 → 6. Dávkový růst, nové vojenské kategorie a v6 převod popisuje [growth-warfare.md](growth-warfare.md). Jazyk a změny prerequisites popisuje [localization.md](localization.md). Migrace zachovávají zdroje, populaci, jednotky, technologie, skilly a achievementy. Verze 2 převádí `scientist` na `academy`, zachovává staré unlocky Miner/Scholar a založí nové údaje automatizace a historie. Verze 3 přidává bezpečné defaults území, Camp a armády; populace nad kapacitou zůstává. Historii nelze zpětně rekonstruovat. Import ověřuje fáze, rezervu, limity historie, timestampy, footprint workers + military i snapshot kampaně.
+`saveVersion` je 7, migrace běží 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7. Dávkový růst, nové vojenské kategorie a v6 převod popisuje [growth-warfare.md](growth-warfare.md). Jazyk a změny prerequisites popisuje [localization.md](localization.md). Migrace zachovávají zdroje, populaci, jednotky, technologie, skilly a achievementy. Verze 2 převádí `scientist` na `academy`, zachovává staré unlocky Miner/Scholar a založí nové údaje automatizace a historie. Verze 3 přidává bezpečné defaults území, Camp a armády; populace nad kapacitou zůstává. Historii nelze zpětně rekonstruovat. Import ověřuje fáze, rezervu, limity historie, timestampy, footprint workers + military i snapshot kampaně.
 
-Testy pokrývají automatizaci, statistiky, novou investiční smyčku, migrace a dosažitelnost Renaissance. Aktuální engine průchod dosáhl Classical za 1 h 51 min a Medieval za 3 h 18 min; skutečné UI dosáhlo Medieval za 3 h 45 min a Renaissance za 4 h 35 min simulace bez grantů. Podrobné výsledky a balance parametry jsou v [realm.md](realm.md).
+Testy pokrývají automatizaci, statistiky, novou investiční smyčku, migrace a dosažitelnost Renaissance. Aktuální engine průchod dosáhl Classical za 1 h 55 min 30 s a Medieval za 3 h 29 min 30 s; UI v předchozí growth/army iteraci dosáhlo Medieval za 3 h 45 min a Renaissance za 4 h 35 min simulace bez grantů. Podrobné výsledky a balance parametry jsou v [realm.md](realm.md).
 
 ## Co ladit dále
 
@@ -103,3 +103,5 @@ Balance je první průchod, nikoli finální tempo. Náklady, kapacita a conques
 - `content/eras.ts`: podmínky přechodu; jejich číselné hodnoty jsou v `balance.eraRequirements`.
 
 Samplovací interval a limit historie ladí velikost save a přesnost grafu, nikoli ekonomiku hry.
+
+Aktuální návaznosti, odvozování grafu z prerequisites a bezpečný v7 převod jsou v [research-order.md](research-order.md).
