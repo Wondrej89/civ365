@@ -1,6 +1,6 @@
 # Research návaznosti a lokalizace
 
-Organized Warfare je v Agricultural Age přímo po Settled Life, před Organized Settlements. Stojí 600 Research / 400 Materials místo 1800 / 1000 a nepotřebuje Division of Labor. Town je ve stromu vidět před ní, aby bylo jasné, kde zvýšit kapacitu. Organized Settlements navazuje na Natural Growth, Record Keeping a Organized Warfare. Classical Army nyní potřebuje také Organized Warfare, Archery a Engineering, kromě původních Bronze Working, Construction a Census. Engineering tvoří skutečnou klasickou návaznost; vojenské tier unlocks dál respektují společný military feature.
+Organized Warfare je v Agricultural Age přímo po Settled Life, vedle Village Organization ve vlastním vojenském sloupci a nad Natural Growth i Organized Settlements. Stojí 600 Research / 400 Materials místo 1800 / 1000 a nepotřebuje Division of Labor. Organized Settlements navazuje na Natural Growth, Record Keeping a Organized Warfare. Classical Army potřebuje také Organized Warfare, Archery a Engineering, kromě původních Bronze Working, Construction a Census. Engineering tvoří skutečnou klasickou návaznost; vojenské tier unlocks dál respektují společný military feature. Aktuální odvozování řádků grafu a opravené návaznosti napříč epochami popisuje [research-order.md](research-order.md).
 
 Každý prerequisite brání nákupu v enginu, ne jen disabled tlačítkem v UI. Test kontroluje každou hranu při chybějícím rodiči, neznámá ID, cykly, návaznosti do budoucích epoch a překryvy pozic. Již zakoupené objevy se kvůli novým hranám neztrácejí.
 
@@ -50,11 +50,11 @@ Extraktor sbírá UI message IDs, content texty, chybové zprávy a event templa
 
 ## Save v5
 
-Aktuální formát je v6. Níže popsaný převod v4 → v5 dál probíhá před novým převodem armády, měst a kampaní v [growth-warfare.md](growth-warfare.md).
+Aktuální formát je v7. Níže popsaný převod v4 → v5 dál probíhá před převodem armády, měst a kampaní ve v6 podle [growth-warfare.md](growth-warfare.md) a doplněním nových výzkumných cest ve v7 podle [research-order.md](research-order.md).
 
 Migrace v4 → v5 přidá `settings.language: 'en'`. U již zakoupených Organized Settlements doplní Organized Warfare; u Classical Army nově požadované Organized Warfare, Archery a Engineering. Zachová všechny ostatní objevy, zdroje, pracovníky, populaci, armádu, kampaně a historii. Doplní pouze nové hrany těchto dvou definic; poškozené původní prerequisites dál odmítá validace. Běžné nové nákupy už musí splnit všechny podmínky a zaplatit cenu.
 
-JSON import ověřuje podporovaný jazyk a strukturu event descriptorů. Migrace v0/v1/v2/v3 pokračují přes v4 a v5 až do v6; populace nad kapacitou se stále nesnižuje.
+JSON import ověřuje podporovaný jazyk a strukturu event descriptorů. Migrace v0/v1/v2/v3 pokračují přes v4, v5 a v6 až do v7; populace nad kapacitou se stále nesnižuje.
 
 ## Ověření tempa
 

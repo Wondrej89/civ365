@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { technologies } from '../content/technologies';
+import { technologies, prerequisitesAddedInV7 } from '../content/technologies';
 import { eras } from '../content/eras';
 import { createInitialState } from '../state';
 import { D } from '../utils/numbers';
@@ -8,6 +8,7 @@ import { settleProgression, technologyStatus } from '../systems/progression';
 import {
   nextUnresearchedTechnology,
   technologyTree,
+  treeDimensions,
 } from '../systems/technology-tree';
 import {
   deserializeSave,
@@ -88,6 +89,100 @@ describe('research dependencies and navigation', () => {
       expect.arrayContaining(['organizedWarfare', 'archery', 'engineering']),
     );
   });
+  it('lays out complete dependency layers and gives every vertical successor a real path from the node above', () => {
+    const tree = technologyTree(researched('industrial'));
+    const ancestors = (id: string): string[] =>
+      technologies
+        .find((t) => t.id === id)!
+        .prerequisites.flatMap((parent) => [parent, ...ancestors(parent)]);
+    for (const node of tree.nodes) {
+      if (node.technology.branch === 'military')
+        expect(node.technology.treePosition!.x).toBe(4);
+      const parents = node.technology.prerequisites.map((id) =>
+        tree.nodes.find((n) => n.technology.id === id)!,
+      );
+      expect(node.technology.treePosition!.y).toBe(
+        Math.max(
+          0,
+          ...parents
+            .filter((p) => p.technology.era === node.technology.era)
+            .map((p) => p.technology.treePosition!.y + 1),
+        ),
+      );
+      for (const parent of parents)
+        expect(
+          parent.y + treeDimensions.nodeHeight,
+          `${parent.technology.id} must be above ${node.technology.id}`,
+        ).toBeLessThan(node.y);
+      const above = tree.nodes
+        .filter(
+          (n) =>
+            n.technology.era === node.technology.era &&
+            n.x === node.x &&
+            n.y < node.y,
+        )
+        .sort((a, b) => b.y - a.y)[0];
+      if (above)
+        expect(
+          ancestors(node.technology.id),
+          `${node.technology.id} bypasses the preceding step in its column`,
+        ).toContain(above.technology.id);
+    }
+    for (const [id, additions] of Object.entries(prerequisitesAddedInV7))
+      expect(technologies.find((t) => t.id === id)!.prerequisites).toEqual(
+        expect.arrayContaining(additions),
+      );
+  });
+  it('places warfare beside Village Organization immediately after Settled Life and before automatic growth', () => {
+    const s = researched('agricultural');
+    s.researchedTechnologies = s.researchedTechnologies.filter(
+      (id) =>
+        technologies.find((t) => t.id === id)!.era !== 'agricultural' ||
+        id === 'settledLife',
+    );
+    const tree = technologyTree(s);
+    const warfare = tree.nodes.find(
+      (n) => n.technology.id === 'organizedWarfare',
+    )!;
+    const village = tree.nodes.find(
+      (n) => n.technology.id === 'villageOrganization',
+    )!;
+    expect(warfare.status).toBe('available');
+    expect(warfare.y).toBe(village.y);
+    expect(warfare.x).toBeGreaterThan(village.x);
+    expect(warfare.technology.treePosition!.y).toBe(1);
+    expect(warfare.technology.treePosition!.y).toBeLessThan(
+      technologies.find((t) => t.id === 'naturalGrowth')!.treePosition!.y,
+    );
+    expect(
+      applyAction(s, { type: 'research', id: 'organizedWarfare' })
+        .researchedTechnologies,
+    ).toContain('organizedWarfare');
+  });
+  it('blocks the later steps of every era until their actual preceding discoveries are complete', () => {
+    for (const t of technologies) {
+      if (t.treePosition!.y === 0) continue;
+      const s = researched(t.era);
+      s.researchedTechnologies = s.researchedTechnologies.filter(
+        (id) => technologies.find((p) => p.id === id)!.era !== t.era,
+      );
+      expect(technologyStatus(s, t), t.id).not.toBe('available');
+      expect(applyAction(s, { type: 'research', id: t.id }), t.id).toBe(s);
+    }
+    const s = researched();
+    s.researchedTechnologies = s.researchedTechnologies.filter(
+      (id) => !['aqueducts', 'publicHealth'].includes(id),
+    );
+    const aqueducts = technologies.find((t) => t.id === 'aqueducts')!;
+    expect(technologyStatus(s, aqueducts)).toBe('revealed');
+    expect(applyAction(s, { type: 'research', id: aqueducts.id })).toBe(s);
+    expect(
+      applyAction(applyAction(s, { type: 'research', id: 'publicHealth' }), {
+        type: 'research',
+        id: aqueducts.id,
+      }).researchedTechnologies,
+    ).toContain('aqueducts');
+  });
   it('opens affordable warfare after Settled Life without Division of Labor or automatic-growth prerequisites', () => {
     const s = researched('agricultural');
     s.researchedTechnologies = s.researchedTechnologies.filter(
@@ -142,6 +237,79 @@ describe('research dependencies and navigation', () => {
   });
 });
 describe('saved locale and legacy discoveries', () => {
+  it('migrates v6 Aqueducts with the full new path while preserving resources, people, army, campaign and language', () => {
+    const s = researched();
+    s.settings.language = 'cs';
+    s.militaryUnits.infantry = D(5);
+    s.militaryTiers.infantry = 2;
+    const running = applyAction(s, {
+      type: 'launchCampaign',
+      targetId: 'materials',
+    });
+    expect(running.activeCampaign).not.toBeNull();
+    const raw = JSON.parse(serializeSave(running));
+    raw.saveVersion = 6;
+    raw.researchedTechnologies = raw.researchedTechnologies.filter(
+      (id: string) => !['urbanCommunities', 'publicHealth'].includes(id),
+    );
+    raw.autoPopulationGrowth.accumulator = 5;
+    const original = JSON.stringify(raw);
+    const loaded = deserializeSave(raw);
+    expect(loaded.saveVersion).toBe(7);
+    expect(loaded.researchedTechnologies).toEqual(
+      expect.arrayContaining([
+        ...raw.researchedTechnologies,
+        'urbanCommunities',
+        'publicHealth',
+      ]),
+    );
+    expect(loaded.population).toEqual(running.population);
+    expect(loaded.resources).toEqual(running.resources);
+    expect(loaded.productionUnits).toEqual(running.productionUnits);
+    expect(loaded.militaryUnits).toEqual(running.militaryUnits);
+    expect(loaded.militaryTiers).toEqual(running.militaryTiers);
+    expect(loaded.activeCampaign).toEqual(running.activeCampaign);
+    expect(loaded.eventLog).toEqual(running.eventLog);
+    expect(loaded.settings.language).toBe('cs');
+    expect(loaded.autoPopulationGrowth.accumulator).toBe(0);
+    expect(JSON.stringify(raw)).toBe(original);
+    expect(serializeSave(importSave(exportSave(loaded)), 1000)).toBe(
+      serializeSave(loaded, 1000),
+    );
+  });
+  it('adds ancestors needed by a newly granted prerequisite without granting unrelated research', () => {
+    const raw = JSON.parse(serializeSave(researched('medieval')));
+    raw.saveVersion = 6;
+    raw.researchedTechnologies = raw.researchedTechnologies.filter(
+      (id: string) =>
+        technologies.find((t) => t.id === id)!.era !== 'medieval' ||
+        id === 'sanitation',
+    );
+    const loaded = deserializeSave(raw);
+    expect(loaded.researchedTechnologies).toEqual(
+      expect.arrayContaining([
+        'sanitation',
+        'civilAdministration',
+        'feudalOrganization',
+      ]),
+    );
+    expect(loaded.researchedTechnologies).not.toContain('professionalArmy');
+    expect(loaded.researchedTechnologies).not.toContain('espionage');
+    expect(loaded.resources).toEqual(researched('medieval').resources);
+  });
+  it('rejects a v6 save missing an original prerequisite and a v7 save bypassing the new paths', () => {
+    const raw = JSON.parse(serializeSave(researched()));
+    raw.saveVersion = 6;
+    raw.researchedTechnologies = raw.researchedTechnologies.filter(
+      (id: string) => id !== 'urbanPlanning',
+    );
+    expect(() => deserializeSave(raw)).toThrow('prerequisites');
+    const current = JSON.parse(serializeSave(researched()));
+    current.researchedTechnologies = current.researchedTechnologies.filter(
+      (id: string) => id !== 'publicHealth',
+    );
+    expect(() => deserializeSave(current)).toThrow('prerequisites');
+  });
   it('roundtrips Czech through JSON and export/import without changing gameplay', () => {
     const initial = researched();
     const s = applyAction(initial, {
@@ -178,7 +346,7 @@ describe('saved locale and legacy discoveries', () => {
     const original = JSON.stringify(raw);
     const loaded = deserializeSave(raw);
     expect(loaded.settings.language).toBe('en');
-    expect(loaded.saveVersion).toBe(6);
+    expect(loaded.saveVersion).toBe(7);
     expect(loaded.researchedTechnologies).toEqual(
       expect.arrayContaining([
         ...old.researchedTechnologies,

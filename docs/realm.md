@@ -79,15 +79,15 @@ Cena růstu používá 1.12 do populace 20, 1.008 od 20 do 400 a 1.001 nad 400. 
 
 Automatický hráč z nového save s deseti počátečními kliknutími a bez grantů dosáhl:
 
-| Milník       | Simulovaný čas |
-| ------------ | -------------: |
-| Agricultural |          5 min |
-| Bronze       |    56 min 30 s |
-| Classical    |     1 h 51 min |
-| Medieval     |     3 h 18 min |
-| Renaissance  | 4 h 0 min 30 s |
+| Milník       |  Simulovaný čas |
+| ------------ | --------------: |
+| Agricultural |           5 min |
+| Bronze       |     56 min 30 s |
+| Classical    | 1 h 55 min 30 s |
+| Medieval     | 3 h 29 min 30 s |
+| Renaissance  |       4 h 9 min |
 
-Průchod skutečným prohlížečem s běžnými UI akcemi a pouze vývojovým speed multiplierem dosáhl Agricultural za 16 min 40 s, Bronze za 1 h 15 min, Classical za 2 h 21 min 40 s, Medieval za 3 h 45 min a Renaissance za 4 h 35 min. Nepoužíval přidávání zdrojů, populace, území ani technologií. Méně časté rozhodování v tomto UI průchodu přirozeně prodloužilo čas oproti engine průchodu.
+V předchozí growth/army iteraci průchod skutečným prohlížečem s běžnými UI akcemi a pouze vývojovým speed multiplierem dosáhl Agricultural za 16 min 40 s, Bronze za 1 h 15 min, Classical za 2 h 21 min 40 s, Medieval za 3 h 45 min a Renaissance za 4 h 35 min. Nepoužíval přidávání zdrojů, populace, území ani technologií. Méně časté rozhodování v tomto UI průchodu přirozeně prodloužilo čas oproti engine průchodu.
 
 Hráč průběžně investuje, přerozděluje pracovníky, staví sídla, rekrutuje armádu a dobývá území. Žádná éra nemá podmínku uplynulého času. Při ladění jsou nejúčinnější `technologyCosts`, `eraRequirements`, `populationGrowth`, `settlements.costGrowth`, `military.recruitCostGrowth` a `conquest` v `content/config.ts`; ceny, kapacity, produkce a jednotkové power zůstávají v content registries.
 
@@ -95,7 +95,7 @@ Hráč průběžně investuje, přerozděluje pracovníky, staví sídla, rekrut
 
 Statistics přidává Population Capacity, Owned Territories a Military Power over time po odemčení příslušných features. Census distribuce obsahuje Military podle skutečných footprintů. Sampling zůstává každých 30 simulovaných sekund, nejvýše 2000 bodů na sérii, včetně offline průběhu.
 
-Aktuální save je v6; nové vojenské a city převody popisuje [growth-warfare.md](growth-warfare.md). Níže popsaný územní převod vznikl ve v4. Migrace dále zachovává všechny předchozí verze, doplňuje jazyk a opravuje nové tech edges podle [localization.md](localization.md). Verze 3 dostane jeden Homeland, jeden Camp, prázdnou armádu a žádnou kampaň; stávající lidé, pracovníci, zdroje, technologie, skilly, achievementy a historie se zachovají. Population nad novou kapacitou zůstává, pouze další růst čeká na zvýšení kapacity. Capacity se odvozuje ze sídel a efektů, neukládá se jako druhá nezávislá pravda. Uložený `populationCapacityBonus` je vyhrazen pro explicitní vývojový grant. Import kontroluje počty, sloty, armádní footprinty a konzistenci rozpracované kampaně. Časy logu jsou celé milisekundy, i když kampaň končí mezi dvěma běžnými tick hranicemi.
+Aktuální save je v7; nové výzkumné cesty a migraci popisuje [research-order.md](research-order.md); nové vojenské a city převody popisuje [growth-warfare.md](growth-warfare.md). Níže popsaný územní převod vznikl ve v4. Migrace dále zachovává všechny předchozí verze, doplňuje jazyk a opravuje nové tech edges podle [localization.md](localization.md). Verze 3 dostane jeden Homeland, jeden Camp, prázdnou armádu a žádnou kampaň; stávající lidé, pracovníci, zdroje, technologie, skilly, achievementy a historie se zachovají. Population nad novou kapacitou zůstává, pouze další růst čeká na zvýšení kapacity. Capacity se odvozuje ze sídel a efektů, neukládá se jako druhá nezávislá pravda. Uložený `populationCapacityBonus` je vyhrazen pro explicitní vývojový grant. Import kontroluje počty, sloty, armádní footprinty a konzistenci rozpracované kampaně. Časy logu jsou celé milisekundy, i když kampaň končí mezi dvěma běžnými tick hranicemi.
 
 Nový typ území přidejte do `content/territories.ts` s `settlementSlots`, případnými `effects` a strategickými resource metadata. Nové sídlo přidejte do `content/settlements.ts`, vojenskou jednotku do `content/military.ts`. Systémy a UI načítají registry; konkrétní tech ID patří do obsahových podmínek, nikoli obecných výpočtů. Grafy dál přidává `content/statistics.ts`; jejich nové `sampleValue` callbacks se vyhodnocují až při samplování, což zachovává bezpečné načítání navzájem odkazovaných engine modulů.
 
@@ -103,4 +103,6 @@ Development panel nabízí + Territory, + Settlement, +100 Capacity, + Military 
 
 ## Ověření iterace
 
-Aktuální growth/army/frontiers iterace prošla všemi 152 unit/integration testy, TypeScript, lintem včetně katalogů a production buildem. Chromium ověřil nový run až do Renaissance bez grantů, desktop a mobilní sheets, import skutečného v4 Medieval save, dávkový růst, placené equipment upgrady, průběžnou údržbu, špionáž, rozpracovanou kampaň přes reload a její offline dokončení bez dvojí odměny. Production build byl ověřen také ze statického hostingu pod `/civ365/` bez asset 404 a chyb JavaScriptu, včetně násobných City cen, bonusu růstu dalšího města a ukládání jazyka; deploy dál obstarává stávající GitHub Pages workflow po merge do main. Podrobnosti jsou v [growth-warfare.md](growth-warfare.md).
+Předchozí growth/army/frontiers iterace prošla všemi 152 unit/integration testy, TypeScript, lintem včetně katalogů a production buildem. Chromium ověřil nový run až do Renaissance bez grantů, desktop a mobilní sheets, import skutečného v4 Medieval save, dávkový růst, placené equipment upgrady, průběžnou údržbu, špionáž, rozpracovanou kampaň přes reload a její offline dokončení bez dvojí odměny. Production build byl ověřen také ze statického hostingu pod `/civ365/` bez asset 404 a chyb JavaScriptu, včetně násobných City cen, bonusu růstu dalšího města a ukládání jazyka; deploy dál obstarává stávající GitHub Pages workflow po merge do main. Podrobnosti jsou v [growth-warfare.md](growth-warfare.md).
+
+Aktuální research-order iterace prošla 158 testy včetně úplného engine průchodu až do Renaissance. Nové podmínky, browser ověření a v7 migrace jsou v [research-order.md](research-order.md).

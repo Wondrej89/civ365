@@ -59,7 +59,7 @@ Import ověřuje equipment tiers a jejich odkrytí, readiness, investment counte
 
 ## Ověření
 
-152 unit/integration testů pokrývá engine i nové hranice růstu, reserve/partial batches, geometric city upgrades, tři role/equipment, upkeep, supply exhaustion, counters/intelligence, tři odměny, save v6 a offline shodu. Player policy používá pouze běžné akce, kombinovanou armádu a 35 % ekonomické populace pro Materials; její úplný průchod bez grantů dosáhl:
+V předchozí growth/army iteraci 152 unit/integration testů pokrylo engine i nové hranice růstu, reserve/partial batches, geometric city upgrades, tři role/equipment, upkeep, supply exhaustion, counters/intelligence, tři odměny, save v6 a offline shodu. Player policy používá pouze běžné akce, kombinovanou armádu a 35 % ekonomické populace pro Materials; její úplný průchod bez grantů dosáhl:
 
 | Éra          | Simulovaný čas |
 | ------------ | -------------: |
@@ -74,3 +74,5 @@ Výsledek je měření jedné optimalizované politiky, nikoli časový zámek n
 Chromium prošel také nový save přes běžná UI tlačítka, s deseti počátečními Food kliknutími a pouze vývojovým zrychlením simulace, bez grantů zdrojů, populace, území nebo technologií. Agricultural dosáhl za 16 min 40 s, Bronze za 1 h 15 min, Classical za 2 h 21 min 40 s, Medieval za 3 h 45 min a Renaissance za 4 h 35 min. Rozhodování po delších úsecích přirozeně prodloužilo tento průchod proti engine politice.
 
 Samostatný browser test importoval skutečný v4 Medieval save se 700 lidmi a 88 Heavy Infantry bez ztráty populace. Ověřil dávkový růst, placené upgrady zachovávající počty, průběžnou údržbu, skryté a špionáží odhalené obránce a vybranou kampaň přes reload a offline dokončení s jednou odměnou a skutečnými casualties. Produkční build ze statického hostingu pod `/civ365/` ověřil i násobně dražší City, bonus růstu dalšího města, ukládání CS preference a mobilní sheets při šířce 390 px, bez asset 404, chyb JavaScriptu a vývojového panelu.
+
+Aktuální formát je v7; výše popsaný v6 převod zůstává součástí migrace. Opravené research návaznosti a aktuální průchod popisuje [research-order.md](research-order.md).

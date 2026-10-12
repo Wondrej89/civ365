@@ -276,7 +276,12 @@ describe('technology, effects, achievements, and eras', () => {
   });
   it('unlocks Farmer, advances with no reset, grants one point, and spends it on one skill', () => {
     let s = developed(19);
-    for (const id of ['language', 'knowledgeSharing', 'agriculture'])
+    for (const id of [
+      'foraging',
+      'language',
+      'knowledgeSharing',
+      'agriculture',
+    ])
       s = buy(s, id);
     expect(applyAction(s, { type: 'advance', id: 'agricultural' })).toBe(s);
     s = applyAction(s, { type: 'recruit', unitId: 'gatherer', amount: 5 });
@@ -410,9 +415,9 @@ describe('saves and offline production', () => {
     delete raw.settings;
     delete raw.reachedEras;
     delete raw.announcedEras;
-    expect(migrateSave(raw).saveVersion).toBe(6);
+    expect(migrateSave(raw).saveVersion).toBe(7);
     expect(deserializeSave(raw).settings.notifications).toBe(true);
-    expect(() => migrateSave({ saveVersion: 7 })).toThrow('Unsupported');
+    expect(() => migrateSave({ saveVersion: 8 })).toThrow('Unsupported');
   });
   it('uses the same simulation offline, including achievements and their changing bonuses', () => {
     const s = applyAction(developed(), {

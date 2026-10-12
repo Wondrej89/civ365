@@ -12,7 +12,7 @@ import {
   settlementCount,
   settlementSlots,
 } from '../engine/settlements';
-import { technologies } from '../content/technologies';
+import { technologies, prerequisitesAddedInV7 } from '../content/technologies';
 import { skills } from '../content/skills';
 import { achievements } from '../content/achievements';
 import { eras } from '../content/eras';
@@ -317,6 +317,50 @@ export function migrateSave(value: unknown): Obj {
       };
     }
     save.saveVersion = 6;
+  }
+  if (save.saveVersion === 6) {
+    const known = ids(
+      save.researchedTechnologies,
+      technologies.map((t) => t.id),
+    );
+    // Check the old rules before granting new paths, so migration does not
+    // silently repair a corrupt save missing an original prerequisite.
+    for (const id of known) {
+      const tech = technologies.find((t) => t.id === id)!;
+      const additions = prerequisitesAddedInV7[id] ?? [];
+      if (
+        tech.prerequisites.some(
+          (parent) => !additions.includes(parent) && !known.includes(parent),
+        )
+      )
+        throw new Error('Missing technology prerequisites.');
+    }
+    const discoveries = new Set(known);
+    const queue = [...known];
+    for (let index = 0; index < queue.length; index++)
+      for (const parent of technologies.find((t) => t.id === queue[index])!
+        .prerequisites)
+        if (!discoveries.has(parent)) {
+          discoveries.add(parent);
+          queue.push(parent);
+        }
+    if (
+      queue.some(
+        (id) =>
+          !known.includes(id) &&
+          technologies
+            .find((t) => t.id === id)!
+            .effects.some(
+              (effect) => effect.type === 'populationGrowthIntervalMultiplier',
+            ),
+      )
+    )
+      save.autoPopulationGrowth = {
+        ...object(save.autoPopulationGrowth),
+        accumulator: 0,
+      };
+    save.researchedTechnologies = [...discoveries];
+    save.saveVersion = 7;
   }
   if (save.saveVersion !== balance.saveVersion)
     throw new Error(
