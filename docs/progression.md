@@ -42,13 +42,13 @@ Přechod zachová zdroje, populaci i jednotky, zapíše událost a při prvním 
 
 Gatherer → Farmer → Farm, Woodcutter → Miner → Workshop a Thinker → Scholar → Academy jsou hratelné. Tier 4 odemkne Factories v Industrial Age. Všechny upgrady od tieru 2 potřebují Materials a předchozí jednotky; libovolné další ceny určuje pole `costs`. Základní jednotky potřebují jen Idle Population, takže Woodcutter vždy poskytuje cestu k Materials bez předchozí investice Materials. Lze také ručně sbírat Materials.
 
-Převody 5 → 1 a poté 4 → 1 zachovávají původní footprint 1 / 5 / 20 / 100 lidí. Farm a Workshop mají základní produkci 28/s, Academy 8.4/s: před dalšími bonusy je to 1.75× produkce čtyř vstupních jednotek. Rozebrání vrací nižší jednotky; utracené zdroje se nevracejí.
+Převody 5 → 1 a poté 4 → 1 zachovávají původní footprint 1 / 5 / 20 / 100 lidí. Farm a Workshop mají základní produkci 32/s, Academy 9.6/s: před dalšími bonusy je to 2× produkce čtyř vstupních jednotek. Industrial Farm, Factory a Laboratory produkují 480 / 480 / 144/s, tedy 3× výkon pěti vstupních jednotek. Rozebrání vrací nižší jednotky; utracené zdroje se nevracejí.
 
 ## Auto Growth
 
 Po Settled Life → Natural Growth se v Population objeví přepínač, interval, odpočet, Food Reserve a přehled technologických modifikátorů. Výchozí stav je OFF, rezerva 10 %. Přepnutí OFF/ON zahájí nový interval. Ruční Grow Population zůstává dostupný.
 
-Jediná funkce `growPopulation` ověřuje kapacitu i Food a přidá dostupnou dávku lidí do Idle Population. Urban Communities / Town Waterworks násobí počet lidí za krok; Municipal Charters přidává bonus za City/Metropolis. Celá dávka stojí Food cenu jednoho člověka při populaci před krokem. Kapacita může počet lidí zkrátit; Food musí pokrýt jednu cenu kroku po ochraně rezervy. Ruční i automatické události používají stejnou funkci; neúspěšný pokus čeká na další interval.
+Jediná funkce `growPopulation` ověřuje kapacitu i Food a přidá dostupnou dávku lidí do Idle Population. Urban Communities / Town Waterworks násobí počet lidí za krok; City/Metropolis poskytují základ růstu, Municipal Charters přidává základního člověka za každé město a všechny násobky násobí celý tento základ. Celá dávka stojí Food cenu jednoho člověka při populaci před krokem. Kapacita může počet lidí zkrátit; Food musí pokrýt jednu cenu kroku po ochraně rezervy. Ruční i automatické události používají stejnou funkci; neúspěšný pokus čeká na další interval.
 
 Rezerva chrání 0 / 10 / 25 / 50 % zásoby **před konkrétním pokusem**. Při 100 Food, rezervě 25 % a ceně 80 se růst neprovede; při ceně 70 ano, zůstane 30 Food. Rezerva není pevná dlouhodobá hranice: při příštím pokusu se přepočítá z nové zásoby. Ruční tlačítko ji může utratit. Ruční i automatický růst se zastaví při dosažení kapacity; Population odkazuje na Settlements. Pokud chcete Food hromadit na upgrade, automatiku lze dočasně vypnout.
 
@@ -111,3 +111,5 @@ Zvýraznění nových objevů a aktuální v8 UI metadata: [discoveries.md](disc
 Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.
 
 Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.
+
+Aktuální městský základ násobeného růstu a výnosnější produkční investice popisuje [city-growth-production.md](city-growth-production.md). Starší měření průchodů výše zachycují předchozí balance.

@@ -117,7 +117,7 @@ describe('Renaissance recovery and Industrial balance', () => {
     expect(net.food.gt(populationCost(state).div(growthInterval(state)))).toBe(
       true,
     );
-    expect(populationGrowthAmount(state).eq(20)).toBe(true);
+    expect(populationGrowthAmount(state).eq(192)).toBe(true);
   });
 
   it('recovers the reported saved state and reaches Industrial using only normal actions and balanced production', () => {

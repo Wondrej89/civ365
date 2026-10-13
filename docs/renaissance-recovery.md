@@ -59,3 +59,5 @@ Samostatný test obnoví pozici sestavenou podle screenshotů: 5730 lidí, 12 ú
 Chromium prošel také úplně nový save přes běžná UI tlačítka, s deseti počátečními Food kliknutími a pouze development speed ×1000, bez grantů. Dosažené časy: Agricultural 16 min 40 s, Bronze 1 h 23 min 20 s, Classical 2 h 38 min 20 s, Medieval 3 h 53 min 20 s, Renaissance 4 h 26 min 40 s a Industrial 5 h 16 min 40 s. Rozhodování v delších úsecích přirozeně prodloužilo průchod proti engine politice.
 
 Produkční build ze statického hostingu pod `/civ365/` ověřil skutečný starý v8 import, screenshotovou pozici s růstem +20 za jednu cenu, automatiku bez produkce, zkrácení dávky na tři místa, správný požadavek 40k, campaign reload a offline dokončení s jednou odměnou. Ověřil také CS nastavení přes reload a mobilní sheets při 390 px, bez JavaScript chyb, asset 404 a development panelu. TypeScript, ESLint, lokalizační kontrola a produkční build procházejí.
+
+Aktuální městský základ násobeného růstu a výnosnější produkční investice popisuje [city-growth-production.md](city-growth-production.md). Starší měření průchodů výše zachycují předchozí balance.

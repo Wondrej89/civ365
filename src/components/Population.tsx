@@ -11,6 +11,7 @@ import {
   growthModifiers,
   nextGrowthSeconds,
   populationGrowthAmount,
+  populationGrowthBreakdown,
   growthCost,
 } from '../game/engine/population';
 import { populationDistribution } from '../game/systems/statistics';
@@ -26,7 +27,8 @@ export function PopulationSheet() {
   const { t: tr, formatNumber } = useI18n();
 
   const { state } = useGame(),
-    automation = isFeatureUnlocked(state, 'autoPopulationGrowth');
+    automation = isFeatureUnlocked(state, 'autoPopulationGrowth'),
+    growth = populationGrowthBreakdown(state);
   const { openSheet } = useWorkbookNavigation();
   return (
     <>
@@ -74,6 +76,43 @@ export function PopulationSheet() {
           </button>
         </Discovery>
       )}
+      <Discovery
+        as="section"
+        discoveryId="population:growth-base"
+        className="panel population-panel growth-base"
+      >
+        <h2>{tr('Growth from your cities')}</h2>
+        <dl className="growth-details">
+          <div>
+            <dt>{tr('Cities + Metropolises')}</dt>
+            <dd>{formatNumber(growth.cities, 0)}</dd>
+          </div>
+          <div>
+            <dt>{tr('Base people per City')}</dt>
+            <dd>{formatNumber(growth.peoplePerCity, 1)}</dd>
+          </div>
+          <div>
+            <dt>{tr('Base population per step')}</dt>
+            <dd>{formatNumber(growth.base, 0)}</dd>
+          </div>
+          <div>
+            <dt>{tr('Growth multiplier')}</dt>
+            <dd>×{formatNumber(growth.multiplier, 2)}</dd>
+          </div>
+        </dl>
+        <strong>
+          {tr('{base} base people ×{multiplier} = {amount} people per step', {
+            base: formatNumber(growth.base, 0),
+            multiplier: formatNumber(growth.multiplier, 2),
+            amount: formatNumber(growth.amount, 0),
+          })}
+        </strong>
+        <p className="sheet-note">
+          {tr(
+            'Before your first City, base growth is one person. Cities and Metropolises contribute equally. The whole growth group still costs one person’s current Food price.',
+          )}
+        </p>
+      </Discovery>
       <div className="population-panels">
         <Discovery
           as="section"
@@ -191,7 +230,7 @@ export function PopulationSheet() {
                             ),
                           })
                         : m.type === 'populationGrowthPerCity'
-                          ? tr('+{amount} per City/Metropolis', {
+                          ? tr('+{amount} base people per City/Metropolis', {
                               amount: formatNumber(m.value, 0),
                             })
                           : tr('×{amount} people', {

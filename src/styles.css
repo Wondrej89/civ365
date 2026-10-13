@@ -2237,6 +2237,18 @@ textarea::placeholder {
 .per-unit-rate small {
   font-size: 9px;
 }
+.unit-upgrade-yield {
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 4px;
+  background: #edf5ef;
+  color: #327650;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.growth-base {
+  margin-bottom: 20px;
+}
 .unit-footprint {
   display: flex;
   align-items: center;
