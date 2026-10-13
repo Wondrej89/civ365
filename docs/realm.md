@@ -37,7 +37,7 @@ Vojáci nevyrábějí běžné zdroje a každý spotřebuje Food i Materials za 
 
 ## Kampaně a volba území
 
-Každá frontier má tři stabilní volby: Fertile Plains / Mineral Highlands / Scholarly Province s bonusem pro Food / Materials / Research. Všechny přidají jedno území a jeden slot. Základ defense zůstává 40 × 1.8^conquests, varianty ho násobí 0.8 / 1 / 1.25 a dávají 3 / 5 / 8 procentních bodů trvalé produkce. Při další conquest se obtížnosti mezi oblastmi střídají; porážka ani reload nabídku nezmění.
+Každá frontier má tři stabilní volby: Fertile Plains / Mineral Highlands / Scholarly Province s bonusem pro Food / Materials / Research. Všechny přidají jedno území a jeden slot. Základ defense je 40 × 1.8^min(conquests, 8) × 1.35^max(conquests − 8, 0), varianty ho násobí 0.8 / 1 / 1.25 a dávají 3 / 5 / 8 procentních bodů trvalé produkce. Při další conquest se obtížnosti mezi oblastmi střídají; porážka ani reload nabídku nezmění.
 
 Infantry counteruje Cavalry, Cavalry Ranged a Ranged Infantry. Složení obránců vzniká deterministicky. Při jediném odemčeném vlastním typu jsou counters vypnuté, při dvou mají menší vliv. Kombinovaná armáda s alespoň 15 % vojáků každého odemčeného typu dostává bonus ×1.1. Bez Espionage UI ukazuje pouze bezpečné rozpětí power, délky a casualties; až intelligence odhalí skutečné složení a přesný odhad.
 
@@ -108,3 +108,5 @@ Předchozí growth/army/frontiers iterace prošla všemi 152 unit/integration te
 Předchozí research-order iterace prošla 158 testy včetně úplného engine průchodu až do Renaissance. Nové podmínky, browser ověření a v7 migrace jsou v [research-order.md](research-order.md).
 
 Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.
+
+Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.

@@ -7,14 +7,14 @@ import { militaryPower } from '../engine/military';
 import { idlePopulation } from '../engine/population-accounting';
 import { deserializeSave, serializeSave } from '../systems/save';
 
-it('reaches Renaissance from a new save through settlements and conquest without grants or time gates', () => {
+it('reaches Industrial from a new save through settlements and conquest without grants or time gates', () => {
   let state = createInitialState(1000);
   for (let i = 0; i < 10; i++)
     state = applyAction(state, { type: 'gather', resource: 'food' });
   const milestones: Record<string, number> = {};
   for (
     let time = 0;
-    time <= 48 * 3600 && state.currentEra !== 'renaissance';
+    time <= 48 * 3600 && state.currentEra !== 'industrial';
     time += 30
   ) {
     for (let i = 0; i < 1000; i++) {
@@ -61,12 +61,12 @@ it('reaches Renaissance from a new save through settlements and conquest without
       );
   }
   console.log('Realm progression seconds:', milestones);
-  expect(state.currentEra).toBe('renaissance');
+  expect(state.currentEra).toBe('industrial');
   expect(milestones.bronze).toBeGreaterThan(1200);
   expect(milestones.classical).toBeGreaterThan(3600);
   expect(milestones.medieval).toBeGreaterThan(7200);
   expect(state.statistics.totalManualClicks.eq(10)).toBe(true);
-  expect(state.statistics.territoriesConquered.gte(9)).toBe(true);
+  expect(state.statistics.territoriesConquered.gte(15)).toBe(true);
   expect(state.statistics.militaryCasualties.gt(0)).toBe(true);
   expect(state.population.lte(populationCapacity(state))).toBe(true);
   expect(idlePopulation(state).gte(0)).toBe(true);

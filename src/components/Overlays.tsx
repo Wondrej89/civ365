@@ -218,7 +218,11 @@ export function DebugPanel() {
         {balance.settlements.costGrowth} {tr('per new home · army costs ×')}
         {balance.military.recruitCostGrowth} {tr('per soldier · defense')}{' '}
         {balance.conquest.baseDefense} × {balance.conquest.defenseGrowth}
-        {tr('^conquests · growth ×')}
+        {tr(' per conquest; after {count} conquests ×{factor}', {
+          count: balance.conquest.lateDefenseBreakpoint,
+          factor: balance.conquest.lateDefenseGrowth,
+        })}
+        {tr(' · growth cost ×')}
         {balance.populationGrowth.multiplier} / ×
         {balance.populationGrowth.laterMultiplier} / ×
         {balance.populationGrowth.lateMultiplier} {tr('· City upgrades ×')}

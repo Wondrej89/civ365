@@ -48,7 +48,7 @@ Převody 5 → 1 a poté 4 → 1 zachovávají původní footprint 1 / 5 / 20 / 
 
 Po Settled Life → Natural Growth se v Population objeví přepínač, interval, odpočet, Food Reserve a přehled technologických modifikátorů. Výchozí stav je OFF, rezerva 10 %. Přepnutí OFF/ON zahájí nový interval. Ruční Grow Population zůstává dostupný.
 
-Jediná funkce `growPopulation` ověřuje kapacitu i Food a přidá dostupnou dávku lidí do Idle Population. Urban Communities / Town Waterworks násobí počet lidí za krok; Municipal Charters přidává bonus za City/Metropolis. Cena je součet marginálních cen jednotlivých lidí v dávce, včetně přechodů přes cenové zlomy. Pokud Food nebo kapacita dovolují jen menší dávku, růst ji provede. Ruční i automatické události používají stejnou funkci; neúspěšný pokus čeká na další interval.
+Jediná funkce `growPopulation` ověřuje kapacitu i Food a přidá dostupnou dávku lidí do Idle Population. Urban Communities / Town Waterworks násobí počet lidí za krok; Municipal Charters přidává bonus za City/Metropolis. Celá dávka stojí Food cenu jednoho člověka při populaci před krokem. Kapacita může počet lidí zkrátit; Food musí pokrýt jednu cenu kroku po ochraně rezervy. Ruční i automatické události používají stejnou funkci; neúspěšný pokus čeká na další interval.
 
 Rezerva chrání 0 / 10 / 25 / 50 % zásoby **před konkrétním pokusem**. Při 100 Food, rezervě 25 % a ceně 80 se růst neprovede; při ceně 70 ano, zůstane 30 Food. Rezerva není pevná dlouhodobá hranice: při příštím pokusu se přepočítá z nové zásoby. Ruční tlačítko ji může utratit. Ruční i automatický růst se zastaví při dosažení kapacity; Population odkazuje na Settlements. Pokud chcete Food hromadit na upgrade, automatiku lze dočasně vypnout.
 
@@ -109,3 +109,5 @@ Aktuální návaznosti, odvozování grafu z prerequisites a bezpečný v7 přev
 Zvýraznění nových objevů a aktuální v8 UI metadata: [discoveries.md](discoveries.md).
 
 Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.
+
+Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.

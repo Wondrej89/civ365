@@ -7,6 +7,9 @@ export const sum = (values: Decimal[]) =>
   values.reduce((total, value) => total.add(value), D());
 
 const suffixes = ['', 'k', 'M', 'B', 'T', 'Qa', 'Qi'];
+/** Only trim fractional zeros; integer zeros carry magnitude (40k must stay 40k). */
+const trimDecimalZeros = (text: string) =>
+  text.includes('.') ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
 export function formatNumber(
   value: Amount,
   digits = 2,
@@ -24,16 +27,16 @@ export function formatNumber(
       .replaceAll(language === 'cs' ? '\u00a0' : ',', ' ');
   const group = Math.floor(n.exponent / 3);
   if (group < suffixes.length && group >= 0)
-    return `${n
-      .div(D(10).pow(group * 3))
-      .toNumber()
-      .toFixed(digits)
-      .replace(/\.?0+$/, '')
-      .replace('.', language === 'cs' ? ',' : '.')}${suffixes[group]}`;
-  return `${n.mantissa
-    .toFixed(digits)
-    .replace(/\.?0+$/, '')
-    .replace('.', language === 'cs' ? ',' : '.')}e${n.exponent}`;
+    return `${trimDecimalZeros(
+      n
+        .div(D(10).pow(group * 3))
+        .toNumber()
+        .toFixed(digits),
+    ).replace('.', language === 'cs' ? ',' : '.')}${suffixes[group]}`;
+  return `${trimDecimalZeros(n.mantissa.toFixed(digits)).replace(
+    '.',
+    language === 'cs' ? ',' : '.',
+  )}e${n.exponent}`;
 }
 export function formatDuration(
   seconds: number,

@@ -91,10 +91,11 @@ describe('growth groups and meaningful city investment', () => {
       era.effects.pop();
     }
   });
-  it('manual and automatic batches pay the same marginal prices and preserve the population equation', () => {
+  it('manual and automatic batches pay one person price and preserve the population equation', () => {
     const state = realm(),
       quote = growthQuote(state),
       beforeIdle = idlePopulation(state);
+    expect(quote.foodCost.eq(populationCost(state))).toBe(true);
     const manual = applyAction(state, { type: 'grow' });
     const automatic = simulate(
       applyAction(state, { type: 'autoGrowth', enabled: true }),
@@ -111,21 +112,22 @@ describe('growth groups and meaningful city investment', () => {
     );
     expect(idlePopulation(manual).sub(beforeIdle).eq(10)).toBe(true);
   });
-  it('charges every marginal person when a batch crosses either food-scaling breakpoint', () => {
+  it('charges once at the population before the step, including batches crossing scaling breakpoints', () => {
     const state = realm();
-    for (const population of [18, 398]) {
+    for (const population of [18, 398, 5730]) {
       state.population = D(population);
-      let sum = D();
-      for (let i = 0; i < 10; i++)
-        sum = sum.add(populationCost(state, D(population + i)));
-      expect(growthCost(state, 10).toNumber()).toBeCloseTo(sum.toNumber(), 7);
+      expect(growthCost(state, 10).eq(populationCost(state))).toBe(true);
+      expect(growthCost(state, 1).eq(growthCost(state, 10))).toBe(true);
+      expect(growthCost(state, 0).eq(0)).toBe(true);
     }
   });
-  it('creates an affordable partial batch and protects the configured reserve', () => {
+  it('buys a full batch when one step fits the reserve and waits when it does not', () => {
     const state = realm();
-    state.resources.food = growthCost(state, 3).mul(2);
+    const cost = populationCost(state);
+    state.resources.food = cost.mul(2);
     const quote = growthQuote(state, 50);
-    expect(quote.amount.eq(3)).toBe(true);
+    expect(quote.amount.eq(10)).toBe(true);
+    expect(quote.foodCost.eq(cost)).toBe(true);
     const automatic = simulate(
       applyAction(state, {
         type: 'autoGrowth',
@@ -134,15 +136,36 @@ describe('growth groups and meaningful city investment', () => {
       }),
       growthInterval(state),
     );
-    expect(automatic.population.sub(state.population).eq(3)).toBe(true);
+    expect(automatic.population.sub(state.population).eq(10)).toBe(true);
     expect(
       automatic.resources.food.gte(state.resources.food.mul(0.5).sub(1e-8)),
+    ).toBe(true);
+    state.resources.food = cost.mul(1.5);
+    expect(growthQuote(state, 50).amount.eq(0)).toBe(true);
+    const waiting = simulate(
+      applyAction(state, {
+        type: 'autoGrowth',
+        enabled: true,
+        foodReservePercent: 50,
+      }),
+      growthInterval(state),
+    );
+    expect(waiting.population.eq(state.population)).toBe(true);
+    expect(waiting.resources.food.eq(state.resources.food)).toBe(true);
+    expect(
+      applyAction(state, { type: 'grow' })
+        .population.sub(state.population)
+        .eq(10),
     ).toBe(true);
   });
   it('clamps a batch at capacity and preserves existing population above it', () => {
     const state = realm();
     state.population = populationCapacity(state).sub(3);
+    const cost = populationCost(state);
+    expect(growthQuote(state).amount.eq(3)).toBe(true);
+    expect(growthQuote(state).foodCost.eq(cost)).toBe(true);
     const next = applyAction(state, { type: 'grow' });
+    expect(next.resources.food.eq(state.resources.food.sub(cost))).toBe(true);
     expect(next.population.eq(populationCapacity(next))).toBe(true);
     expect(
       next.statistics.totalPopulationCreated
@@ -156,6 +179,31 @@ describe('growth groups and meaningful city investment', () => {
         applyAction(next, { type: 'autoGrowth', enabled: true }),
         100,
       ).population.eq(next.population),
+    ).toBe(true);
+  });
+  it('gives twenty Renaissance people for one food price at the reported late-game population', () => {
+    const state = realm('renaissance');
+    state.population = D(5730);
+    state.statistics.totalPopulationCreated = D(5730);
+    state.statistics.maxPopulation = D(5730);
+    state.settlements.city = D(6);
+    state.settlements.metropolis = D(2);
+    state.settlements.town = D(4);
+    state.ownedTerritories.frontier = D(11);
+    state.statistics.territoriesConquered = D(11);
+    state.resources.food = populationCost(state);
+    expect(populationGrowthAmount(state).eq(20)).toBe(true);
+    expect(growthQuote(state).amount.eq(20)).toBe(true);
+    const next = applyAction(state, { type: 'grow' });
+    expect(next.population.eq(5750)).toBe(true);
+    expect(next.resources.food.eq(0)).toBe(true);
+    expect(next.statistics.foodSpentOnGrowth.eq(state.resources.food)).toBe(
+      true,
+    );
+    expect(
+      next.statistics.totalPopulationCreated
+        .sub(state.statistics.totalPopulationCreated)
+        .eq(20),
     ).toBe(true);
   });
   it('keeps late food costs below the previous runaway curve without removing early scaling', () => {

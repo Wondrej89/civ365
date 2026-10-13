@@ -10,9 +10,9 @@ Počet lidí na ruční i automatický krok je:
 
 Urban Communities přidá ×4, Public Baths pouze zrychlí interval, Town Waterworks další ×2 a Humanism ×1.5. Municipal Charters přidává +1 za každé City nebo Metropolis. Dvě Cities s kompletním Medieval výzkumem tedy dávají **10 lidí za krok**. Town a Settlement tento městský bonus neposkytují.
 
-Cena dávky je přesný součet cen jednotlivých lidí, včetně přechodů přes populační hranice 20 a 400. Základ 10 Food a počáteční násobič 1.12 zůstávají; další části jsou nyní 1.008 a 1.001. Tím se odstraňuje pozdní extrémní cena, nikoli potřeba Food. `populationCostMultiplier` efekty zůstávají.
+Celá dávka nyní stojí aktuální Food cenu jednoho člověka před růstovým krokem. Výzkum i města tedy přidávají lidi bez násobení ceny dávky. Základ 10 Food a počáteční násobič 1.12 zůstávají; další části jsou nyní 1.008 a 1.001. Tím se odstraňuje pozdní extrémní cena, nikoli potřeba Food. `populationCostMultiplier` efekty zůstávají.
 
-Pokud lze zaplatit jen část dávky, narodí se tato část. Stejně funguje zbývající kapacita: tři volná místa dovolí tři lidi i při normální dávce deset. Auto Growth chrání zvolenou rezervu Food; ruční růst ji může použít. Populace nad capem ze starého savu se nesnižuje. UI ukazuje dávku, její cenu, interval i konkrétní growth modifiers.
+Food musí pokrýt jednu cenu kroku po ochraně rezervy; jinak automatika počká na další pokus. Zbývající kapacita může dávku zkrátit: tři volná místa dovolí tři lidi i při normální dávce deset. Auto Growth chrání zvolenou rezervu Food; ruční růst ji může použít. Populace nad capem ze starého savu se nesnižuje. UI ukazuje dávku, její cenu, interval i konkrétní growth modifiers.
 
 ## Materiálové investice
 
@@ -78,3 +78,5 @@ Samostatný browser test importoval skutečný v4 Medieval save se 700 lidmi a 8
 Aktuální formát je v8; značky nového obsahu popisuje [discoveries.md](discoveries.md); výše popsaný v6 převod zůstává součástí migrace. Opravené research návaznosti a aktuální průchod popisuje [research-order.md](research-order.md).
 
 Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.
+
+Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.
