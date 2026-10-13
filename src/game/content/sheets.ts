@@ -6,6 +6,7 @@ export const sheetDefinitions = [
   { id: 'settlements', name: 'Settlements', requiredFeature: 'settlements' },
   { id: 'military', name: 'Military', requiredFeature: 'military' },
   { id: 'territory', name: 'Territory', requiredFeature: 'territory' },
+  { id: 'trade', name: 'Trade', requiredFeature: 'trade' },
   { id: 'research', name: 'Research', requiredFeature: 'research' },
   { id: 'skills', name: 'Skills', requiredFeature: 'skillTree' },
   { id: 'achievements', name: 'Achievements', requiredFeature: 'achievements' },

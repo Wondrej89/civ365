@@ -276,7 +276,7 @@ describe('research dependencies and navigation', () => {
     expect(
       nextUnresearchedTechnology(s, first.technology.id)!.technology.id,
     ).not.toBe(first.technology.id);
-    expect(nextUnresearchedTechnology(researched('industrial'))).toBeNull();
+    expect(nextUnresearchedTechnology(researched('atomic'))).toBeNull();
   });
 });
 describe('saved locale and legacy discoveries', () => {
@@ -329,7 +329,7 @@ describe('saved locale and legacy discoveries', () => {
     raw.autoPopulationGrowth.accumulator = 5;
     const original = JSON.stringify(raw);
     const loaded = deserializeSave(raw);
-    expect(loaded.saveVersion).toBe(8);
+    expect(loaded.saveVersion).toBe(9);
     expect(loaded.researchedTechnologies).toEqual(
       expect.arrayContaining([
         ...raw.researchedTechnologies,
@@ -420,7 +420,7 @@ describe('saved locale and legacy discoveries', () => {
     const original = JSON.stringify(raw);
     const loaded = deserializeSave(raw);
     expect(loaded.settings.language).toBe('en');
-    expect(loaded.saveVersion).toBe(8);
+    expect(loaded.saveVersion).toBe(9);
     expect(loaded.researchedTechnologies).toEqual(
       expect.arrayContaining([
         ...old.researchedTechnologies,

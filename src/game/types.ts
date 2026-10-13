@@ -41,6 +41,7 @@ export type GameEffect =
       resource?: string;
       value: Amount;
     }
+  | { type: 'tradeEfficiencyBonus'; value: Amount }
   | { type: 'populationCostMultiplier'; value: Amount }
   | { type: 'populationGrowthIntervalMultiplier'; value: Amount }
   | {
@@ -194,6 +195,7 @@ export interface AchievementDefinition {
   condition: Condition;
   effects: GameEffect[];
   reward: string;
+  track?: { id: string; tier: number; target: string; stat: string };
 }
 export interface EraDefinition {
   id: string;
@@ -262,6 +264,7 @@ export interface GameState {
 }
 export type GameAction =
   | { type: 'gather'; resource: string }
+  | { type: 'trade'; sell: string; buy: string; amount: Amount | 'max' }
   | { type: 'grow' }
   | { type: 'autoGrowth'; enabled?: boolean; foodReservePercent?: number }
   | {

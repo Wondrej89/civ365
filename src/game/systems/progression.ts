@@ -161,7 +161,12 @@ export function settleProgression(state: GameState) {
         changed = true;
         logEvent(
           state,
-          eventMessage('Achievement unlocked: {0}.', { '0': a.name }),
+          a.track
+            ? eventMessage('Achievement unlocked: {name} · {target}.', {
+                name: a.name,
+                target: a.track.target,
+              })
+            : eventMessage('Achievement unlocked: {0}.', { '0': a.name }),
           'achievement',
         );
       }

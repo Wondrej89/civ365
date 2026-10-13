@@ -298,7 +298,7 @@ describe('persistent new discoveries', () => {
     raw.settings.language = 'cs';
     const original = JSON.stringify(raw),
       next = deserializeSave(raw);
-    expect(next.saveVersion).toBe(8);
+    expect(next.saveVersion).toBe(9);
     expect([...newDiscoverySheets(next)]).toEqual([]);
     expect(next.discoveryProgress.acknowledgedItems).toEqual(
       currentDiscoveries(next).map((i) => i.id),

@@ -572,7 +572,7 @@ describe('v6 migration and campaign persistence', () => {
       delete raw[key];
     const original = JSON.stringify(raw),
       loaded = deserializeSave(raw);
-    expect(loaded.saveVersion).toBe(8);
+    expect(loaded.saveVersion).toBe(9);
     expect(loaded.settings.language).toBe('cs');
     expect(loaded.population.eq(600)).toBe(true);
     expect(militaryPopulation(loaded).eq(80)).toBe(true);

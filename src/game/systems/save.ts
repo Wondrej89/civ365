@@ -65,7 +65,7 @@ function ids(value: unknown, allowed: string[]): string[] {
     new Set(value).size !== value.length
   )
     throw new Error('Unknown or duplicate content in save.');
-  return value as string[];
+  return [...(value as string[])];
 }
 function validateMessage(
   value: unknown,
@@ -368,6 +368,7 @@ export function migrateSave(value: unknown): Obj {
     save.discoveryProgress = null;
     save.saveVersion = 8;
   }
+  if (save.saveVersion === 8) save.saveVersion = 9;
   if (save.saveVersion !== balance.saveVersion)
     throw new Error(
       'Unsupported save version. Use a save from this version of Civilization.xlsx.',
@@ -769,7 +770,7 @@ export function deserializeSave(value: unknown): GameState {
   )
     throw new Error('Save contains an undiscovered settlement.');
   state.statistics.assignedWorkers = representedPopulation(state);
-  if (raw.discoveryProgress === null && object(value).saveVersion !== 8)
+  if (raw.discoveryProgress === null && Number(object(value).saveVersion) < 8)
     state.discoveryProgress = seedDiscoveries(state);
   else {
     const progress = object(raw.discoveryProgress);

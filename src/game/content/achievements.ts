@@ -1,3 +1,4 @@
+import { milestoneAchievements } from './achievement-tracks';
 import type { AchievementDefinition } from '../types';
 export const achievements: AchievementDefinition[] = [
   {
@@ -5,14 +6,6 @@ export const achievements: AchievementDefinition[] = [
     name: 'First Steps',
     description: 'Reach a population of 2.',
     condition: { type: 'populationAtLeast', value: 2 },
-    effects: [{ type: 'productionMultiplier', resource: 'food', value: 1.02 }],
-    reward: '+2% Food production',
-  },
-  {
-    id: 'smallTribe',
-    name: 'Small Tribe',
-    description: 'Reach a population of 10.',
-    condition: { type: 'populationAtLeast', value: 10 },
     effects: [{ type: 'productionMultiplier', resource: 'food', value: 1.02 }],
     reward: '+2% Food production',
   },
@@ -49,4 +42,43 @@ export const achievements: AchievementDefinition[] = [
     effects: [{ type: 'productionMultiplier', resource: 'food', value: 1.02 }],
     reward: '+2% Food production',
   },
+  {
+    id: 'firstCity',
+    name: 'A City of Your Own',
+    description: 'Establish your first City.',
+    condition: { type: 'settlementsAtLeast', value: 1, minimumTier: 3 },
+    effects: [
+      { type: 'productionMultiplier', resource: 'materials', value: 1.02 },
+    ],
+    reward: '+2% Materials production',
+  },
+  {
+    id: 'firstTrade',
+    name: 'Across Borders',
+    description: 'Complete your first international exchange.',
+    condition: { type: 'statAtLeast', stat: 'tradesCompleted', value: 1 },
+    effects: [{ type: 'tradeEfficiencyBonus', value: 0.01 }],
+    reward: '+1 percentage point trade efficiency',
+  },
+  {
+    id: 'industrialCivilization',
+    name: 'The Industrial Revolution',
+    description: 'Enter the Industrial Age.',
+    condition: { type: 'eraReached', eraId: 'industrial' },
+    effects: [
+      { type: 'productionMultiplier', resource: 'materials', value: 1.03 },
+    ],
+    reward: '+3% Materials production',
+  },
+  {
+    id: 'modernCivilization',
+    name: 'A Connected World',
+    description: 'Enter the Modern Age.',
+    condition: { type: 'eraReached', eraId: 'modern' },
+    effects: [
+      { type: 'productionMultiplier', resource: 'research', value: 1.03 },
+    ],
+    reward: '+3% Research production',
+  },
+  ...milestoneAchievements,
 ];

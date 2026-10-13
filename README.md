@@ -1,6 +1,6 @@
 # Civilization.xlsx
 
-Hratelná browserová incremental hra ve stylu světlého tabulkového workbooku. Začněte s jediným člověkem, sbírejte Food, budujte produkční řetězce, objevujte technologie a rozvíjejte civilizaci až do Renaissance Age. Territory, settlements a armáda tvoří dlouhodobou investiční smyčku; Industrial Age je připravená jako další cíl. Bez backendu, účtu nebo externích služeb.
+Hratelná browserová incremental hra ve stylu světlého tabulkového workbooku. Začněte s jediným člověkem, sbírejte Food, budujte produkční řetězce, objevujte technologie a rozvíjejte civilizaci přes Industrial a Modern Age až ke vstupu do Atomic Age. Territory, settlements a armáda tvoří dlouhodobou investiční smyčku; mezinárodní obchod umožňuje směňovat přebytky zdrojů. Bez backendu, účtu nebo externích služeb.
 
 ## Spuštění
 
@@ -198,9 +198,9 @@ Nový zdroj přidejte do `content/resources.ts`: engine, produkce, formatter a s
 
 ## Rozsah a omezení
 
-Aktuální obsah zahrnuje hratelnou Medieval a Renaissance Age, 62 technologií, settlements, vojenské jednotky a conquest. Industrial Age obsahuje první vstupní obsah; další průmyslové systémy jsou budoucí rozšíření. Economy, Energy, Space a Prestige nejsou implementované ani viditelné. První vstup do každé nové éry dává Civilization point pro současný skill systém. Grafiku tvoří workbook, KPI, tabulky, SVG technologický strom a statistické grafy, bez složitých animací. Produkční jednotky poskytují zdroje; armáda má průběžnou údržbu, zásobování a placené vybavení ve třech kategoriích.
+Aktuální obsah zahrnuje 84 technologií přes Industrial a Modern Age, vstupní obsah Atomic Age, settlements, tři vojenské kategorie, conquest a mezinárodní směnu Food / Materials / Research. Achievementy obsahují 8 jednorázových odměn a 5 sérií po 18 milnících. Wealth, Energy, Space a Prestige zatím nejsou viditelné. První vstup do každé nové éry dává Civilization point pro současný skill systém. Grafiku tvoří workbook, KPI, tabulky, SVG technologický strom a statistické grafy, bez složitých animací. Produkční jednotky poskytují zdroje; armáda má průběžnou údržbu, zásobování a placené vybavení ve třech kategoriích.
 
-Kritické unit/integration testy pokrývají odemykání, časovou produkci, workforce invarianty, technologie, podmínky, efekty, achievementy, přechod éry, skilly, save roundtrip/validaci/migraci, offline produkci a úplný průchod až do Renaissance Age, kapacitu a sloty, vojenský footprint, ztráty, kampaně a jejich offline pokračování, automatický růst, rezervu Food, statistické série a offline shodu. UI lze ověřit také přes reálný prohlížeč.
+Kritické unit/integration testy pokrývají odemykání, časovou produkci, workforce invarianty, technologie, podmínky, efekty, achievementy, přechod éry, skilly, save roundtrip/validaci/migraci, offline produkci a úplný průchod až do Atomic Age, kapacitu a sloty, vojenský footprint, ztráty, kampaně a jejich offline pokračování, automatický růst, rezervu Food, statistické série a offline shodu. UI lze ověřit také přes reálný prohlížeč.
 
 Podrobný seznam nových technologií, pravidla automatického růstu a rezervy, sampling, rozšiřování větví/grafů a doporučené balance parametry jsou v [docs/progression.md](docs/progression.md).
 
@@ -213,3 +213,5 @@ Dávkový růst, škálování cen měst, údržba armády, equipment tiers, tř
 Graf odvozuje pořadí z prerequisites, vojenský výzkum má vlastní sloupec a pozdější kroky nemohou přeskočit předchozí ve své větvi. Save v7 zachovává už koupené objevy: [docs/research-order.md](docs/research-order.md).
 
 Nové záložky a prvky zůstávají zvýrazněné do otevření, interakce nebo pěti sekund skutečného zobrazení. Značky se ukládají ve v8; velké monitory mají větší oznámení: [docs/discoveries.md](docs/discoveries.md).
+
+Mezinárodní obchod, opakované milníky, Industrial/Modern obsah, vstup do Atomic Age a migrace v9: [docs/trade-achievements-future.md](docs/trade-achievements-future.md).

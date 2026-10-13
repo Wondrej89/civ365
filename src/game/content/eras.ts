@@ -134,4 +134,29 @@ export const eras: EraDefinition[] = [
       ...milestones(config.industrial),
     ],
   ),
+  chapter(
+    'modern',
+    'Modern Age',
+    'Industry connects cities, knowledge, and international exchange.',
+    'industrial',
+    [
+      ...tech('electricEngineering', 'vaccination', 'combinedArms'),
+      ...milestones(config.modern),
+    ],
+  ),
+  chapter(
+    'atomic',
+    'Atomic Age',
+    'A new scientific frontier awaits your civilization.',
+    'modern',
+    [
+      ...tech(
+        'atomicTheory',
+        'modernMedicine',
+        'mechanizedLogistics',
+        'globalMarkets',
+      ),
+      ...milestones(config.atomic),
+    ],
+  ),
 ];
