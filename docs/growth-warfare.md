@@ -6,9 +6,9 @@ Tato změna navazuje na stávající engine a workbook UI. Populace v pozdních 
 
 Počet lidí na ruční i automatický krok je:
 
-`floor(product(populationGrowthAmountMultiplier) + City/Metropolis count × sum(populationGrowthPerCity))`.
+`floor(max(1, City/Metropolis count × (1 + sum(populationGrowthPerCity))) × product(populationGrowthAmountMultiplier))`.
 
-Urban Communities přidá ×4, Public Baths pouze zrychlí interval, Town Waterworks další ×2 a Humanism ×1.5. Municipal Charters přidává +1 za každé City nebo Metropolis. Dvě Cities s kompletním Medieval výzkumem tedy dávají **10 lidí za krok**. Town a Settlement tento městský bonus neposkytují.
+Urban Communities přidá ×4, Public Baths pouze zrychlí interval, Town Waterworks další ×2 a Humanism ×1.5. Municipal Charters přidává +1 základního člověka za City nebo Metropolis před násobením. Dvě Cities s kompletním Medieval výzkumem tedy dávají **32 lidí za krok**. Town a Settlement tento městský bonus neposkytují.
 
 Celá dávka nyní stojí aktuální Food cenu jednoho člověka před růstovým krokem. Výzkum i města tedy přidávají lidi bez násobení ceny dávky. Základ 10 Food a počáteční násobič 1.12 zůstávají; další části jsou nyní 1.008 a 1.001. Tím se odstraňuje pozdní extrémní cena, nikoli potřeba Food. `populationCostMultiplier` efekty zůstávají.
 
@@ -80,3 +80,5 @@ Aktuální formát je v8; značky nového obsahu popisuje [discoveries.md](disco
 Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.
 
 Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.
+
+Aktuální městský základ násobeného růstu a výnosnější produkční investice popisuje [city-growth-production.md](city-growth-production.md). Starší měření průchodů výše zachycují předchozí balance.

@@ -9,6 +9,9 @@ export const balance = {
     industrial: { research: 20000, materials: 2000 },
   } as Record<string, { research: number; materials: number }>,
   populationGrowth: {
+    basePeoplePerCity: 1,
+    minimumBaseAmount: 1,
+    minimumCityTier: 3,
     baseFoodCost: 10,
     multiplier: 1.12,
     scalingBreakpoint: 20,

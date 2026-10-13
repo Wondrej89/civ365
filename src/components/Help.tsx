@@ -45,7 +45,7 @@ export function HelpSheet() {
             <h2>{tr('Grow together')}</h2>
             <p>
               {tr(
-                'Spend Food to welcome new people. Urban Communities and Town Waterworks increase people per growth step; Public Baths speeds up automatic growth. Municipal Charters adds a person per City or Metropolis. The whole group costs the current Food price of one person. Capacity can shorten a group; growth stops at Population Capacity.',
+                'Cities and Metropolises provide base population growth; before your first City the base is one. Municipal Charters adds one base person per City. Urban Communities, Town Waterworks and Humanism multiply the entire base; Public Baths speeds up automatic growth. The whole group costs the current Food price of one person. Capacity can shorten a group; growth stops at Population Capacity.',
               )}
             </p>
           </div>

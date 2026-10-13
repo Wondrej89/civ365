@@ -37,10 +37,10 @@ export const units: ProductionUnitDefinition[] = [
     tier: 3,
     upgradeFrom: { unitId: 'farmer', amount: 4 },
     costs: [
-      { resource: 'materials', amount: 100 },
-      { resource: 'food', amount: 250 },
+      { resource: 'materials', amount: 600 },
+      { resource: 'food', amount: 500 },
     ],
-    baseProduction: [{ resource: 'food', amount: 28 }],
+    baseProduction: [{ resource: 'food', amount: 32 }],
     unlockCondition: {
       type: 'technologyOwned',
       technologyId: 'advancedAgriculture',
@@ -55,10 +55,10 @@ export const units: ProductionUnitDefinition[] = [
     tier: 4,
     upgradeFrom: { unitId: 'farm', amount: 5 },
     costs: [
-      { resource: 'materials', amount: 4000 },
-      { resource: 'food', amount: 5000 },
+      { resource: 'materials', amount: 60000 },
+      { resource: 'food', amount: 15000 },
     ],
-    baseProduction: [{ resource: 'food', amount: 150 }],
+    baseProduction: [{ resource: 'food', amount: 480 }],
     unlockCondition: { type: 'technologyOwned', technologyId: 'factories' },
   },
   {
@@ -99,10 +99,10 @@ export const units: ProductionUnitDefinition[] = [
     tier: 3,
     upgradeFrom: { unitId: 'miner', amount: 4 },
     costs: [
-      { resource: 'materials', amount: 200 },
-      { resource: 'food', amount: 100 },
+      { resource: 'materials', amount: 1200 },
+      { resource: 'food', amount: 300 },
     ],
-    baseProduction: [{ resource: 'materials', amount: 28 }],
+    baseProduction: [{ resource: 'materials', amount: 32 }],
     unlockCondition: { type: 'technologyOwned', technologyId: 'bronzeWorking' },
     visibilityCondition: { type: 'eraReached', eraId: 'bronze' },
   },
@@ -113,8 +113,8 @@ export const units: ProductionUnitDefinition[] = [
     category: 'materials',
     tier: 4,
     upgradeFrom: { unitId: 'workshop', amount: 5 },
-    costs: [{ resource: 'materials', amount: 5000 }],
-    baseProduction: [{ resource: 'materials', amount: 150 }],
+    costs: [{ resource: 'materials', amount: 100000 }],
+    baseProduction: [{ resource: 'materials', amount: 480 }],
     unlockCondition: { type: 'technologyOwned', technologyId: 'factories' },
   },
   {
@@ -154,10 +154,10 @@ export const units: ProductionUnitDefinition[] = [
     tier: 3,
     upgradeFrom: { unitId: 'scholar', amount: 4 },
     costs: [
-      { resource: 'research', amount: 150 },
-      { resource: 'materials', amount: 200 },
+      { resource: 'research', amount: 600 },
+      { resource: 'materials', amount: 1500 },
     ],
-    baseProduction: [{ resource: 'research', amount: 8.4 }],
+    baseProduction: [{ resource: 'research', amount: 9.6 }],
     unlockCondition: {
       type: 'technologyOwned',
       technologyId: 'institutionalLearning',
@@ -173,10 +173,10 @@ export const units: ProductionUnitDefinition[] = [
     tier: 4,
     upgradeFrom: { unitId: 'academy', amount: 5 },
     costs: [
-      { resource: 'research', amount: 1000 },
-      { resource: 'materials', amount: 3000 },
+      { resource: 'research', amount: 15000 },
+      { resource: 'materials', amount: 80000 },
     ],
-    baseProduction: [{ resource: 'research', amount: 45 }],
+    baseProduction: [{ resource: 'research', amount: 144 }],
     unlockCondition: { type: 'technologyOwned', technologyId: 'factories' },
   },
 ];

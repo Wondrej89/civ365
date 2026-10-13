@@ -48,21 +48,35 @@ export function growthModifiers(state: GameState) {
         })),
     );
 }
-export function populationGrowthAmount(state: GameState) {
+/** Cities define the base; every growth multiplier applies to the whole base. */
+export function populationGrowthBreakdown(state: GameState) {
   const effects = activeEffects(state);
-  const base = effects.reduce(
+  const multiplier = effects.reduce(
     (n, e) =>
       e.type === 'populationGrowthAmountMultiplier' ? n.mul(e.value) : n,
     D(1),
   );
-  const cityBonus = effects.reduce(
+  const peoplePerCity = effects.reduce(
     (n, e) => (e.type === 'populationGrowthPerCity' ? n.add(e.value) : n),
-    D(),
+    D(balance.populationGrowth.basePeoplePerCity),
   );
-  return base
-    .add(cityBonus.mul(settlementCount(state, 3)))
-    .floor()
-    .max(1);
+  const cities = settlementCount(
+    state,
+    balance.populationGrowth.minimumCityTier,
+  );
+  const base = cities
+    .mul(peoplePerCity)
+    .max(balance.populationGrowth.minimumBaseAmount);
+  return {
+    cities,
+    peoplePerCity,
+    base,
+    multiplier,
+    amount: base.mul(multiplier).floor().max(1),
+  };
+}
+export function populationGrowthAmount(state: GameState) {
+  return populationGrowthBreakdown(state).amount;
 }
 /** A growth step costs one person's current price; research increases the people it provides. */
 export function growthCost(

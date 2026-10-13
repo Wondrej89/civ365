@@ -604,7 +604,7 @@ const entries: Entry[] = [
       { type: 'populationGrowthPerCity', value: 1 },
     ],
     effectText:
-      '+30% settlement capacity · +1 person per City/Metropolis per growth step',
+      '+30% settlement capacity · +1 base person per City/Metropolis before growth multipliers',
   },
   {
     id: 'professionalArmy',

@@ -37,6 +37,46 @@ function realm(era = 'agricultural') {
   return s;
 }
 describe('persistent new discoveries', () => {
+  it('announces the new city breakdown and unlocked upgrade yields once, without re-announcing numeric changes', () => {
+    const s = realm('industrial');
+    const additions = currentDiscoveries(s)
+      .filter(
+        (item) =>
+          item.id === 'population:growth-base' ||
+          item.id.startsWith('workforce:yield:'),
+      )
+      .map((item) => item.id);
+    s.discoveryProgress = seedDiscoveries(s);
+    s.discoveryProgress.noticedItems = s.discoveryProgress.noticedItems.filter(
+      (id) => !additions.includes(id),
+    );
+    s.discoveryProgress.acknowledgedItems =
+      s.discoveryProgress.acknowledgedItems.filter(
+        (id) => !additions.includes(id),
+      );
+    expect(newDiscoverySheets(s).has('population')).toBe(true);
+    expect(newDiscoverySheets(s).has('workforce')).toBe(true);
+    expect(additions).toContain('population:growth-base');
+    expect(additions).toContain('workforce:yield:industrialFarm');
+    let read = acknowledgeSheet(acknowledgeSheet(s, 'population'), 'workforce');
+    for (const id of additions) read = acknowledgeDiscovery(read, id);
+    read.settlements.city = D(3);
+    read.settlementInvestments.city = D(3);
+    read.settlementInvestments.town = D(3);
+    read.settlementInvestments.settlement = D(3);
+    read.ownedTerritories.frontier = D(3);
+    read.statistics.territoriesConquered = D(3);
+    read.statistics.totalSettlementsBuilt = D(4);
+    read.population = D(150);
+    read.statistics.totalPopulationCreated = D(150);
+    read.statistics.maxPopulation = D(150);
+    read.productionUnits.farm = D(5);
+    expect(newDiscoverySheets(read).has('population')).toBe(false);
+    expect(newDiscoverySheets(read).has('workforce')).toBe(false);
+    expect(
+      deserializeSave(JSON.parse(serializeSave(read))).discoveryProgress,
+    ).toEqual(read.discoveryProgress);
+  });
   it('marks newly revealed resource rows and controls on already visited sheets', () => {
     const s = createInitialState(1000);
     s.population = D(4);

@@ -6,11 +6,11 @@ Farm již nedává `1.1 ^ počet Farms` násobič Farmerům a Laboratory podobn�
 
 | Řetězec   | Základní produkce na člověka od tieru 1 do 4 |
 | --------- | -------------------------------------------- |
-| Food      | 0.5 → 0.8 → 1.4 → 1.5/s                      |
-| Materials | 0.5 → 0.8 → 1.4 → 1.5/s                      |
-| Research  | 0.15 → 0.24 → 0.42 → 0.45/s                  |
+| Food      | 0.5 → 0.8 → 1.6 → 4.8/s                      |
+| Materials | 0.5 → 0.8 → 1.6 → 4.8/s                      |
+| Research  | 0.15 → 0.24 → 0.48 → 1.44/s                  |
 
-Všechny tři řetězce zachovávají populace 1 / 5 / 20 / 100 lidí na jednotku, ceny a převody. UI Production comparison počítá skutečný Net gain celého systému, včetně obecně podporovaných vlastnických efektů. Popis Irrigation, Division of Labor, Craftsmanship a Workforce vysvětluje dědění bonusů.
+Všechny tři řetězce zachovávají populace 1 / 5 / 20 / 100 lidí na jednotku a převody. Vyšší ceny pokročilých investic shrnuje [city-growth-production.md](city-growth-production.md). UI Production comparison počítá skutečný Net gain celého systému, včetně obecně podporovaných vlastnických efektů. Popis Irrigation, Division of Labor, Craftsmanship a Workforce vysvětluje dědění bonusů.
 
 ## Různé přínosy navazujících karet
 
@@ -21,7 +21,7 @@ Všechny tři řetězce zachovávají populace 1 / 5 / 20 / 100 lidí na jednotk
 - Printing Press zvyšuje Research, Humanism upravuje cenu a počet lidí, Scientific Method znovu zvyšuje Research.
 - Proto-Industry zvyšuje Materials, Steam Experiments snižuje Materials cenu sídel o 10 % a připravuje Industrial Age.
 
-Dokončený Classical výzkum stále poskytuje čtyři lidi každé dvě sekundy; dokončený Medieval výzkum se dvěma městy deset lidí. Dávkový růst, Food rezerva, kapacita, údržba armády a více podmínek pro vstup do epoch fungují dál. Ceny výzkumů ani požadavky epoch se nemění.
+Dokončený Classical výzkum násobí celý městský základ ×4 při dvousekundovém intervalu; dokončený Medieval výzkum se dvěma městy dává 32 lidí. Dávkový růst, Food rezerva, kapacita, údržba armády a více podmínek pro vstup do epoch fungují dál. Ceny výzkumů ani požadavky epoch se nemění.
 
 ## Dobové názvy
 
@@ -64,3 +64,5 @@ Jde o jednu deterministickou hráčskou politiku, nikoli časové zámky nebo ga
 Chromium ověřil produkční build ze statického hostingu pod `/civ365/`: v8 import s populací nad capem a původními značkami přečtení, všech devět placených produkčních převodů a reload, skutečný výzkum Urban Communities a Public Baths včetně růstového UI a podmínek, dobové názvy, EN/CS nastavení a mobilní sheets při 390 px. Bez JavaScript chyb, asset 404 nebo vývojového panelu. Grow tlačítko při dosažené kapacitě již nevypisuje záporný nedostatek Food.
 
 Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.
+
+Aktuální městský základ násobeného růstu a výnosnější produkční investice popisuje [city-growth-production.md](city-growth-production.md). Starší měření průchodů výše zachycují předchozí balance.

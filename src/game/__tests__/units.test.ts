@@ -356,7 +356,7 @@ describe('tier production, modifiers and reveal states', () => {
         state = action(state, 'upgrade', 'farm');
         expect(state.productionUnits.farmer.eq(2)).toBe(true);
         expect(productionPerSecond(state).food.toNumber()).toBeCloseTo(
-          (2 * 4 + 2 * 28 + 2) * 1.02 * 1.02 * 1.3,
+          (2 * 4 + 2 * 32 + 2) * 1.02 * 1.02 * 1.3,
         );
         expect(
           activeEffects(state).some((e) => e.type === 'productionFlatBonus'),
@@ -404,6 +404,12 @@ describe('tier production, modifiers and reveal states', () => {
           state.population = representedPopulation(state).add(5);
           const before = productionPerSecond(state)[unit.category];
           const preview = upgradePreview(state, unit)!;
+          const minimumRatio = unit.tier >= 4 ? 3 : unit.tier === 3 ? 2 : 1.6;
+          expect(
+            preview.produced[unit.category]
+              .div(preview.replaced[unit.category])
+              .toNumber(),
+          ).toBeGreaterThanOrEqual(minimumRatio - 1e-10);
           const upgraded = action(state, 'upgrade', unit.id);
           expect(
             preview.gain[unit.category].gt(0),
@@ -422,6 +428,34 @@ describe('tier production, modifiers and reveal states', () => {
         }
     },
   );
+  it('requires the larger industrial investment and charges Max consistently without changing the workforce', () =>
+    withFutureUnits(() => {
+      const state = ready(300);
+      state.researchedTechnologies.push('futureUnits');
+      state.productionUnits.workshop = D(12);
+      state.resources.materials = D(99_999);
+      expect(maxCreatable(state, unitById('factory')!).eq(0)).toBe(true);
+      expect(action(state, 'upgrade', 'factory')).toBe(state);
+      state.resources.materials = D(250_000);
+      const bulk = action(state, 'upgrade', 'factory', 'max');
+      const singles = action(
+        action(state, 'upgrade', 'factory'),
+        'upgrade',
+        'factory',
+      );
+      expect(bulk.productionUnits.factory.eq(2)).toBe(true);
+      expect(bulk.productionUnits.workshop.eq(2)).toBe(true);
+      expect(bulk.resources.materials.eq(50_000)).toBe(true);
+      expect(bulk.productionUnits).toEqual(singles.productionUnits);
+      expect(bulk.resources).toEqual(singles.resources);
+      expect(idlePopulation(bulk).eq(idlePopulation(state))).toBe(true);
+      expect(bulk.population.eq(state.population)).toBe(true);
+      expect(
+        productionPerSecond(bulk).materials.gt(
+          productionPerSecond(state).materials,
+        ),
+      ).toBe(true);
+    }));
   it('inherits both unit and legacy job modifiers once, respects resource filters, and keeps higher-tier bonuses out of ancestors', () => {
     const tech = technologies.find((t) => t.id === 'agriculture')!;
     const original = tech.effects;
@@ -453,14 +487,14 @@ describe('tier production, modifiers and reveal states', () => {
         unitProduction(state, unitById('farmer')!, 1).food.toNumber(),
       ).toBe(24);
       expect(unitProduction(state, unitById('farm')!, 1).food.toNumber()).toBe(
-        840,
+        960,
       );
       expect(
         unitProduction(state, unitById('industrialFarm')!, 1).food.toNumber(),
-      ).toBe(4500);
+      ).toBe(14400);
       expect(
         unitProduction(state, unitById('academy')!, 1).research.toNumber(),
-      ).toBe(8.4);
+      ).toBe(9.6);
     } finally {
       tech.effects = original;
     }

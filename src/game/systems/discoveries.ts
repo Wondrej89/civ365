@@ -108,8 +108,11 @@ export function currentDiscoveries(state: GameState): Discovery[] {
         id: unitDiscoveryId(unit.id, status),
         mode: status === 'revealed' ? 'passive' : 'interactive',
       });
+    if (unit.upgradeFrom && (status === 'available' || status === 'owned'))
+      add('workforce', `yield:${unit.id}`);
   }
   add('population', 'manual', 'interactive');
+  add('population', 'growth-base');
   if (capacityReached(state)) add('population', 'capacity', 'interactive');
   result.push({
     sheet: 'population',
@@ -312,8 +315,10 @@ export function discoveryIds() {
       ['revealed', 'available'].map((mode) => unitDiscoveryId(u.id, mode)),
     ),
     'population:manual',
+    'population:growth-base',
     'population:capacity',
     'population:automation',
+    ...units.filter((u) => u.upgradeFrom).map((u) => `workforce:yield:${u.id}`),
     ...['population', 'statistics'].flatMap((s) =>
       ['civilian', 'military'].map((mode) => `${s}:allocation:${mode}`),
     ),

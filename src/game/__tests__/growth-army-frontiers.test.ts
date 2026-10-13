@@ -17,6 +17,7 @@ import {
 import { applyOfflineProgress } from '../systems/offline';
 import {
   populationGrowthAmount,
+  populationGrowthBreakdown,
   growthCost,
   growthQuote,
   growthInterval,
@@ -76,17 +77,59 @@ function realm(era = 'medieval') {
   return state;
 }
 describe('growth groups and meaningful city investment', () => {
-  it('progresses from one person to research batches and adds people per City/Metropolis', () => {
+  it('uses one fallback before cities, counts City and Metropolis equally, and ignores lower settlement tiers', () => {
+    const state = realm('classical');
+    state.researchedTechnologies = state.researchedTechnologies.filter(
+      (id) => id !== 'urbanCommunities',
+    );
+    state.settlements.city = D();
+    state.settlements.metropolis = D();
+    state.settlements.town = D(20);
+    expect(populationGrowthBreakdown(state).base.eq(1)).toBe(true);
+    expect(populationGrowthAmount(state).eq(1)).toBe(true);
+    state.settlements.city = D(3);
+    expect(populationGrowthAmount(state).eq(3)).toBe(true);
+    state.settlements.city = D(2);
+    state.settlements.metropolis = D(1);
+    expect(populationGrowthAmount(state).eq(3)).toBe(true);
+    expect(populationGrowthBreakdown(state).cities.eq(3)).toBe(true);
+  });
+  it('multiplies all cities together before rounding, including fractional modifiers and very large counts', () => {
+    const state = realm('classical');
+    const era = eras.find((e) => e.id === 'classical')!;
+    state.researchedTechnologies = state.researchedTechnologies.filter(
+      (id) => id !== 'urbanCommunities',
+    );
+    state.settlements.city = D(3);
+    era.effects.push({ type: 'populationGrowthAmountMultiplier', value: 16 });
+    try {
+      expect(populationGrowthAmount(state).eq(48)).toBe(true);
+      era.effects[era.effects.length - 1] = {
+        type: 'populationGrowthAmountMultiplier',
+        value: 1.5,
+      };
+      expect(populationGrowthAmount(state).eq(4)).toBe(true); // floor(3 × 1.5), not 3 × floor(1.5)
+      era.effects[era.effects.length - 1] = {
+        type: 'populationGrowthAmountMultiplier',
+        value: 16,
+      };
+      state.settlements.city = D('1e400');
+      expect(populationGrowthAmount(state).eq('1.6e401')).toBe(true);
+    } finally {
+      era.effects.pop();
+    }
+  });
+  it('multiplies the whole city-derived base, including city bonuses and era effects', () => {
     expect(populationGrowthAmount(createInitialState(1000)).eq(1)).toBe(true);
     const state = realm();
-    expect(populationGrowthAmount(state).eq(10)).toBe(true); // 4 × 2 + two Cities
+    expect(populationGrowthAmount(state).eq(32)).toBe(true); // two Cities × two base people × (4 × 2)
     state.settlements.city = D(3);
     state.settlements.metropolis = D(1);
-    expect(populationGrowthAmount(state).eq(12)).toBe(true);
+    expect(populationGrowthAmount(state).eq(64)).toBe(true);
     const era = eras.find((e) => e.id === 'medieval')!;
     era.effects.push({ type: 'populationGrowthAmountMultiplier', value: 3 });
     try {
-      expect(populationGrowthAmount(state).eq(28)).toBe(true);
+      expect(populationGrowthAmount(state).eq(192)).toBe(true);
     } finally {
       era.effects.pop();
     }
@@ -101,7 +144,7 @@ describe('growth groups and meaningful city investment', () => {
       applyAction(state, { type: 'autoGrowth', enabled: true }),
       growthInterval(state),
     );
-    expect(manual.population.sub(state.population).eq(10)).toBe(true);
+    expect(manual.population.sub(state.population).eq(32)).toBe(true);
     expect(automatic.population.eq(manual.population)).toBe(true);
     expect(
       manual.resources.food.eq(state.resources.food.sub(quote.foodCost)),
@@ -110,7 +153,7 @@ describe('growth groups and meaningful city investment', () => {
       manual.resources.food.toNumber(),
       7,
     );
-    expect(idlePopulation(manual).sub(beforeIdle).eq(10)).toBe(true);
+    expect(idlePopulation(manual).sub(beforeIdle).eq(32)).toBe(true);
   });
   it('charges once at the population before the step, including batches crossing scaling breakpoints', () => {
     const state = realm();
@@ -126,7 +169,7 @@ describe('growth groups and meaningful city investment', () => {
     const cost = populationCost(state);
     state.resources.food = cost.mul(2);
     const quote = growthQuote(state, 50);
-    expect(quote.amount.eq(10)).toBe(true);
+    expect(quote.amount.eq(32)).toBe(true);
     expect(quote.foodCost.eq(cost)).toBe(true);
     const automatic = simulate(
       applyAction(state, {
@@ -136,7 +179,7 @@ describe('growth groups and meaningful city investment', () => {
       }),
       growthInterval(state),
     );
-    expect(automatic.population.sub(state.population).eq(10)).toBe(true);
+    expect(automatic.population.sub(state.population).eq(32)).toBe(true);
     expect(
       automatic.resources.food.gte(state.resources.food.mul(0.5).sub(1e-8)),
     ).toBe(true);
@@ -155,7 +198,7 @@ describe('growth groups and meaningful city investment', () => {
     expect(
       applyAction(state, { type: 'grow' })
         .population.sub(state.population)
-        .eq(10),
+        .eq(32),
     ).toBe(true);
   });
   it('clamps a batch at capacity and preserves existing population above it', () => {
@@ -181,7 +224,7 @@ describe('growth groups and meaningful city investment', () => {
       ).population.eq(next.population),
     ).toBe(true);
   });
-  it('gives twenty Renaissance people for one food price at the reported late-game population', () => {
+  it('gives a city-scaled Renaissance group for one food price at the reported late-game population', () => {
     const state = realm('renaissance');
     state.population = D(5730);
     state.statistics.totalPopulationCreated = D(5730);
@@ -192,10 +235,10 @@ describe('growth groups and meaningful city investment', () => {
     state.ownedTerritories.frontier = D(11);
     state.statistics.territoriesConquered = D(11);
     state.resources.food = populationCost(state);
-    expect(populationGrowthAmount(state).eq(20)).toBe(true);
-    expect(growthQuote(state).amount.eq(20)).toBe(true);
+    expect(populationGrowthAmount(state).eq(192)).toBe(true);
+    expect(growthQuote(state).amount.eq(192)).toBe(true);
     const next = applyAction(state, { type: 'grow' });
-    expect(next.population.eq(5750)).toBe(true);
+    expect(next.population.eq(5922)).toBe(true);
     expect(next.resources.food.eq(0)).toBe(true);
     expect(next.statistics.foodSpentOnGrowth.eq(state.resources.food)).toBe(
       true,
@@ -203,7 +246,7 @@ describe('growth groups and meaningful city investment', () => {
     expect(
       next.statistics.totalPopulationCreated
         .sub(state.statistics.totalPopulationCreated)
-        .eq(20),
+        .eq(192),
     ).toBe(true);
   });
   it('keeps late food costs below the previous runaway curve without removing early scaling', () => {

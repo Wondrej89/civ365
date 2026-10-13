@@ -228,6 +228,10 @@ export function DebugPanel() {
         {balance.populationGrowth.lateMultiplier} {tr('· City upgrades ×')}
         {balance.settlements.upgradeCostGrowth.city} {tr('· counter strength')}
         {balance.military.counterStrength}
+        {tr(' · base growth {people} per City, minimum {minimum}', {
+          people: balance.populationGrowth.basePeoplePerCity,
+          minimum: balance.populationGrowth.minimumBaseAmount,
+        })}
       </p>
     </details>
   );

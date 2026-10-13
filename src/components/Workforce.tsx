@@ -135,6 +135,10 @@ function UnitCard({
   const reason = creationBlockReason(state, unit),
     source = unit.upgradeFrom ? unitById(unit.upgradeFrom.unitId)! : null;
   const preview = upgradePreview(state, unit);
+  const replaced = preview?.replaced[unit.category],
+    produced = preview?.produced[unit.category];
+  const outputRatio =
+    replaced?.gt(0) && produced ? produced.div(replaced) : null;
   function act(
     type: Extract<GameAction, { unitId: string }>['type'],
     amount: number | 'max',
@@ -196,6 +200,18 @@ function UnitCard({
           <ProductionValues values={perUnit} /> {tr('per unit')}
         </span>
       </div>
+      {outputRatio && (
+        <Discovery
+          discoveryId={`workforce:yield:${unit.id}`}
+          className="unit-upgrade-yield"
+        >
+          <strong>
+            {tr('×{factor} production for the same workforce', {
+              factor: formatNumber(outputRatio, 2),
+            })}
+          </strong>
+        </Discovery>
+      )}
       <div className="unit-footprint">
         <Users size={12} />
         {formatNumber(getPopulationFootprint(unit.id), 0)}{' '}
