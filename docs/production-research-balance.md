@@ -62,3 +62,5 @@ Kompletní sada má 185 procházejících testů. Nový save prošel pomocí bě
 Jde o jednu deterministickou hráčskou politiku, nikoli časové zámky nebo garantované časy. Populační kapacita, investice do měst a conquest dál podmiňují postup.
 
 Chromium ověřil produkční build ze statického hostingu pod `/civ365/`: v8 import s populací nad capem a původními značkami přečtení, všech devět placených produkčních převodů a reload, skutečný výzkum Urban Communities a Public Baths včetně růstového UI a podmínek, dobové názvy, EN/CS nastavení a mobilní sheets při 390 px. Bez JavaScript chyb, asset 404 nebo vývojového panelu. Grow tlačítko při dosažené kapacitě již nevypisuje záporný nedostatek Food.
+
+Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.

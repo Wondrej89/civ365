@@ -15,7 +15,16 @@ export const frontierDefense = (state: GameState) =>
     D(balance.conquest.baseDefense)
       .mul(
         D(balance.conquest.defenseGrowth).pow(
-          state.statistics.territoriesConquered,
+          state.statistics.territoriesConquered.min(
+            balance.conquest.lateDefenseBreakpoint,
+          ),
+        ),
+      )
+      .mul(
+        D(balance.conquest.lateDefenseGrowth).pow(
+          state.statistics.territoriesConquered
+            .sub(balance.conquest.lateDefenseBreakpoint)
+            .max(0),
         ),
       )
       .toString(),

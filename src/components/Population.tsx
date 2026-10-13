@@ -81,7 +81,7 @@ export function PopulationSheet() {
           className="panel population-panel"
         >
           <h2>{tr('Manual growth')}</h2>
-          <p>{tr('Food for a full growth step')}</p>
+          <p>{tr('Food for one growth step')}</p>
           <strong className="growth-cost">
             {formatNumber(growthCost(state))} {tr('Food')}
           </strong>
@@ -170,7 +170,7 @@ export function PopulationSheet() {
             </dl>
             <p className="sheet-note">
               {tr(
-                'Each step protects your Food reserve and can create a smaller group if Food or capacity is limited. The same rules apply while you are away.',
+                'Each step buys the whole group for the current Food price of one person and protects your Food reserve. Capacity can shorten the group; insufficient Food waits for the next attempt. The same rules apply while you are away.',
               )}
             </p>
             {growthModifiers(state).length > 0 && (

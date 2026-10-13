@@ -42,6 +42,8 @@ export const balance = {
   conquest: {
     baseDefense: 40,
     defenseGrowth: 1.8,
+    lateDefenseBreakpoint: 8,
+    lateDefenseGrowth: 1.35,
     baseDurationSeconds: 180,
     minimumDurationSeconds: 15,
     maximumDurationSeconds: 600,

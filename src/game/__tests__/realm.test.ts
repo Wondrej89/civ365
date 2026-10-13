@@ -400,7 +400,9 @@ describe('deterministic campaigns in the shared simulation', () => {
   it('has an unbounded configurable defense curve and generic casualty modifiers', () => {
     const state = armed();
     state.statistics.territoriesConquered = D(10);
-    expect(frontierDefense(state).toNumber()).toBeCloseTo(40 * 1.8 ** 10);
+    expect(frontierDefense(state).toNumber()).toBeCloseTo(
+      40 * 1.8 ** 8 * 1.35 ** 2,
+    );
     const before = campaignForecast(state).casualtyRate;
     state.researchedTechnologies.push('fortifications');
     expect(campaignForecast(state).casualtyRate).toBeCloseTo(before * 0.65);
