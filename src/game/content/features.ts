@@ -110,6 +110,15 @@ export const features: FeatureDefinition[] = [
     unlockCondition: { type: 'technologyOwned', technologyId: 'espionage' },
     notify: true,
   },
+  {
+    id: 'trade',
+    name: 'International Trade',
+    unlockCondition: {
+      type: 'technologyOwned',
+      technologyId: 'longDistanceTrade',
+    },
+    notify: true,
+  },
   ...['economy', 'energy', 'space', 'prestige'].map((id) => ({
     id,
     name: id,

@@ -3,6 +3,11 @@ import { units } from '../content/units';
 import { technologies } from '../content/technologies';
 import { settlements } from '../content/settlements';
 import { militaryUnits } from '../content/military';
+import {
+  achievementTracks,
+  achievementTrackProgress,
+} from '../content/achievement-tracks';
+import { tradeDiscoveryId } from '../engine/trade';
 import { achievements } from '../content/achievements';
 import { skills } from '../content/skills';
 import { resources } from '../content/resources';
@@ -201,7 +206,7 @@ export function currentDiscoveries(state: GameState): Discovery[] {
       !skill.exclusiveWith.some((id) => (state.purchasedSkills[id] ?? 0) > 0);
     add('skills', `skill:${skill.id}`, usable ? 'interactive' : 'passive');
   }
-  for (const achievement of achievements) {
+  for (const achievement of achievements.filter((a) => !a.track)) {
     const owned = state.achievements.includes(achievement.id);
     if (!achievement.hidden || owned)
       add(
@@ -209,6 +214,23 @@ export function currentDiscoveries(state: GameState): Discovery[] {
         `achievement:${achievement.id}:${owned ? 'earned' : 'progress'}`,
       );
   }
+  for (const track of achievementTracks)
+    add(
+      'achievements',
+      `track:${track.id}:${achievementTrackProgress(state, track.id).earned.length}`,
+    );
+  result.push({
+    sheet: 'trade',
+    id: tradeDiscoveryId(state),
+    mode: 'interactive',
+  });
+  for (const tech of technologies.filter((t) =>
+    t.effects.some((e) => e.type === 'tradeEfficiencyBonus'),
+  ))
+    add(
+      'trade',
+      `improvement:${tech.id}:${state.researchedTechnologies.includes(tech.id) ? 'earned' : 'preview'}`,
+    );
   const visible = new Set<string>(
     sheetDefinitions
       .filter((s) => unlocked(s.requiredFeature))
@@ -284,6 +306,20 @@ export function acknowledgeDiscovery(state: GameState, id: string): GameState {
 /** Accept previously seen revisions too, so upgrades never invalidate a save. */
 export function discoveryIds() {
   return new Set([
+    ...Array.from({ length: 101 }, (_, i) => `trade:exchange:${i}`),
+    ...technologies
+      .filter((t) => t.effects.some((e) => e.type === 'tradeEfficiencyBonus'))
+      .flatMap((t) =>
+        ['preview', 'earned'].map(
+          (mode) => `trade:improvement:${t.id}:${mode}`,
+        ),
+      ),
+    ...achievementTracks.flatMap((t) =>
+      Array.from(
+        { length: balance.achievementTracks.tiers + 1 },
+        (_, i) => `achievements:track:${t.id}:${i}`,
+      ),
+    ),
     'overview:population',
     ...[...guidance.map((g) => g.id), 'complete'].map(
       (id) => `overview:guidance:${id}`,

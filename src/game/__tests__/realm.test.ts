@@ -520,7 +520,7 @@ describe('era gates, discoveries and migration', () => {
       delete raw[key];
     const original = JSON.stringify(raw),
       loaded = deserializeSave(raw);
-    expect(loaded.saveVersion).toBe(8);
+    expect(loaded.saveVersion).toBe(9);
     expect(loaded.population.eq(500)).toBe(true);
     expect(loaded.productionUnits.gatherer.eq(100)).toBe(true);
     expect(loaded.researchedTechnologies).toEqual(

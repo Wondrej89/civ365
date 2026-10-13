@@ -27,6 +27,11 @@ export const statisticIds = [
   'campaignsCompleted',
   'foodSpentOnMilitary',
   'materialsSpentOnMilitary',
+  'tradesCompleted',
+  'tradeValueExchanged',
+  'foodTradedAway',
+  'materialsTradedAway',
+  'researchTradedAway',
 ];
 export function createInitialState(now = Date.now()): GameState {
   const state: GameState = {

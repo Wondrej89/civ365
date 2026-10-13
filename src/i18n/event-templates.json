@@ -1,6 +1,7 @@
 [
   "A new era has begun: {0}.",
   "Achievement unlocked: {0}.",
+  "Achievement unlocked: {name} · {target}.",
   "Campaign launched for {territory}.",
   "Campaign {0}. {1} people lost.",
   "First {0} constructed.",
@@ -9,6 +10,7 @@
   "New production unit unlocked: {0}.",
   "Population reached {population}.",
   "Territory conquered! +1 settlement slot and +{bonus}% {resource} production.",
+  "Traded {sold} {source} for {received} {destination}.",
   "{0} learned.",
   "{0} researched.",
   "{0} {1} {2}.",

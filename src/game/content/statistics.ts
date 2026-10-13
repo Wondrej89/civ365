@@ -11,6 +11,13 @@ const discovered = (featureId: string): Condition => ({
 });
 export const statisticSeries: StatisticSeriesDefinition[] = [
   {
+    id: 'tradeValue',
+    name: 'Lifetime trade value',
+    color: '#a58b5e',
+    sampleValue: (state) => state.statistics.tradeValueExchanged,
+    unlockCondition: discovered('trade'),
+  },
+  {
     id: 'population',
     name: 'Population over time',
     color: '#21764f',

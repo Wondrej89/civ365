@@ -9,6 +9,8 @@ import {
   Building2,
   Swords,
   Map,
+  ArrowRightLeft,
+  Award,
 } from 'lucide-react';
 import { useGame } from '../hooks/useGame';
 import { isFeatureUnlocked } from '../game/engine/conditions';
@@ -101,6 +103,28 @@ export function HelpSheet() {
             <p>
               {tr(
                 'Choose one of three regions in Territory: Food, Materials or Research. Harder defenders offer larger permanent production bonuses. Infantry counters Cavalry, Cavalry counters Ranged, and Ranged counters Infantry; balanced armies reduce uncertainty. Espionage reveals defenders. Campaigns consume supplies and continue offline; casualties reduce Population.',
+              )}
+            </p>
+          </div>
+        )}
+        {isFeatureUnlocked(state, 'trade') && (
+          <div className="panel">
+            <ArrowRightLeft size={25} />
+            <h2>{tr('Trade your surplus')}</h2>
+            <p>
+              {tr(
+                'Long Distance Trade opens international exchange. Choose what to sell and what to receive in Trade, then review the quote. Banking, Oceanic Navigation, Railways and Global Markets improve efficiency. Transport costs mean that exchanging back always returns less. Research receipts do not count as Research production.',
+              )}
+            </p>
+          </div>
+        )}
+        {isFeatureUnlocked(state, 'achievements') && (
+          <div className="panel">
+            <Award size={25} />
+            <h2>{tr('Keep reaching milestones')}</h2>
+            <p>
+              {tr(
+                'One-time achievements celebrate discoveries and eras. Milestone series reward population records, lifetime production, conquest and trade volume at growing targets. Every completed tier gives a permanent bonus once, even if you later lose people or spend the resources.',
               )}
             </p>
           </div>

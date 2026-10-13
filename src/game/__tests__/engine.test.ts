@@ -415,9 +415,9 @@ describe('saves and offline production', () => {
     delete raw.settings;
     delete raw.reachedEras;
     delete raw.announcedEras;
-    expect(migrateSave(raw).saveVersion).toBe(8);
+    expect(migrateSave(raw).saveVersion).toBe(9);
     expect(deserializeSave(raw).settings.notifications).toBe(true);
-    expect(() => migrateSave({ saveVersion: 9 })).toThrow('Unsupported');
+    expect(() => migrateSave({ saveVersion: 10 })).toThrow('Unsupported');
   });
   it('uses the same simulation offline, including achievements and their changing bonuses', () => {
     const s = applyAction(developed(), {
@@ -555,7 +555,16 @@ it('completes the opening-to-skills loop without resource cheats or hundreds of 
   expect(s.currentEra).toBe('agricultural');
   expect(elapsed).toBeLessThanOrEqual(1800);
   expect(s.statistics.totalManualClicks.eq(10)).toBe(true);
-  expect(s.achievements.length).toBe(5);
+  expect(s.achievements).toEqual(
+    expect.arrayContaining([
+      'firstSteps',
+      'smallTribe',
+      'organized',
+      'curious',
+      'settled',
+      'researchMilestone1',
+    ]),
+  );
   s = applyAction(s, { type: 'skill', id: 'oralTradition' });
   expect(s.purchasedSkills.oralTradition).toBe(1);
   console.info(

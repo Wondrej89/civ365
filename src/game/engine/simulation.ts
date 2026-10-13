@@ -26,6 +26,7 @@ import {
   payArmyUpkeep,
   upgradeMilitary,
 } from './military';
+import { executeTrade } from './trade';
 import { launchCampaign, finishCampaign } from './conquest';
 import {
   canAdvance,
@@ -130,6 +131,9 @@ export function simulate(
 export function applyAction(state: GameState, action: GameAction): GameState {
   const next = cloneState(state);
   switch (action.type) {
+    case 'trade':
+      if (!executeTrade(next, action)) return state;
+      break;
     case 'buildSettlement':
     case 'upgradeSettlement':
       if (!mutateSettlementAction(next, action)) return state;

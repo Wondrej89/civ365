@@ -7,7 +7,18 @@ export const balance = {
     medieval: { research: 800, materials: 180 },
     renaissance: { research: 4000, materials: 600 },
     industrial: { research: 20000, materials: 2000 },
+    modern: { research: 100000, materials: 8000 },
+    atomic: { research: 500000, materials: 30000 },
   } as Record<string, { research: number; materials: number }>,
+  trade: {
+    baseEfficiency: 0.6,
+    maximumEfficiency: 0.95,
+    resourceValues: { food: 1, materials: 2, research: 6 } as Record<
+      string,
+      number
+    >,
+  },
+  achievementTracks: { tiers: 18, growth: 10 },
   populationGrowth: {
     basePeoplePerCity: 1,
     minimumBaseAmount: 1,
@@ -79,6 +90,20 @@ export const balance = {
       capacity: 2500,
       military: 40000,
     },
+    modern: {
+      population: 8000,
+      territories: 20,
+      cities: 14,
+      capacity: 12000,
+      military: 160000,
+    },
+    atomic: {
+      population: 12000,
+      territories: 24,
+      cities: 18,
+      capacity: 18000,
+      military: 600000,
+    },
   },
   automaticGrowth: {
     intervalSeconds: 10,
@@ -97,5 +122,5 @@ export const balance = {
   maxOfflineSeconds: 8 * 60 * 60,
   offlineStepSeconds: 10,
   eventLimit: 100,
-  saveVersion: 8,
+  saveVersion: 9,
 };
