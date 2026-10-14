@@ -1,3 +1,4 @@
+import { cloneState } from '../state';
 import { militaryUnits } from '../content/military';
 import { balance } from '../content/config';
 import { D, sum } from '../utils/numbers';
@@ -72,6 +73,33 @@ export function militaryUpgradeQuote(
       .mul(balance.military.upgradeCostMultiplier[c.resource] ?? 1),
   }));
 }
+export function militaryRearmCounts(
+  state: GameState,
+  unit: MilitaryUnitDefinition,
+) {
+  const count = state.militaryUnits[unit.id];
+  const retained = count
+    .mul(1 - balance.military.rearmWithdrawalFraction)
+    .floor();
+  return { retained, withdrawn: count.sub(retained) };
+}
+export function militaryUpgradePreview(
+  state: GameState,
+  unit: MilitaryUnitDefinition,
+) {
+  if (!nextMilitaryTier(state, unit)) return null;
+  const counts = militaryRearmCounts(state, unit);
+  const next = cloneState(state);
+  next.militaryUnits[unit.id] = counts.retained;
+  next.militaryTiers[unit.id]++;
+  if (armyCount(next).eq(0)) next.militaryReadiness = 1;
+  return {
+    ...counts,
+    releasedPopulation: counts.withdrawn.mul(unit.populationCost),
+    beforePower: militaryPower(state),
+    afterPower: militaryPower(next),
+  };
+}
 export function canUpgradeMilitary(
   state: GameState,
   unit: MilitaryUnitDefinition,
@@ -90,10 +118,16 @@ export function upgradeMilitary(state: GameState, id: string) {
   if (!unit || !canUpgradeMilitary(state, unit)) return false;
   const next = nextMilitaryTier(state, unit)!;
   payCosts(state, militaryUpgradeQuote(state, unit));
+  const { retained, withdrawn } = militaryRearmCounts(state, unit);
+  state.militaryUnits[id] = retained;
   state.militaryTiers[id]++;
+  if (armyCount(state).eq(0)) state.militaryReadiness = 1;
   logEvent(
     state,
-    message('{role} upgraded to {unit}.', { role: unit.name, unit: next.name }),
+    message(
+      '{role} upgraded to {unit}. {count} soldiers returned to Idle Population for recruitment.',
+      { role: unit.name, unit: next.name, count: withdrawn.toString() },
+    ),
   );
   return true;
 }

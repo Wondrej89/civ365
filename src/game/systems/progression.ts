@@ -57,6 +57,21 @@ export function payCosts(state: GameState, costs: ResourceCost[]) {
       cost.amount,
     );
 }
+/** Prices depend on owned discoveries, not a mutable purchase counter or elapsed time. */
+export function technologyCostMultiplier(state: GameState, resource: string) {
+  return D(balance.technologyPurchaseGrowth[resource] ?? 1).pow(
+    state.researchedTechnologies.length,
+  );
+}
+export function technologyCost(
+  state: GameState,
+  technology: TechnologyDefinition,
+): ResourceCost[] {
+  return technology.cost.map((cost) => ({
+    resource: cost.resource,
+    amount: D(cost.amount).mul(technologyCostMultiplier(state, cost.resource)),
+  }));
+}
 export type TechnologyStatus =
   'hidden' | 'revealed' | 'available' | 'researched';
 export function technologyStatus(

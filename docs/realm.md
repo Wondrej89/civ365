@@ -73,9 +73,9 @@ Steam Experiments a Mechanical Engineering jsou pozdní Renaissance technologie 
 
 ## Pacing a centrální nastavení
 
-Násobiče Research cen pro Tribal / Agricultural / Bronze / Classical / Medieval / Renaissance / Industrial jsou 1 / 10 / 40 / 180 / 800 / 4000 / 20000. Materials násobiče jsou 1 / 5 / 15 / 50 / 180 / 600 / 2000. Základní ceny zůstávají v definicích technologií. Pozdější výzkum tak drahne rychleji než samotné produkční bonusy.
+Násobiče Research cen pro Tribal / Agricultural / Bronze / Classical / Medieval / Renaissance / Industrial jsou 1 / 10 / 40 / 180 / 800 / 4000 / 20000. Materials násobiče jsou 1 / 5 / 15 / 50 / 180 / 600 / 2000. Základní ceny zůstávají v definicích technologií; každý známý výzkum dále násobí ceny Research ×1.075 a Materials ×1.04. Přesný dynamický quote sdílí UI, nákup i testovací politika.
 
-Cena růstu používá 1.12 do populace 20, 1.008 od 20 do 400 a 1.001 nad 400. Mírnější pozdější část zabraňuje prakticky nedosažitelným tisícovým populacím; kapacita a náklady na sídla a armádu představují další limity. To je první balance pass, nikoli přesný časový slib každému hráči.
+Cena růstu používá 1.12 do populace 20, 1.008 od 20 do 400 a 1.001 od 400 do 2 000. Nad 2 000 navazuje kvadratická část se škálou 500 lidí, která zachovává dosažitelný růst i kolem 20 tisíc; kapacita a náklady na sídla a armádu představují další limity. To je první balance pass, nikoli přesný časový slib každému hráči.
 
 Automatický hráč z nového save s deseti počátečními kliknutími a bez grantů dosáhl:
 
@@ -95,7 +95,7 @@ Hráč průběžně investuje, přerozděluje pracovníky, staví sídla, rekrut
 
 Statistics přidává Population Capacity, Owned Territories a Military Power over time po odemčení příslušných features. Census distribuce obsahuje Military podle skutečných footprintů. Sampling zůstává každých 30 simulovaných sekund, nejvýše 2000 bodů na sérii, včetně offline průběhu.
 
-Aktuální save je v8; značky nového obsahu popisuje [discoveries.md](discoveries.md); nové výzkumné cesty a migraci popisuje [research-order.md](research-order.md); nové vojenské a city převody popisuje [growth-warfare.md](growth-warfare.md). Níže popsaný územní převod vznikl ve v4. Migrace dále zachovává všechny předchozí verze, doplňuje jazyk a opravuje nové tech edges podle [localization.md](localization.md). Verze 3 dostane jeden Homeland, jeden Camp, prázdnou armádu a žádnou kampaň; stávající lidé, pracovníci, zdroje, technologie, skilly, achievementy a historie se zachovají. Population nad novou kapacitou zůstává, pouze další růst čeká na zvýšení kapacity. Capacity se odvozuje ze sídel a efektů, neukládá se jako druhá nezávislá pravda. Uložený `populationCapacityBonus` je vyhrazen pro explicitní vývojový grant. Import kontroluje počty, sloty, armádní footprinty a konzistenci rozpracované kampaně. Časy logu jsou celé milisekundy, i když kampaň končí mezi dvěma běžnými tick hranicemi.
+Aktuální save je v9; značky nového obsahu popisuje [discoveries.md](discoveries.md); nové výzkumné cesty a migraci popisuje [research-order.md](research-order.md); nové vojenské a city převody popisuje [growth-warfare.md](growth-warfare.md). Níže popsaný územní převod vznikl ve v4. Migrace dále zachovává všechny předchozí verze, doplňuje jazyk a opravuje nové tech edges podle [localization.md](localization.md). Verze 3 dostane jeden Homeland, jeden Camp, prázdnou armádu a žádnou kampaň; stávající lidé, pracovníci, zdroje, technologie, skilly, achievementy a historie se zachovají. Population nad novou kapacitou zůstává, pouze další růst čeká na zvýšení kapacity. Capacity se odvozuje ze sídel a efektů, neukládá se jako druhá nezávislá pravda. Uložený `populationCapacityBonus` je vyhrazen pro explicitní vývojový grant. Import kontroluje počty, sloty, armádní footprinty a konzistenci rozpracované kampaně. Časy logu jsou celé milisekundy, i když kampaň končí mezi dvěma běžnými tick hranicemi.
 
 Nový typ území přidejte do `content/territories.ts` s `settlementSlots`, případnými `effects` a strategickými resource metadata. Nové sídlo přidejte do `content/settlements.ts`, vojenskou jednotku do `content/military.ts`. Systémy a UI načítají registry; konkrétní tech ID patří do obsahových podmínek, nikoli obecných výpočtů. Grafy dál přidává `content/statistics.ts`; jejich nové `sampleValue` callbacks se vyhodnocují až při samplování, což zachovává bezpečné načítání navzájem odkazovaných engine modulů.
 
@@ -110,3 +110,5 @@ Předchozí research-order iterace prošla 158 testy včetně úplného engine p
 Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [production-research-balance.md](production-research-balance.md). Stabilní ID technologií zůstávají kvůli starším savům.
 
 Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.
+
+Aktuální balance a výsledky průchodů po změně výzkumu a přezbrojení: [balance-costs-rearming.md](balance-costs-rearming.md).

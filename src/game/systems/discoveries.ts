@@ -170,6 +170,7 @@ export function currentDiscoveries(state: GameState): Discovery[] {
     add('military', `unit:${unit.id}`, 'interactive');
     const nextTier = nextMilitaryTier(state, unit);
     if (nextTier) {
+      add('military', `rearming:${unit.id}`);
       const available = evaluateCondition(nextTier.unlockCondition, state);
       result.push({
         sheet: 'military',
@@ -196,6 +197,7 @@ export function currentDiscoveries(state: GameState): Discovery[] {
         mode: status === 'available' ? 'interactive' : 'passive',
       });
   }
+  add('research', 'pricing');
   for (const skill of skills) {
     const level = state.purchasedSkills[skill.id] ?? 0;
     const usable =
@@ -367,6 +369,8 @@ export function discoveryIds() {
     ...statisticSeries.map((s) => `statistics:series:${s.id}`),
     ...settlements.map((s) => `settlements:tier:${s.id}`),
     'military:upkeep',
+    'research:pricing',
+    ...militaryUnits.map((u) => `military:rearming:${u.id}`),
     'military:committed',
     'territory:campaign',
     ...militaryUnits.map((u) => `military:unit:${u.id}`),

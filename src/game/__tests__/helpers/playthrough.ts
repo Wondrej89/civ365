@@ -30,6 +30,7 @@ import {
   canAdvance,
   canAfford,
   technologyStatus,
+  technologyCost,
 } from '../../systems/progression';
 import { D } from '../../utils/numbers';
 import type { GameAction, GameState } from '../../types';
@@ -68,7 +69,8 @@ export function nextPlaythroughAction(state: GameState): GameAction | null {
   ];
   const affordableTechs = technologies.filter(
     (t) =>
-      technologyStatus(state, t) === 'available' && canAfford(state, t.cost),
+      technologyStatus(state, t) === 'available' &&
+      canAfford(state, technologyCost(state, t)),
   );
   affordableTechs.sort(
     (a, b) =>

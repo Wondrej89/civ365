@@ -39,6 +39,7 @@ import {
   skillCost,
   technologyById,
   technologyStatus,
+  technologyCost,
 } from '../systems/progression';
 
 export function addProduction(
@@ -214,10 +215,10 @@ export function applyAction(state: GameState, action: GameAction): GameState {
       if (
         !tech ||
         technologyStatus(next, tech) !== 'available' ||
-        !canAfford(next, tech.cost)
+        !canAfford(next, technologyCost(next, tech))
       )
         return state;
-      payCosts(next, tech.cost);
+      payCosts(next, technologyCost(next, tech));
       next.researchedTechnologies.push(tech.id);
       grantEffects(next, tech.effects);
       next.autoPopulationGrowth.accumulator = Math.min(

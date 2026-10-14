@@ -10,7 +10,7 @@ Počet lidí na ruční i automatický krok je:
 
 Urban Communities přidá ×4, Public Baths pouze zrychlí interval, Town Waterworks další ×2 a Humanism ×1.5. Municipal Charters přidává +1 základního člověka za City nebo Metropolis před násobením. Dvě Cities s kompletním Medieval výzkumem tedy dávají **32 lidí za krok**. Town a Settlement tento městský bonus neposkytují.
 
-Celá dávka nyní stojí aktuální Food cenu jednoho člověka před růstovým krokem. Výzkum i města tedy přidávají lidi bez násobení ceny dávky. Základ 10 Food a počáteční násobič 1.12 zůstávají; další části jsou nyní 1.008 a 1.001. Tím se odstraňuje pozdní extrémní cena, nikoli potřeba Food. `populationCostMultiplier` efekty zůstávají.
+Celá dávka nyní stojí aktuální Food cenu jednoho člověka před růstovým krokem. Výzkum i města tedy přidávají lidi bez násobení ceny dávky. Základ 10 Food a počáteční násobič 1.12 zůstávají; další části jsou 1.008 do 400 lidí a 1.001 do 2 000 lidí. Nad 2 000 se cena počítá kvadratickou křivkou se škálou 500 lidí, viz [balance-costs-rearming.md](balance-costs-rearming.md). `populationCostMultiplier` efekty zůstávají.
 
 Food musí pokrýt jednu cenu kroku po ochraně rezervy; jinak automatika počká na další pokus. Zbývající kapacita může dávku zkrátit: tři volná místa dovolí tři lidi i při normální dávce deset. Auto Growth chrání zvolenou rezervu Food; ruční růst ji může použít. Populace nad capem ze starého savu se nesnižuje. UI ukazuje dávku, její cenu, interval i konkrétní growth modifiers.
 
@@ -27,7 +27,7 @@ Každý upgrade má vlastní `settlementInvestments` lifetime counter. První Ci
 
 ## Tři kategorie a equipment
 
-`militaryUnits` obsahuje pouze Infantry / Cavalry / Ranged, `militaryTiers` drží jejich aktuální vybavení. Každý voják stále reprezentuje jednoho člověka; obecný `populationCost` zůstává podporovaný. Výzkum zpřístupní další tier, potom hráč zaplatí upgrade celé kategorie. Upgrade zachová počty a populaci; noví vojáci se nabírají do aktuálního tieru. Cena vybaví všechny současné vojáky, u prázdné kategorie jeden training kit. Food tvoří čtvrtinu náborové ceny cílového vybavení, Materials celou cenu, bez náborového army-size násobiče. Upgrady jsou postupné.
+`militaryUnits` obsahuje pouze Infantry / Cavalry / Ranged, `militaryTiers` drží jejich aktuální vybavení. Každý voják stále reprezentuje jednoho člověka; obecný `populationCost` zůstává podporovaný. Výzkum zpřístupní další tier, potom hráč zaplatí upgrade celé kategorie. Upgrade vrátí 50 % jednotek, zaokrouhleno nahoru, do Idle Population. Celková populace se nemění; vyřazené vojáky je nutné znovu zaplatit a naverbovat v novém tieru. Dosavadní resource bill podle počtu před přezbrojením zůstává, u prázdné kategorie se platí jeden training kit. Food tvoří čtvrtinu náborové ceny cílového vybavení, Materials celou cenu, bez náborového army-size násobiče. Upgrady jsou postupné.
 
 | Kategorie | Dostupný řetězec                                                                |
 | --------- | ------------------------------------------------------------------------------- |
@@ -35,7 +35,7 @@ Každý upgrade má vlastní `settlementInvestments` lifetime counter. První Ci
 | Cavalry   | Horsemen → Lancers → Knight → Dragoon → Mounted Rifles                          |
 | Ranged    | Archer → Composite Bowman → Crossbowman → Musketeer → Rifleman                  |
 
-Horsemanship odemkne Cavalry v Bronze. Classical Army zpřístupní klasické vybavení, Feudal Organization Knight/Crossbowman, Professional Army Men-at-Arms, Matchlock Firearms renaissance vybavení a Industrial Rifling pušky. Submachine Gunner je připravený budoucí tier s `never` condition; nepřidává neexistující moderní epochu.
+Horsemanship odemkne Cavalry v Bronze. Classical Army zpřístupní klasické vybavení, Feudal Organization Knight/Crossbowman, Professional Army Men-at-Arms, Matchlock Firearms renaissance vybavení a Industrial Rifling pušky. Automatic Weapons v Modern Age přidává Motorized Infantry, Armored Cars a Submachine Gunner; stále jde o tři persistentní kategorie.
 
 Každý tier definuje Power, náborové ceny a **Food / Materials za sekundu**. Upkeep se platí i během kampaně a offline. Supply Lines ×0.8, Professional Army ×0.8 a Military Logistics ×0.75 používají obecný `militaryUpkeepMultiplier`. Ledger a hlavní resource rates ukazují net produkci; Military navíc rozklad gross / upkeep / net a jednotkové náklady.
 
@@ -82,3 +82,5 @@ Aktuální produkční bonusy a rozlišené přínosy výzkumů popisuje [produc
 Cena celé růstové dávky, aktuální conquest křivka a ověřený vstup do Industrial Age jsou popsány v [renaissance-recovery.md](renaissance-recovery.md). Starší výsledky průchodů výše zachycují předchozí balance.
 
 Aktuální městský základ násobeného růstu a výnosnější produkční investice popisuje [city-growth-production.md](city-growth-production.md). Starší měření průchodů výše zachycují předchozí balance.
+
+Výsledky výše zachycují historické balance verze. Aktuální ceny výzkumu, pozdní populace a náklad přezbrojení: [balance-costs-rearming.md](balance-costs-rearming.md).

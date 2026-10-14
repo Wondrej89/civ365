@@ -314,11 +314,11 @@ describe('three army categories, equipment and supply', () => {
       id: 'infantry',
     });
     expect(militaryTier(next, militaryUnits[0]).name).toBe('Spearman');
-    expect(next.militaryUnits.infantry.eq(10)).toBe(true);
+    expect(next.militaryUnits.infantry.eq(5)).toBe(true);
     expect(next.population.eq(people)).toBe(true);
-    expect(idlePopulation(next).eq(idle)).toBe(true);
-    expect(militaryPopulation(next).eq(10)).toBe(true);
-    expect(militaryPower(next).eq(before.mul(3))).toBe(true);
+    expect(idlePopulation(next).eq(idle.add(5))).toBe(true);
+    expect(militaryPopulation(next).eq(5)).toBe(true);
+    expect(militaryPower(next).eq(before.mul(1.5))).toBe(true);
     expect(
       next.resources.materials.eq(
         state.resources.materials.sub(costs[1].amount),

@@ -4,12 +4,17 @@ import { useI18n } from "../i18n/LocaleContext";
 import { useRef, useState } from "react";
 import { Check, FlaskConical, LockKeyhole, ScanSearch } from "lucide-react";
 import { useGame } from "../hooks/useGame";
-import { canAfford } from "../game/systems/progression";
+import {
+  canAfford,
+  technologyCost,
+  technologyCostMultiplier,
+} from "../game/systems/progression";
 import {
   technologyTree,
   treeDimensions as dimensions,
   nextUnresearchedTechnology,
 } from "../game/systems/technology-tree";
+import { balance } from "../game/content/config";
 import { gameStore } from "../game/store";
 
 import { productionPerSecond } from "../game/engine/production";
@@ -75,6 +80,33 @@ export function ResearchSheet() {
           </span>
         </div>
       </div>
+      <Discovery
+        as="div"
+        discoveryId="research:pricing"
+        className="sheet-note research-pricing"
+        data-research-pricing
+      >
+        {tr(
+          "Each researched technology raises future Research prices by {research}% and Materials prices by {materials}%.",
+          {
+            research: formatNumber(
+              (balance.technologyPurchaseGrowth.research - 1) * 100,
+            ),
+            materials: formatNumber(
+              (balance.technologyPurchaseGrowth.materials - 1) * 100,
+            ),
+          },
+        )}{" "}
+        {tr(
+          "Current price multipliers: Research ×{research}, Materials ×{materials}.",
+          {
+            research: formatNumber(technologyCostMultiplier(state, "research")),
+            materials: formatNumber(
+              technologyCostMultiplier(state, "materials"),
+            ),
+          },
+        )}
+      </Discovery>
       <div className="tree-toolbar">
         <button
           className="button"
@@ -189,8 +221,9 @@ export function ResearchSheet() {
               const eraName = tr(
                 tree.groups.find((g) => g.era.id === t.era)?.era.name ?? "",
               );
+              const costs = technologyCost(state, t);
               const reason = available
-                ? costReason(t.cost, state)
+                ? costReason(costs, state)
                 : !state.reachedEras.includes(t.era)
                   ? tr("Reach {era} to research this discovery.", {
                       era: eraName,
@@ -246,10 +279,10 @@ export function ResearchSheet() {
                   <p>
                     {unknown ? tr("A discovery is waiting.") : tr(t.effectText)}
                   </p>
-                  <Costs costs={t.cost} state={state} />
+                  {!researched && <Costs costs={costs} state={state} />}
                   <button
                     className={`button ${available ? "primary" : ""}`}
-                    disabled={!available || !canAfford(state, t.cost)}
+                    disabled={!available || !canAfford(state, costs)}
                     title={tr(reason ?? "") || tr(t.effectText)}
                     aria-label={tr("Research {0}", {
                       "0": unknown ? tr("unknown technology") : tr(t.name),

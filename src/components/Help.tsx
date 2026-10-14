@@ -47,7 +47,7 @@ export function HelpSheet() {
             <h2>{tr('Grow together')}</h2>
             <p>
               {tr(
-                'Cities and Metropolises provide base population growth; before your first City the base is one. Municipal Charters adds one base person per City. Urban Communities, Town Waterworks and Humanism multiply the entire base; Public Baths speeds up automatic growth. The whole group costs the current Food price of one person. Capacity can shorten a group; growth stops at Population Capacity.',
+                'Cities and Metropolises provide base population growth; before your first City the base is one. Municipal Charters adds one base person per City. Urban Communities, Town Waterworks and Humanism multiply the entire base; Public Baths speeds up automatic growth. The whole group costs the current Food price of one person. After 2,000 people, the price follows a gentler quadratic curve. Capacity can shorten a group; growth stops at Population Capacity.',
               )}
             </p>
           </div>
@@ -58,7 +58,7 @@ export function HelpSheet() {
             <h2>{tr('Make discoveries')}</h2>
             <p>
               {tr(
-                'Thinkers produce Research. Spend it in the Research sheet; each discovery may reveal another. Keep Woodcutters working for discoveries that also need Materials.',
+                'Thinkers produce Research. Spend it in the Research sheet; each discovery may reveal another and raises the prices of future technologies. Keep Woodcutters working for discoveries that also need Materials.',
               )}
             </p>
           </div>
@@ -91,7 +91,7 @@ export function HelpSheet() {
             <h2>{tr('Prepare an army')}</h2>
             <p>
               {tr(
-                'Recruit Infantry, Cavalry and Ranged troops from Idle Population. Equipment upgrades improve an entire category without using more people. Every soldier consumes Food and Materials each second. Keep production above upkeep or readiness and combat power fall. Demobilization returns soldiers to Idle Population.',
+                'Recruit Infantry, Cavalry and Ranged troops from Idle Population. Equipment upgrades withdraw half of that category, rounded up, to Idle Population. Recruit those soldiers again to restore its strength; total Population stays the same. Every soldier consumes Food and Materials each second. Keep production above upkeep or readiness and combat power fall. Demobilization returns soldiers to Idle Population.',
               )}
             </p>
           </div>

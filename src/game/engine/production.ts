@@ -106,10 +106,20 @@ export function populationCost(
     .sub(config.scalingBreakpoint)
     .max(0)
     .min(config.lateScalingBreakpoint - config.scalingBreakpoint);
-  const late = population.sub(config.lateScalingBreakpoint).max(0);
+  const late = population
+    .sub(config.lateScalingBreakpoint)
+    .max(0)
+    .min(config.softScalingBreakpoint - config.lateScalingBreakpoint);
+  const soft = population
+    .sub(config.softScalingBreakpoint)
+    .max(0)
+    .div(config.softScalingPopulation)
+    .add(1)
+    .pow(config.softScalingPower);
   return D(config.baseFoodCost)
     .mul(D(config.multiplier).pow(early))
     .mul(D(config.laterMultiplier).pow(later))
     .mul(D(config.lateMultiplier).pow(late))
+    .mul(soft)
     .mul(populationModifier(activeEffects(state)));
 }

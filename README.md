@@ -215,3 +215,5 @@ Graf odvozuje pořadí z prerequisites, vojenský výzkum má vlastní sloupec a
 Nové záložky a prvky zůstávají zvýrazněné do otevření, interakce nebo pěti sekund skutečného zobrazení. Značky se ukládají ve v8; velké monitory mají větší oznámení: [docs/discoveries.md](docs/discoveries.md).
 
 Mezinárodní obchod, opakované milníky, Industrial/Modern obsah, vstup do Atomic Age a migrace v9: [docs/trade-achievements-future.md](docs/trade-achievements-future.md).
+
+Balancování výzkumu po každém nákupu, kvadratická cena populace nad 2 000 a přezbrojení s návratem poloviny vojáků do Idle Population: [docs/balance-costs-rearming.md](docs/balance-costs-rearming.md).

@@ -18,6 +18,7 @@ import {
   militaryTier,
   nextMilitaryTier,
   militaryUpgradeQuote,
+  militaryUpgradePreview,
   canUpgradeMilitary,
   upkeepPerMilitaryUnit,
 } from '../game/engine/military';
@@ -131,6 +132,7 @@ export function MilitarySheet() {
               costs = militaryQuote(state, u),
               tier = militaryTier(state, u),
               next = nextMilitaryTier(state, u);
+            const upgradePreview = militaryUpgradePreview(state, u);
             const upgradeCosts = militaryUpgradeQuote(state, u),
               upgradeUnlocked =
                 next && evaluateCondition(next.unlockCondition, state);
@@ -195,6 +197,39 @@ export function MilitarySheet() {
                         technology: tr(required),
                       })}
                     </p>
+                    {upgradePreview && (
+                      <Discovery
+                        as="div"
+                        discoveryId={`military:rearming:${u.id}`}
+                      >
+                        <dl className="growth-details rearm-preview">
+                          <div>
+                            <dt>{tr('Soldiers after rearming')}</dt>
+                            <dd>
+                              {formatNumber(count, 0)} →{' '}
+                              {formatNumber(upgradePreview.retained, 0)}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>{tr('Returned to Idle Population')}</dt>
+                            <dd>
+                              +
+                              {formatNumber(
+                                upgradePreview.releasedPopulation,
+                                0,
+                              )}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>{tr('Army power after rearming')}</dt>
+                            <dd>
+                              {formatNumber(upgradePreview.beforePower)} →{' '}
+                              {formatNumber(upgradePreview.afterPower)}
+                            </dd>
+                          </div>
+                        </dl>
+                      </Discovery>
+                    )}
                     <Costs costs={upgradeCosts} state={state} />
                     <button
                       className="button"
@@ -212,7 +247,7 @@ export function MilitarySheet() {
                               })
                             : costReason(upgradeCosts, state) ||
                               tr(
-                                'Re-equip the entire category without using more Population.',
+                                'Rearm this category and recruit the withdrawn soldiers again.',
                               )
                       }
                       onClick={() =>
@@ -226,7 +261,12 @@ export function MilitarySheet() {
                     </button>
                     <p className="sheet-note">
                       {tr(
-                        'This bill equips all current soldiers. Future recruits use the new tier. With no soldiers, pay for one training kit.',
+                        'Rearming withdraws {percent}% of soldiers, rounded up, to Idle Population. Total Population stays the same. Recruit them again with the new equipment. Resource costs apply; an empty category costs one training kit.',
+                        {
+                          percent: formatNumber(
+                            balance.military.rearmWithdrawalFraction * 100,
+                          ),
+                        },
                       )}
                     </p>
                   </Discovery>
