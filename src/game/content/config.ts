@@ -10,6 +10,10 @@ export const balance = {
     modern: { research: 100000, materials: 8000 },
     atomic: { research: 500000, materials: 30000 },
   } as Record<string, { research: number; materials: number }>,
+  technologyPurchaseGrowth: { research: 1.075, materials: 1.04 } as Record<
+    string,
+    number
+  >,
   trade: {
     baseEfficiency: 0.6,
     maximumEfficiency: 0.95,
@@ -29,6 +33,9 @@ export const balance = {
     laterMultiplier: 1.008,
     lateScalingBreakpoint: 400,
     lateMultiplier: 1.001,
+    softScalingBreakpoint: 2000,
+    softScalingPopulation: 500,
+    softScalingPower: 2,
   },
   settlements: {
     costGrowth: 1.4,
@@ -41,6 +48,7 @@ export const balance = {
   },
   military: {
     recruitCostGrowth: 1.002,
+    rearmWithdrawalFraction: 0.5,
     upgradeCostMultiplier: { food: 0.25, materials: 1 } as Record<
       string,
       number

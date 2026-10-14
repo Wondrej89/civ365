@@ -194,7 +194,7 @@ describe('technology, effects, achievements, and eras', () => {
     const first = buy(s, 'foraging'),
       tools = buy(first, 'toolMaking');
     expect(tools.researchedTechnologies).toEqual(['foraging', 'toolMaking']);
-    expect(tools.resources.materials.eq(990)).toBe(true);
+    expect(tools.resources.materials.toNumber()).toBeCloseTo(989.6);
     expect(buy(tools, 'toolMaking')).toBe(tools);
     expect(technologyStatus(tools, technologies[0])).toBe('researched');
   });

@@ -41,7 +41,7 @@ Industrial přidává Scientific Crop Rotation, Railways, Mass Education, Public
 
 Public Sanitation a Modern Medicine snižují Food cenu jedné růstové dávky, Vaccination násobí dávku a Civil Registries přidává člověka do městského základu před násobením. Platí existující cena celé skupiny za jednoho člověka, kapacita i absence hard time gates. Vyšší Food/Materials/Research produkce odpovídá rostoucím research cenám; epochální research multiplikátory jsou Industrial 20 000, Modern 100 000, Atomic 500 000.
 
-Modern vybavení zachovává tři kategorie: Motorized Infantry, Armored Cars a Submachine Gunner. Vyžaduje Automatic Weapons; příslušný equipment upgrade platí pro celou kategorii a nadále spotřebovává zásoby. Pěchota/jízda/střelba zachovává populační footprint, údržbu, counters a combined-arms pravidla.
+Modern vybavení zachovává tři kategorie: Motorized Infantry, Armored Cars a Submachine Gunner. Vyžaduje Automatic Weapons; příslušný equipment upgrade převede kategorii na nový tier a vrátí polovinu jednotek do Idle Population; jejich doplnění je opět placené. Nadále platí údržba zásob. Pěchota/jízda/střelba zachovává populační footprint, údržbu, counters a combined-arms pravidla.
 
 | Vstup | Výzkumy | Populace | Území | City/Metropolis | Kapacita | Síla armády |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
@@ -63,3 +63,5 @@ Build rozděluje knihovny a aplikaci do dvou cachovatelných JS souborů (~250/2
 Produkční browser smoke pod `/civ365/` prošel importem skutečného v8 save z předchozí verze, zachováním populace/armády/zdrojů/discovery metadata, první směnou, Research receipt, blokací neplatných vstupů, výzkumem Railways a novým upozorněním na lepší kurz, Max, reloadem, milníkovým seznamem a pěti sekundami viditelnosti, grafem Trade a uloženou CS preferencí. Desktop 1 600 px a mobil 390 px nemají přetečení; oba nové JS soubory a ostatní statické soubory se načetly bez 404 nebo JS chyby.
 
 Samostatný průchod skutečnými tlačítky v Chromium začal novou hru, použil jen 10 Food kliknutí a vývojovou rychlost ×1 000 bez grantů. Dosáhl Agricultural v 1 000 s, Bronze v 5 000 s, Classical v 9 500 s, Medieval v 11 500 s, Renaissance v 13 500 s, Industrial v 16 500 s, Modern v 18 500 s a Atomic v 20 500 s (5 h 41 min 40 s simulace). Všechny přechody proběhly přes checklist, skutečnou stavbu a upgrady, placené vojáky a dokončené campaign; průchod potvrdil ztráty populace i 23 dobytých území. UI akce jsou dávkované mezi kroky simulace a omezené běžnými tlačítky +1/+10/Max. Celá cesta skončila bez JS/HTTP chyb.
+
+Cenové a časové výsledky výše jsou původní měření této iterace. Aktuální purchase scaling, cena populace nad 2 000 a pravidla přezbrojení včetně nového průchodu jsou v [balance-costs-rearming.md](balance-costs-rearming.md).

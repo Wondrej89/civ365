@@ -225,7 +225,24 @@ export function DebugPanel() {
         {tr(' · growth cost ×')}
         {balance.populationGrowth.multiplier} / ×
         {balance.populationGrowth.laterMultiplier} / ×
-        {balance.populationGrowth.lateMultiplier} {tr('· City upgrades ×')}
+        {balance.populationGrowth.lateMultiplier}
+        {tr(
+          ' · after {population} people, growth cost follows power {power} with scale {scale}',
+          {
+            population: balance.populationGrowth.softScalingBreakpoint,
+            power: balance.populationGrowth.softScalingPower,
+            scale: balance.populationGrowth.softScalingPopulation,
+          },
+        )}
+        {tr(
+          ' · each technology: Research ×{research}, Materials ×{materials}; rearming withdraws {percent}%',
+          {
+            research: balance.technologyPurchaseGrowth.research,
+            materials: balance.technologyPurchaseGrowth.materials,
+            percent: balance.military.rearmWithdrawalFraction * 100,
+          },
+        )}
+        {tr('· City upgrades ×')}
         {balance.settlements.upgradeCostGrowth.city} {tr('· counter strength')}
         {balance.military.counterStrength}
         {tr(' · base growth {people} per City, minimum {minimum}', {

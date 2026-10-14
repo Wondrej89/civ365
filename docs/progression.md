@@ -96,9 +96,9 @@ Testy pokrývají automatizaci, statistiky, novou investiční smyčku, migrace 
 
 Balance je první průchod, nikoli finální tempo. Náklady, kapacita a conquest nyní přirozeně omezují rychlost. Pro další ladění sledujte více systémů současně; samotný Research neříká, jak rychle hráč projde éry. Pro další ladění jsou nejúčinnější:
 
-- `content/config.ts`: násobiče cen Research/Materials pro jednotlivé éry; nemění šest původních tribal cen.
+- `content/config.ts`: základní násobiče cen Research/Materials pro jednotlivé éry a násobič po každém dokončeném výzkumu (Research ×1.075, Materials ×1.04). Obsahové ceny se nemění; UI i platba používají `technologyCost`.
 - `content/units.ts`: ceny `costs`, základní produkce, převody `upgradeFrom` a bonusy okolním tierům. Změna footprintu vyžaduje zhodnocení migrace; změna ceny nebo produkce ne.
-- `content/config.ts`: základní cena populace, násobič 1.12 do populace 20, 1.008 do 400 a 1.001 nad ní. Pozdní mírnější růst zachovává dosažitelnost Renaissance.
+- `content/config.ts`: základní cena populace, násobič 1.12 do populace 20, 1.008 do 400, 1.001 do 2 000 a poté kvadratická část `(1 + (population − 2000) / 500)^2`. Raný průběh zůstává stejný, pozdní populace už nezdražuje exponenciálně.
 - `content/technologies.ts`: jednotlivé ceny, prerequisites, produkční bonusy a intervalové efekty automatizace.
 - `content/eras.ts`: podmínky přechodu; jejich číselné hodnoty jsou v `balance.eraRequirements`.
 
